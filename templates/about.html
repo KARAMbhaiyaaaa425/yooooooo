@@ -1,64 +1,135 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="mb-8 mt-2 flex items-center gap-4">
-    <a href="/settings" class="text-gray-300 hover:text-white text-xl"><i class="fa-solid fa-arrow-left"></i></a>
-    <h2 class="text-2xl font-bold text-gray-200 tracking-wide uppercase">About App</h2>
-</div>
-
-<div class="flex flex-col items-center justify-center mb-10 mt-6">
-    {% if settings.app_logo %}
-    <img src="{{ settings.app_logo }}" alt="Logo" class="w-24 h-24 rounded-full mb-4 shadow-[0_0_20px_rgba(37,99,235,0.3)] theme-shadow">
-    {% else %}
-    <div class="w-24 h-24 rounded-full bg-blue-900/30 border-4 border-blue-600 flex items-center justify-center text-blue-500 text-4xl mb-4 shadow-[0_0_20px_rgba(37,99,235,0.3)] theme-shadow theme-bg-subtle theme-border theme-text">
-        <i class="fa-solid fa-store"></i>
+<!-- Top Header / Logo -->
+<div class="mb-6 flex flex-col items-center justify-center pt-4">
+    <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl mb-3 shadow-[0_0_20px_rgba(37,99,235,0.4)] theme-bg theme-shadow">
+        {% if global_settings.app_logo %}
+            <img src="{{ global_settings.app_logo }}" class="w-full h-full object-cover rounded-full">
+        {% else %}
+            <i class="fa-solid fa-store"></i>
+        {% endif %}
     </div>
-    {% endif %}
-    
-    <h3 class="text-3xl font-black text-white uppercase tracking-wider">{{ settings.app_name | default('KARAN STORE') }}</h3>
-    <p class="text-xs text-gray-500 mt-1 font-bold tracking-widest">VERSION 2.0.0 (BETA)</p>
+    <h1 class="text-2xl font-black text-white uppercase tracking-wider">{{ global_settings.app_name | default('Karan Store') }}</h1>
+    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Version 2.0.0 (Beta)</p>
 </div>
 
-<div class="space-y-4 mb-20 px-2">
+<div class="space-y-4 mb-20 px-1">
     
-    <a href="https://t.me/{{ settings.telegram | default('Karan_store') | replace('@', '') }}" target="_blank" class="flex items-center justify-between p-4 bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-2xl transition group">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 theme-bg-subtle theme-text">
-                <i class="fa-brands fa-telegram text-xl"></i>
+    <!-- About Section -->
+    <div class="bg-card border border-gray-800 rounded-2xl p-4">
+        <div class="flex items-center gap-2 mb-2">
+            <i class="fa-regular fa-circle-info text-blue-500 theme-text"></i>
+            <h3 class="text-sm font-bold text-white">About {{ global_settings.app_name | default('Karan Store') }}</h3>
+        </div>
+        <p class="text-xs text-gray-400 leading-relaxed">
+            {{ global_settings.app_name | default('Karan Store') }} is a simple and secure platform where you can manage your wallet balance, purchase digital products/keys, and access your orders easily.
+        </p>
+    </div>
+
+    <!-- App Features -->
+    <div>
+        <h3 class="text-sm font-bold text-white mb-3 ml-1">App Features</h3>
+        <div class="bg-card border border-gray-800 rounded-2xl p-4 flex justify-between items-start gap-2">
+            
+            <div class="flex flex-col items-center text-center w-1/5">
+                <div class="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 mb-2">
+                    <i class="fa-solid fa-shield-check text-lg"></i>
+                </div>
+                <p class="text-[9px] font-bold text-white leading-tight mb-1">Secure<br>Payments</p>
+                <p class="text-[8px] text-gray-500 leading-tight">Safe & secure<br>payment<br>processing</p>
+            </div>
+            
+            <div class="flex flex-col items-center text-center w-1/5">
+                <div class="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500 mb-2">
+                    <i class="fa-solid fa-wallet text-lg"></i>
+                </div>
+                <p class="text-[9px] font-bold text-white leading-tight mb-1">Easy<br>Wallet</p>
+                <p class="text-[8px] text-gray-500 leading-tight">Add balance<br>instantly</p>
+            </div>
+            
+            <div class="flex flex-col items-center text-center w-1/5">
+                <div class="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-500 mb-2">
+                    <i class="fa-solid fa-key text-lg"></i>
+                </div>
+                <p class="text-[9px] font-bold text-white leading-tight mb-1">My<br>Keys</p>
+                <p class="text-[8px] text-gray-500 leading-tight">Manage your<br>purchased<br>keys</p>
+            </div>
+            
+            <div class="flex flex-col items-center text-center w-1/5">
+                <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 mb-2">
+                    <i class="fa-solid fa-bag-shopping text-lg"></i>
+                </div>
+                <p class="text-[9px] font-bold text-white leading-tight mb-1">Store</p>
+                <p class="text-[8px] text-gray-500 leading-tight">Browse and<br>purchase<br>products</p>
+            </div>
+            
+            <div class="flex flex-col items-center text-center w-1/5">
+                <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-2">
+                    <i class="fa-solid fa-bolt text-lg"></i>
+                </div>
+                <p class="text-[9px] font-bold text-white leading-tight mb-1">Fast &<br>Simple</p>
+                <p class="text-[8px] text-gray-500 leading-tight">Clean and<br>easy-to-use<br>experience</p>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Social Links -->
+    <div class="space-y-2 mt-4">
+        <!-- Telegram -->
+        <a href="https://t.me/{{ global_settings.telegram | default('Karan_store') | replace('@', '') }}" target="_blank" class="bg-card border border-gray-800 rounded-xl p-3 flex items-center gap-4 hover:bg-gray-800 transition group">
+            <div class="w-10 h-10 rounded-full bg-[#2AABEE] flex items-center justify-center text-white text-lg">
+                <i class="fa-brands fa-telegram"></i>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-white font-bold text-sm uppercase tracking-wider">Telegram</h3>
+                <p class="text-xs text-gray-400">@{{ global_settings.telegram | default('Karan_store') | replace('@', '') }}</p>
+            </div>
+            <i class="fa-solid fa-arrow-up-right-from-square text-gray-600 group-hover:text-white transition"></i>
+        </a>
+
+        <!-- Instagram -->
+        <a href="https://instagram.com/{{ global_settings.instagram | default('Karan_store') | replace('@', '') }}" target="_blank" class="bg-card border border-gray-800 rounded-xl p-3 flex items-center gap-4 hover:bg-gray-800 transition group">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] flex items-center justify-center text-white text-lg">
+                <i class="fa-brands fa-instagram"></i>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-white font-bold text-sm uppercase tracking-wider">Instagram</h3>
+                <p class="text-xs text-gray-400">@{{ global_settings.instagram | default('Karan_store') | replace('@', '') }}</p>
+            </div>
+            <i class="fa-solid fa-arrow-up-right-from-square text-gray-600 group-hover:text-white transition"></i>
+        </a>
+
+        <!-- Rate App -->
+        <div class="bg-card border border-gray-800 rounded-xl p-3 flex items-center gap-4 cursor-pointer hover:bg-gray-800 transition group" onclick="alert('Thank you for your support!')">
+            <div class="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-500 text-lg">
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-white font-bold text-sm uppercase tracking-wider">Rate The App</h3>
+                <p class="text-xs text-gray-400">Show some love ❤️</p>
+            </div>
+            <i class="fa-solid fa-chevron-right text-gray-600 group-hover:text-white transition"></i>
+        </div>
+    </div>
+
+    <!-- App Information -->
+    <div class="bg-card border border-gray-800 rounded-2xl p-4 mt-4">
+        <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0 theme-text theme-bg-subtle">
+                <i class="fa-solid fa-file-lines"></i>
             </div>
             <div>
-                <p class="text-sm font-bold text-white uppercase tracking-wider">Telegram</p>
-                <p class="text-xs text-gray-500">@{{ settings.telegram | default('Karan_store') | replace('@', '') }}</p>
+                <h3 class="text-sm font-bold text-white mb-1">App Information</h3>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Version: 2.0.0 (Beta)<br>
+                    © 2026 {{ global_settings.app_name | default('Karan Store') }}. All rights reserved.<br>
+                    Made with ❤️ for our users
+                </p>
             </div>
         </div>
-        <i class="fa-solid fa-arrow-up-right-from-square text-gray-600 group-hover:text-blue-400 theme-hover-text text-sm transition"></i>
-    </a>
-    
-    <a href="https://instagram.com/{{ settings.instagram | default('Karan_store') | replace('@', '') }}" target="_blank" class="flex items-center justify-between p-4 bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-2xl transition group">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-full bg-pink-500/10 flex items-center justify-center text-pink-400">
-                <i class="fa-brands fa-instagram text-xl"></i>
-            </div>
-            <div>
-                <p class="text-sm font-bold text-white uppercase tracking-wider">Instagram</p>
-                <p class="text-xs text-gray-500">@{{ settings.instagram | default('Karan_store') | replace('@', '') }}</p>
-            </div>
-        </div>
-        <i class="fa-solid fa-arrow-up-right-from-square text-gray-600 group-hover:text-pink-400 text-sm transition"></i>
-    </a>
-    
-    <button onclick="Swal.fire({title:'Rate Us', html:'<div class=\'flex justify-center gap-2 text-3xl text-yellow-400 my-4\'><i class=\'fa-solid fa-star\'></i><i class=\'fa-solid fa-star\'></i><i class=\'fa-solid fa-star\'></i><i class=\'fa-solid fa-star\'></i><i class=\'fa-solid fa-star\'></i></div><p class=\'text-sm text-gray-300\'>Thank you for your support!</p>', confirmButtonText: 'Submit', background:'#111827', color:'#fff', confirmButtonColor: '#2563eb'})" class="w-full flex items-center justify-between p-4 bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-2xl transition group text-left">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-400">
-                <i class="fa-solid fa-star text-lg"></i>
-            </div>
-            <div>
-                <p class="text-sm font-bold text-white uppercase tracking-wider">Rate The App</p>
-                <p class="text-xs text-gray-500">Show some love 💖</p>
-            </div>
-        </div>
-        <i class="fa-solid fa-chevron-right text-gray-600 group-hover:text-yellow-400 text-sm transition"></i>
-    </button>
+    </div>
 
 </div>
 {% endblock %}
