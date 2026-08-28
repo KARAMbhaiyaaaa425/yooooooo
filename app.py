@@ -28,8 +28,9 @@ KARANPAY_CREATE_URL = "https://gurupaygateway.com/api/create-order"
 KARANPAY_STATUS_URL = "https://gurupaygateway.com/api/check-status"
 
 def get_karanpay_key(order_id):
-    if order_id.startswith("ADD2_"): return KARANPAY_KEY_2
-    return KARANPAY_KEY_1
+    settings = db.settings.find_one({"id": "global"}) or {}
+    if order_id.startswith("ADD2_"): return settings.get("karanpay_key_2", KARANPAY_KEY_2)
+    return settings.get("karanpay_key_1", KARANPAY_KEY_1)
 
 # ================= MIDDLEWARE =================
 @app.context_processor
@@ -315,12 +316,17 @@ def buy():
         
     db.users.update_one({"user_id": user_id, "balance": {"$gte": price}}, {"$inc": {"balance": -price}})
     
-    payload = {'api_key': API_KEY, 'action': 'buy', 'product_id': str(plan["product_id"]), 'duration': str(plan["plan_name"]), 'android_id': android_id}
-    headers = {'Content-Type': 'application/x-www-form-urlencoded', 'x-master-key': MASTER_KEY}
+    settings = db.settings.find_one({"id": "global"}) or {}
+    current_api_key = settings.get("api_key", API_KEY)
+    current_master_key = settings.get("master_key", MASTER_KEY)
+    current_api_endpoint = settings.get("api_endpoint", API_ENDPOINT)
+    
+    payload = {'api_key': current_api_key, 'action': 'buy', 'product_id': str(plan["product_id"]), 'duration': str(plan["plan_name"]), 'android_id': android_id}
+    headers = {'Content-Type': 'application/x-www-form-urlencoded', 'x-master-key': current_master_key}
     
     try:
         tls_session = tls_client.Session(client_identifier="chrome_112")
-        res = tls_session.post(API_ENDPOINT, data=payload, headers=headers, timeout_seconds=15)
+        res = tls_session.post(current_api_endpoint, data=payload, headers=headers, timeout_seconds=15)
         data = res.json()
         key = data.get("key") or data.get("license") or "Error fetching key"
         
@@ -486,6 +492,24 @@ def admin_orders_list():
     orders = list(db.history.find({}).sort("date", -1))
     return render_template("admin/orders.html", orders=orders)
 
+@app.route("/admin/sales")
+def admin_sales():
+    if not session.get("admin"): return redirect("/admin")
+    
+    # Fetch all sales
+    all_sales = list(db.history.find().sort("date", -1))
+    
+    # Calculate stats
+    total_revenue = sum(float(s.get("price", 0)) for s in all_sales)
+    total_sales = len(all_sales)
+    
+    # Today's sales
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    today_sales = [s for s in all_sales if s.get("date", "").startswith(today_str)]
+    today_revenue = sum(float(s.get("price", 0)) for s in today_sales)
+    
+    return render_template("admin/sales.html", sales=all_sales, total_revenue=total_revenue, total_sales=total_sales, today_revenue=today_revenue, today_sales=len(today_sales))
+
 @app.route("/admin/transactions")
 def admin_transactions():
     if not session.get("admin"): return redirect("/admin")
@@ -593,8 +617,24 @@ def tutorial():
     user = db.users.find_one({"user_id": session["user_id"]})
     return render_template("tutorial.html", user=user, balance=user.get("balance", 0.0))
 
+@app.route("/upload_avatar", methods=["POST"])
+def upload_avatar():
+    if "user_id" not in session: return jsonify({"success": False, "error": "Not logged in"})
+    data = request.json
+    avatar_b64 = data.get("avatar")
+    if not avatar_b64: return jsonify({"success": False})
+    
+    db.users.update_one({"user_id": session["user_id"]}, {"$set": {"avatar": avatar_b64}})
+    return jsonify({"success": True})
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
+
+
+
+
 
 
 
