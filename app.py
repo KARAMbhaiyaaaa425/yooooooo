@@ -540,8 +540,14 @@ def admin_edit_product(pid):
         name = request.form.get("name", product.get("name"))
         category = request.form.get("category", product.get("category"))
         plan_name = request.form.get("plan_name", product.get("plan_name"))
-        price = float(request.form.get("price", product.get("price")))
-        api_id = request.form.get("product_id", product.get("product_id"))
+        try:
+            price = float(request.form.get("price", product.get("price"))
+        except (TypeError, ValueError):
+            price = 0.0
+        try:
+            api_id = int(request.form.get("product_id", product.get("product_id")))
+        except (TypeError, ValueError):
+            api_id = 0
         
         db.products.update_one({"id": pid}, {"$set": {
             "media_url": media_url,
@@ -574,9 +580,14 @@ def admin_add_product():
         name = request.form.get("name")
         category = request.form.get("category")
         plan_name = request.form.get("plan_name")
-        price = float(request.form.get("price"))
-        product_id = request.form.get("product_id", "0")
-        if not product_id: product_id = "0"
+        try:
+            price = float(request.form.get("price"))
+        except (TypeError, ValueError):
+            price = 0.0
+        try:
+            product_id = int(request.form.get("product_id", 0))
+        except (TypeError, ValueError):
+            product_id = 0
         media_url = request.form.get("media_url", "")
         feedback_link = request.form.get("feedback_link", "")
         updates_link = request.form.get("updates_link", "")
@@ -596,7 +607,7 @@ def admin_add_product():
             "category": category,
             "plan_name": plan_name,
             "price": price,
-            "product_id": int(product_id),
+            "product_id": product_id,
             "media_url": media_url,
             "feedback_link": feedback_link,
             "updates_link": updates_link,
@@ -616,7 +627,7 @@ def admin_add_product():
             "feedback_link": feedback_link,
             "updates_link": updates_link,
             "features": features,
-                "status": status,
+            "status": status,
                 "status_msg": status_msg,
                 "product_id": product_id
             })

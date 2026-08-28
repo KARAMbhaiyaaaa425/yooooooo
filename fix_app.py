@@ -3,37 +3,43 @@ import re
 with open('app.py', 'r', encoding='utf-8') as f:
     text = f.read()
 
-correct_block = '''@app.route("/transfer", methods=["GET", "POST"])
-def transfer():
-    if "user_id" not in session: return redirect("/")
-    user = db.users.find_one({"user_id": session["user_id"]})
-    msg = ""
-    error = ""
-    if request.method == "POST":
-        target = request.form.get("target_id")
-        amount = float(request.form.get("amount", 0))
-        if amount >= 1 and user.get("balance", 0) >= amount:
-            target_user = db.users.find_one({"user_id": target})
-            if target_user and target != session["user_id"]:
-                db.users.update_one({"user_id": session["user_id"]}, {"$inc": {"balance": -amount}})
-                db.users.update_one({"user_id": target}, {"$inc": {"balance": amount}})
-                msg = f"Success! Transferred ?{amount} to {target}"
-            else:
-                error = "Invalid User ID or cannot transfer to yourself."
-        else:
-            error = "Invalid amount or insufficient balance."
-            
-    # Refresh user to get new balance
-    user = db.users.find_one({"user_id": session["user_id"]})
-    return render_template("transfer.html", user=user, balance=user.get("balance", 0.0), msg=msg, error=error)
+# Fix admin_add_product price casting
+text = re.sub(
+    r'price = float\((request\.form\.get\("price"\))\)',
+    r'try:\n            price = float(\1)\n        except (TypeError, ValueError):\n            price = 0.0',
+    text
+)
 
-@app.route("/buy", methods=["POST"])
-def buy():
-    try:
-        if "user_id" not in session:
-            return jsonify({"success": False, "msg": "Not logged in"})'''
+# Fix admin_edit_product price casting
+text = re.sub(
+    r'price = float\((request\.form\.get\("price", product\.get\("price"\))\)\)',
+    r'try:\n            price = float(\1)\n        except (TypeError, ValueError):\n            price = 0.0',
+    text
+)
 
-text = re.sub(r'@app\.route\("/transfer", methods=\["GET", "POST"\]\)\s*def transfer\(\):\s*return jsonify\({"success": False, "msg": "Not logged in"}\)', correct_block, text)
+# Fix product_id casting in add
+text = re.sub(
+    r'product_id = request\.form\.get\("product_id", "0"\)\n\s*if not product_id: product_id = "0"',
+    r'try:\n            product_id = int(request.form.get("product_id", 0))\n        except (TypeError, ValueError):\n            product_id = 0',
+    text
+)
+# And its usage in insert_one
+text = re.sub(
+    r'"product_id": int\(product_id\),',
+    r'"product_id": product_id,',
+    text
+)
+
+# Fix product_id casting in edit
+text = re.sub(
+    r'api_id = request\.form\.get\("product_id", product\.get\("product_id"\)\)',
+    r'try:\n            api_id = int(request.form.get("product_id", product.get("product_id")))\n        except (TypeError, ValueError):\n            api_id = 0',
+    text
+)
+
+# Fix the broken indentation in add_another
+text = text.replace('            "media_url": media_url,\n            "feedback_link": feedback_link,\n            "updates_link": updates_link,\n            "features": features,\n                "status": status,', '            "media_url": media_url,\n            "feedback_link": feedback_link,\n            "updates_link": updates_link,\n            "features": features,\n            "status": status,')
+
 
 with open('app.py', 'w', encoding='utf-8') as f:
     f.write(text)
