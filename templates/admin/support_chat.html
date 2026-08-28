@@ -13,16 +13,22 @@
     <div class="bg-gray-800 border border-gray-700 rounded-2xl flex flex-col h-[60vh] shadow-lg relative overflow-hidden">
         <!-- Chat Area -->
         <div class="flex-1 overflow-y-auto p-5 space-y-4" id="chatBox">
-            {% for msg in ticket.messages %}
+                        {% for msg in ticket.messages %}
                 {% if msg.sender == 'user' %}
                 <!-- User Message -->
                 <div class="flex gap-3">
                     <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 shrink-0">
                         <i class="fa-solid fa-user text-xs"></i>
                     </div>
-                    <div>
-                        <div class="bg-gray-700 border border-gray-600 rounded-2xl rounded-tl-sm px-4 py-2 max-w-[100%]">
-                            <p class="text-sm text-white">{{ msg.text }}</p>
+                    <div class="max-w-[75%]">
+                        <div class="bg-gray-700 border border-gray-600 rounded-2xl rounded-tl-sm px-4 py-2">
+                            {% if msg.text.startswith('data:image') %}
+                                <img src="{{ msg.text }}" class="w-full rounded-lg mb-1" onclick="window.open(this.src)">
+                            {% elif msg.text.startswith('data:audio') %}
+                                <audio src="{{ msg.text }}" controls class="max-w-full h-8"></audio>
+                            {% else %}
+                                <p class="text-sm text-white">{{ msg.text }}</p>
+                            {% endif %}
                         </div>
                         <p class="text-[9px] text-gray-500 mt-1 ml-1">{{ msg.time }}</p>
                     </div>
@@ -30,9 +36,15 @@
                 {% else %}
                 <!-- Admin Message -->
                 <div class="flex flex-row-reverse gap-3">
-                    <div>
-                        <div class="bg-blue-600 rounded-2xl rounded-tr-sm px-4 py-2 max-w-[100%] shadow-[0_0_15px_rgba(37,99,235,0.2)]">
-                            <p class="text-sm text-white">{{ msg.text }}</p>
+                    <div class="max-w-[75%]">
+                        <div class="bg-blue-600 rounded-2xl rounded-tr-sm px-4 py-2 shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+                            {% if msg.text.startswith('data:image') %}
+                                <img src="{{ msg.text }}" class="w-full rounded-lg mb-1" onclick="window.open(this.src)">
+                            {% elif msg.text.startswith('data:audio') %}
+                                <audio src="{{ msg.text }}" controls class="max-w-full h-8"></audio>
+                            {% else %}
+                                <p class="text-sm text-white">{{ msg.text }}</p>
+                            {% endif %}
                         </div>
                         <p class="text-[9px] text-gray-500 mt-1 mr-1 text-right">{{ msg.time }}</p>
                     </div>
@@ -58,3 +70,4 @@
     chatBox.scrollTop = chatBox.scrollHeight;
 </script>
 {% endblock %}
+

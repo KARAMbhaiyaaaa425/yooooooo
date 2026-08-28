@@ -39,9 +39,20 @@
 
             <h4 class="text-lg font-bold text-green-400 mb-4 border-b border-gray-700 pb-2 mt-6">Design & Features</h4>
 
-            <div class="mb-4">
+                        <div class="mb-4">
                 <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Image or Video URL</label>
                 <input type="url" name="media_url" value="{{ product.media_url | default('') }}" placeholder="https://example.com/video.mp4" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Check File Feedback Link</label>
+                    <input type="url" name="feedback_link" value="{{ product.feedback_link | default('') }}" placeholder="https://t.me/..." class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Check File Updates Link</label>
+                    <input type="url" name="updates_link" value="{{ product.updates_link | default('') }}" placeholder="https://t.me/..." class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                </div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -73,3 +84,4 @@
     </div>
 </div>
 {% endblock %}
+
