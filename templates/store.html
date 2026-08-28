@@ -1,24 +1,74 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<!-- Hide horizontal scrollbar if categories overflow -->
+<style>
+    .hide-scroll::-webkit-scrollbar { display: none; }
+    .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+
 <div class="mb-4">
-    <h2 class="text-2xl font-bold text-white">Product Store</h2>
-    <p class="text-gray-400 text-sm">Purchase keys instantly 24/7</p>
+    <h2 class="text-2xl font-black text-white italic tracking-wider">PRODUCT <span class="text-blue-500">STORE</span></h2>
 </div>
 
-<div class="space-y-4">
+<div class="space-y-6">
     {% for p in products %}
-    <div class="bg-gray-800 rounded-2xl p-5 border border-gray-700 shadow-md">
-        <div class="flex justify-between items-start mb-2">
-            <span class="text-[10px] font-bold px-2 py-1 bg-gray-700/50 text-blue-400 rounded-md tracking-wider uppercase">{{ p.category }}</span>
-            <span class="text-lg font-bold text-green-400">₹{{ p.price }}</span>
-        </div>
-        <h4 class="text-lg font-bold text-white mb-1">{{ p.name }}</h4>
-        <p class="text-gray-400 text-sm mb-4"><i class="fa-regular fa-clock mr-1"></i> {{ p.plan_name }}</p>
+    <div class="bg-[#0b0c10] rounded-2xl border-2 border-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.5)] overflow-hidden relative">
         
-        <button onclick="buyProduct({{ p.id }}, '{{ p.name }}', {{ p.price }})" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-900/20 transition flex justify-center items-center gap-2 active:scale-[0.98]">
-            <i class="fa-solid fa-cart-shopping"></i> Purchase Key
-        </button>
+        <!-- Top Tags -->
+        <div class="absolute top-3 left-3 z-10 flex gap-2">
+            <span class="text-[10px] font-bold px-2 py-1 bg-teal-900/80 text-teal-300 border border-teal-500/50 rounded uppercase tracking-widest backdrop-blur-sm shadow-lg">{{ p.category }}</span>
+            <span class="text-[10px] font-bold px-2 py-1 bg-purple-900/80 text-purple-300 border border-purple-500/50 rounded uppercase tracking-widest backdrop-blur-sm shadow-lg">{{ p.plan_name }}</span>
+        </div>
+        
+        <!-- Media Section -->
+        <div class="relative w-full h-48 bg-black flex items-center justify-center border-b border-gray-800">
+            {% if p.media_url %}
+                {% if p.media_url.endswith('.mp4') %}
+                    <video src="{{ p.media_url }}" class="w-full h-full object-cover opacity-80" controls></video>
+                {% else %}
+                    <img src="{{ p.media_url }}" class="w-full h-full object-cover opacity-80">
+                {% endif %}
+            {% else %}
+                <div class="text-center text-gray-600">
+                    <i class="fa-solid fa-gamepad text-5xl mb-2"></i>
+                    <p class="text-xs uppercase tracking-widest">No Media</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="p-5">
+            <!-- Title -->
+            <h4 class="text-xl font-black text-white text-center uppercase tracking-wider mb-4 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{{ p.name }}</h4>
+            
+            <!-- Features List -->
+            <div class="space-y-2 mb-6">
+                {% if p.features %}
+                    {% for feature in p.features.split('\n') %}
+                        {% if feature.strip() %}
+                        <div class="bg-[#111827] rounded-lg p-2.5 border border-gray-800 flex items-center gap-3">
+                            <i class="fa-solid fa-bolt text-cyan-400 text-sm drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]"></i>
+                            <span class="text-sm font-bold text-gray-200">{{ feature.strip() }}</span>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="bg-[#111827] rounded-lg p-2.5 border border-gray-800 flex items-center gap-3">
+                        <i class="fa-solid fa-bolt text-cyan-400 text-sm drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]"></i>
+                        <span class="text-sm font-bold text-gray-200">Standard Delivery</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="text-center mb-3">
+                <i class="fa-solid fa-chevron-down text-gray-600 text-sm"></i>
+            </div>
+            
+            <!-- Buy Button -->
+            <button onclick="buyProduct({{ p.id }}, '{{ p.name }}', {{ p.price }})" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-4 rounded-xl shadow-[0_0_15px_rgba(99,102,241,0.5)] transition flex justify-center items-center gap-2 active:scale-95 uppercase tracking-widest text-sm border border-indigo-400/50">
+                BUY RESELLER KEY — ₹{{ p.price }}
+            </button>
+        </div>
     </div>
     {% endfor %}
 </div>
@@ -26,22 +76,22 @@
 <script>
 function buyProduct(productId, name, price) {
     Swal.fire({
-        title: 'Confirm Purchase',
+        title: 'CONFIRM PURCHASE',
         html: `<p class="text-gray-300">Buy <b>${name}</b> for <b class="text-green-400">₹${price}</b>?</p>`,
-        icon: 'question',
+        icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#2563eb',
+        confirmButtonColor: '#4f46e5',
         cancelButtonColor: '#374151',
-        confirmButtonText: 'Buy Now',
-        background: '#1f2937',
+        confirmButtonText: 'BUY NOW',
+        background: '#0b0c10',
         color: '#fff'
     }).then((result) => {
         if (result.isConfirmed) {
             Swal.fire({
-                title: 'Generating Key...',
+                title: 'GENERATING KEY...',
                 text: 'Please wait...',
                 allowOutsideClick: false,
-                background: '#1f2937', color: '#fff',
+                background: '#0b0c10', color: '#fff',
                 didOpen: () => { Swal.showLoading() }
             });
 
@@ -53,18 +103,18 @@ function buyProduct(productId, name, price) {
             .then(data => {
                 if(data.success) {
                     Swal.fire({
-                        title: 'Success!',
-                        html: `<p class="text-gray-400 mb-2">Your License Key:</p>
-                               <div class="bg-gray-900 text-green-400 p-3 rounded-lg border border-gray-700 text-lg font-mono font-bold select-all break-all">${data.key}</div>`,
+                        title: 'SUCCESS!',
+                        html: `<p class="text-gray-400 mb-2 uppercase text-xs tracking-widest">Your License Key</p>
+                               <div class="bg-gray-900 text-green-400 p-4 rounded-lg border border-gray-700 text-lg font-mono font-bold select-all break-all shadow-[0_0_10px_rgba(74,222,128,0.2)]">${data.key}</div>`,
                         icon: 'success',
-                        confirmButtonText: 'Copy & Close',
-                        background: '#1f2937', color: '#fff'
+                        confirmButtonText: 'COPY & CLOSE',
+                        background: '#0b0c10', color: '#fff'
                     }).then(() => {
                         navigator.clipboard.writeText(data.key);
                         location.reload();
                     });
                 } else {
-                    Swal.fire({title: 'Failed', text: data.msg, icon: 'error', background: '#1f2937', color: '#fff'});
+                    Swal.fire({title: 'FAILED', text: data.msg, icon: 'error', background: '#0b0c10', color: '#fff'});
                 }
             });
         }
