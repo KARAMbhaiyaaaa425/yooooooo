@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="mb-8 mt-2 flex items-center gap-4">
+    <a href="/dashboard" class="text-gray-300 hover:text-white text-xl"><i class="fa-solid fa-arrow-left"></i></a>
+    <h2 class="text-3xl font-bold text-white tracking-wide">Settings</h2>
+</div>
+
+<div class="space-y-2 mb-20">
+    
+    <a href="/settings/appearance" class="flex items-center gap-4 p-4 text-gray-300 hover:bg-gray-800/50 rounded-2xl transition">
+        <i class="fa-solid fa-palette text-xl w-6 text-center"></i>
+        <span class="text-lg font-medium">Appearance</span>
+    </a>
+    
+    <a href="/settings/about" class="flex items-center gap-4 p-4 text-gray-300 hover:bg-gray-800/50 rounded-2xl transition">
+        <i class="fa-solid fa-circle-info text-xl w-6 text-center"></i>
+        <span class="text-lg font-medium">About</span>
+    </a>
+</div>
+{% endblock %}

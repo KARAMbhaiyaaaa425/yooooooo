@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="mb-6 flex items-center gap-3">
+    <a href="/dashboard" class="text-white hover:text-gray-300"><i class="fa-solid fa-chevron-left"></i></a>
+    <h2 class="text-2xl font-bold text-white tracking-wide uppercase">Notifications</h2>
+</div>
+
+<div class="space-y-4 mb-20 px-2">
+    {% for n in notifications %}
+    <div class="bg-card border border-gray-800 rounded-2xl p-5 relative overflow-hidden group hover:border-gray-600 transition">
+        <!-- Glow effect behind icon -->
+        <div class="absolute -top-4 -right-4 w-20 h-20 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition theme-bg-subtle"></div>
+        
+        <div class="flex gap-4">
+            <div class="w-12 h-12 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center text-blue-400 shrink-0 z-10 theme-text theme-border">
+                <i class="fa-solid fa-bell text-xl"></i>
+            </div>
+            <div class="z-10">
+                <div class="flex justify-between items-start mb-1">
+                    <h3 class="font-bold text-white text-md uppercase tracking-wider">{{ n.title }}</h3>
+                </div>
+                <p class="text-xs text-blue-400 font-bold mb-2 tracking-widest theme-text">{{ n.date }}</p>
+                <p class="text-sm text-gray-400 leading-relaxed">{{ n.message }}</p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-20">
+        <div class="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-4 text-gray-500 text-3xl shadow-inner">
+            <i class="fa-solid fa-bell-slash"></i>
+        </div>
+        <h3 class="text-white font-bold mb-1 uppercase tracking-wider text-xl">All Caught Up</h3>
+        <p class="text-xs text-gray-500 font-medium">You don't have any new notifications.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -2,29 +2,87 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login - Karan Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Montserrat', 'sans-serif'] },
+                    colors: {
+                        dark: '#0a0e17',
+                        card: '#111827',
+                        primary: '#2563eb'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; background-color: #0a0e17; color: #f8fafc; }
+    </style>
 </head>
-<body class="bg-gray-900 text-white h-screen flex items-center justify-center">
-    <div class="bg-gray-800 p-8 rounded-xl shadow-lg w-96 text-center border border-gray-700">
-        <h1 class="text-3xl font-bold mb-2 text-blue-400">Karan Store</h1>
-        <p class="text-gray-400 mb-6 text-sm">Login using your Telegram User ID</p>
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <div class="w-full max-w-sm bg-card border border-gray-800 rounded-3xl p-8 text-center relative z-10 shadow-2xl">
+        <div class="w-20 h-20 mx-auto bg-blue-900/30 border-4 border-blue-600 rounded-full flex items-center justify-center text-blue-500 text-3xl mb-4 shadow-[0_0_20px_rgba(37,99,235,0.4)]">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        
+        <h1 class="text-3xl font-black mb-1 text-white uppercase tracking-wider">KARAN <span class="text-blue-500">STORE</span></h1>
+        
+        {% if is_admin %}
+            <p class="text-gray-400 mb-8 text-xs font-bold tracking-widest uppercase">Admin Portal</p>
+        {% else %}
+            <p class="text-gray-400 mb-8 text-xs font-bold tracking-widest uppercase">Login to your account</p>
+        {% endif %}
         
         {% if error %}
-        <div class="bg-red-500/20 text-red-400 p-3 rounded-lg mb-4 text-sm">{{ error }}</div>
+        <div class="bg-red-500/20 border border-red-500/50 text-red-400 p-3 rounded-xl mb-6 text-xs font-bold flex items-center justify-center gap-2">
+            <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+        </div>
         {% endif %}
         
         <form method="POST">
             {% if is_admin %}
-            <input type="text" name="username" placeholder="Admin Username" required class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 text-center text-lg">
-            <input type="password" name="password" placeholder="Admin Password" required class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 text-center text-lg">
-            <button type="submit" class="w-full bg-red-600 hover:bg-red-500 font-bold py-3 rounded-lg transition duration-200">ADMIN LOGIN</button>
+                <div class="space-y-4 mb-6">
+                    <input type="text" name="username" placeholder="Admin Username" required class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-4 rounded-xl focus:outline-none focus:border-red-500 text-center font-bold uppercase tracking-widest text-sm transition">
+                    <input type="password" name="password" placeholder="Admin Password" required class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-4 rounded-xl focus:outline-none focus:border-red-500 text-center font-bold tracking-widest text-sm transition">
+                </div>
+                <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-xl transition shadow-[0_0_15px_rgba(220,38,38,0.4)] tracking-widest uppercase">LOGIN TO ADMIN</button>
+                <a href="/" class="mt-6 block text-xs text-gray-500 font-bold hover:text-white uppercase tracking-widest">Back to Store</a>
+            
             {% else %}
-            <input type="text" name="user_id" placeholder="Enter Telegram User ID" required class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 text-center text-lg">
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 font-bold py-3 rounded-lg transition duration-200">LOGIN</button>
-            <p class="mt-4 text-xs text-gray-500">Go to Telegram Bot and check your Profile to find your User ID.</p>
-            <a href="/admin" class="mt-4 inline-block text-xs text-red-400 hover:text-red-300">Owner Login</a>
+                <div class="space-y-4 mb-6 relative">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <input type="email" name="email" placeholder="Email Address" required class="w-full bg-gray-900 border border-gray-700 text-white pl-10 pr-4 py-4 rounded-xl focus:outline-none focus:border-blue-500 text-center font-bold tracking-widest text-sm transition">
+                    </div>
+                    
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <input type="password" name="password" placeholder="Password" required class="w-full bg-gray-900 border border-gray-700 text-white pl-10 pr-4 py-4 rounded-xl focus:outline-none focus:border-blue-500 text-center font-bold tracking-widest text-sm transition">
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition shadow-[0_0_15px_rgba(37,99,235,0.4)] tracking-widest uppercase flex items-center justify-center gap-2 mb-4">
+                    LOGIN <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                
+                <p class="mt-6 text-sm text-gray-400 font-medium">Don't have an account? <br>
+                    <a href="/register" class="text-blue-400 font-bold hover:text-blue-300">Create Account</a>
+                </p>
+
+                <a href="/admin" class="mt-6 block text-[10px] text-gray-600 font-bold hover:text-red-400 uppercase tracking-widest transition"><i class="fa-solid fa-lock mr-1"></i> Owner Portal</a>
             {% endif %}
         </form>
     </div>

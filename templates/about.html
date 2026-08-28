@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="mb-8 mt-2 flex items-center gap-4">
+    <a href="/settings" class="text-gray-300 hover:text-white text-xl"><i class="fa-solid fa-arrow-left"></i></a>
+    <h2 class="text-2xl font-bold text-gray-200 tracking-wide uppercase">About App</h2>
+</div>
+
+<div class="flex flex-col items-center justify-center mb-10 mt-6">
+    {% if settings.app_logo %}
+    <img src="{{ settings.app_logo }}" alt="Logo" class="w-24 h-24 rounded-full mb-4 shadow-[0_0_20px_rgba(37,99,235,0.3)] theme-shadow">
+    {% else %}
+    <div class="w-24 h-24 rounded-full bg-blue-900/30 border-4 border-blue-600 flex items-center justify-center text-blue-500 text-4xl mb-4 shadow-[0_0_20px_rgba(37,99,235,0.3)] theme-shadow theme-bg-subtle theme-border theme-text">
+        <i class="fa-solid fa-store"></i>
+    </div>
+    {% endif %}
+    
+    <h3 class="text-3xl font-black text-white uppercase tracking-wider">{{ settings.app_name | default('KARAN STORE') }}</h3>
+    <p class="text-xs text-gray-500 mt-1 font-bold tracking-widest">VERSION 2.0.0 (BETA)</p>
+</div>
+
+<div class="space-y-4 mb-20 px-2">
+    
+    <a href="https://t.me/{{ settings.telegram | default('Karan_store') | replace('@', '') }}" target="_blank" class="flex items-center justify-between p-4 bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-2xl transition group">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 theme-bg-subtle theme-text">
+                <i class="fa-brands fa-telegram text-xl"></i>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-white uppercase tracking-wider">Telegram</p>
+                <p class="text-xs text-gray-500">@{{ settings.telegram | default('Karan_store') | replace('@', '') }}</p>
+            </div>
+        </div>
+        <i class="fa-solid fa-arrow-up-right-from-square text-gray-600 group-hover:text-blue-400 theme-hover-text text-sm transition"></i>
+    </a>
+    
+    <a href="https://instagram.com/{{ settings.instagram | default('Karan_store') | replace('@', '') }}" target="_blank" class="flex items-center justify-between p-4 bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-2xl transition group">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-pink-500/10 flex items-center justify-center text-pink-400">
+                <i class="fa-brands fa-instagram text-xl"></i>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-white uppercase tracking-wider">Instagram</p>
+                <p class="text-xs text-gray-500">@{{ settings.instagram | default('Karan_store') | replace('@', '') }}</p>
+            </div>
+        </div>
+        <i class="fa-solid fa-arrow-up-right-from-square text-gray-600 group-hover:text-pink-400 text-sm transition"></i>
+    </a>
+    
+    <button onclick="Swal.fire({title:'Rate Us', html:'<div class=\'flex justify-center gap-2 text-3xl text-yellow-400 my-4\'><i class=\'fa-solid fa-star\'></i><i class=\'fa-solid fa-star\'></i><i class=\'fa-solid fa-star\'></i><i class=\'fa-solid fa-star\'></i><i class=\'fa-solid fa-star\'></i></div><p class=\'text-sm text-gray-300\'>Thank you for your support!</p>', confirmButtonText: 'Submit', background:'#111827', color:'#fff', confirmButtonColor: '#2563eb'})" class="w-full flex items-center justify-between p-4 bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-2xl transition group text-left">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-400">
+                <i class="fa-solid fa-star text-lg"></i>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-white uppercase tracking-wider">Rate The App</p>
+                <p class="text-xs text-gray-500">Show some love 💖</p>
+            </div>
+        </div>
+        <i class="fa-solid fa-chevron-right text-gray-600 group-hover:text-yellow-400 text-sm transition"></i>
+    </button>
+
+</div>
+{% endblock %}

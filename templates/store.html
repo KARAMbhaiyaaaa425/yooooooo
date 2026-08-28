@@ -1,6 +1,12 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<style>
+    .plan-dropdown { transition: max-height 0.3s ease-in-out; max-height: 0; overflow: hidden; }
+    .plan-dropdown.open { max-height: 1000px; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+</style>
+
 <div class="mb-4 mt-2 flex items-center justify-between">
     <button onclick="toggleSidebar()" class="text-white text-xl md:hidden block"><i class="fa-solid fa-bars"></i></button>
     <div class="bg-card border border-gray-800 rounded-lg px-3 py-1 flex items-center gap-2">
@@ -14,24 +20,24 @@
     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
         <i class="fa-solid fa-search text-gray-500"></i>
     </div>
-    <input type="text" id="searchInput" onkeyup="searchProducts()" class="w-full bg-card border border-gray-800 text-white text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-blue-500 transition" placeholder="Search keys...">
+    <input type="text" id="searchInput" onkeyup="searchProducts()" class="w-full bg-card border border-gray-800 text-white text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-blue-500 transition font-medium" placeholder="SEARCH HACKS...">
 </div>
 
 <!-- Category Filters -->
 <div class="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-    <button onclick="filterCategory('all', this)" class="cat-btn shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-[11px] font-bold shadow-md transition">All</button>
+    <button onclick="filterCategory('all', this)" class="cat-btn shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-[11px] font-bold shadow-md transition uppercase">ALL</button>
     {% set categories = [] %}
     {% for p in products %}
         {% if p.category not in categories %}
             {% set _ = categories.append(p.category) %}
-            <button onclick="filterCategory('{{ p.category }}', this)" class="cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 hover:text-white px-4 py-1.5 rounded-full text-[11px] font-bold transition">{{ p.category }}</button>
+            <button onclick="filterCategory('{{ p.category }}', this)" class="cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 hover:text-white px-4 py-1.5 rounded-full text-[11px] font-bold transition uppercase">{{ p.category }}</button>
         {% endif %}
     {% endfor %}
 </div>
 
 <div class="flex justify-between items-center mb-4">
-    <h3 class="text-sm font-bold text-white">Popular Keys</h3>
-    <a href="#" class="text-xs text-blue-500 font-semibold hover:text-blue-400">View All</a>
+    <h3 class="text-sm font-bold text-white uppercase tracking-wider">POPULAR KEYS</h3>
+    <a href="#" class="text-[10px] text-blue-500 font-bold hover:text-blue-400 uppercase tracking-wider">VIEW ALL</a>
 </div>
 
 <!-- Products List -->
@@ -40,60 +46,81 @@
     <div class="product-card bg-card border border-gray-800 rounded-2xl overflow-hidden relative" data-category="{{ p.category }}" data-name="{{ p.name | lower }}">
         
         <!-- Image Section -->
-        <div class="relative w-full h-36 bg-gray-900 overflow-hidden">
+        <div class="relative w-full h-40 bg-black flex items-center justify-center border-b border-gray-800 overflow-hidden group">
             {% if p.media_url %}
                 {% if p.media_url.endswith('.mp4') %}
-                    <video id="vid-{{ loop.index }}" src="{{ p.media_url }}" class="w-full h-full object-cover opacity-80" loop muted playsinline></video>
+                    <video id="vid-{{ loop.index }}" src="{{ p.media_url }}" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-500" loop muted playsinline></video>
                     <button onclick="let v = document.getElementById('vid-{{ loop.index }}'); if(v.paused){v.play(); this.style.display='none';}else{v.pause();}" class="absolute inset-0 flex items-center justify-center z-10">
                         <div class="w-12 h-12 rounded-full border border-white/50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                             <i class="fa-solid fa-play text-white ml-1"></i>
                         </div>
                     </button>
                 {% else %}
-                    <img src="{{ p.media_url }}" class="w-full h-full object-cover opacity-90">
+                    <img src="{{ p.media_url }}" class="w-full h-full object-cover opacity-80">
                 {% endif %}
             {% else %}
                 <div class="w-full h-full flex items-center justify-center text-gray-700">
-                    <i class="fa-solid fa-image text-4xl"></i>
+                    <i class="fa-solid fa-gamepad text-4xl"></i>
                 </div>
             {% endif %}
             
             <div class="absolute top-2 left-2 z-10">
-                <span class="bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase">{{ p.category }}</span>
+                <span class="bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">{{ p.category }}</span>
             </div>
             
-            <div class="absolute top-2 right-2 z-10">
-                <button class="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-gray-300 hover:text-pink-500 transition">
-                    <i class="fa-regular fa-heart text-sm"></i>
-                </button>
+            <!-- Badges -->
+            <div class="absolute top-2 right-2 z-10 flex gap-1">
+                {% set s = p.plans[0].status | default('SAFE') %}
+                {% if s == 'SAFE' %}
+                    <span class="bg-green-500/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">✅ SAFE</span>
+                {% elif s == 'UPDATING' %}
+                    <span class="bg-yellow-500/90 text-black text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">⚠️ UPDATING</span>
+                {% else %}
+                    <span class="bg-red-600/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">❌ PATCHED</span>
+                {% endif %}
             </div>
         </div>
         
         <!-- Details Section -->
         <div class="p-4">
-            <h3 class="text-white font-black text-lg uppercase tracking-wide">{{ p.name }}</h3>
-            <p class="text-[10px] text-gray-500 mb-3">{{ p.category }} Access</p>
+            <h3 class="text-white font-black text-xl uppercase tracking-wide mb-2">{{ p.name }}</h3>
             
-            <div class="flex items-center gap-2 mb-4 text-[10px] text-gray-400">
-                <div class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> {{ p.plan_name }} Validity</div>
+            <!-- Features list if present -->
+            {% if p.features %}
+            <div class="text-[10px] text-gray-400 mb-4 font-medium leading-relaxed uppercase whitespace-pre-line">
+                {{ p.features }}
             </div>
+            {% endif %}
             
-            <div class="flex justify-between items-center mt-2">
-                <div>
-                    <span class="text-xl font-bold text-green-400">₹{{ p.price }}</span>
+            <!-- Dropdown Toggle Button -->
+            <button onclick="document.getElementById('plans-{{ loop.index }}').classList.toggle('open')" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-lg text-xs shadow-md transition flex items-center justify-between px-4 uppercase tracking-wider">
+                <span>SELECT PLAN</span>
+                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+            </button>
+            
+            <!-- Plans Dropdown -->
+            <div id="plans-{{ loop.index }}" class="plan-dropdown mt-2 space-y-2">
+                {% for plan in p.plans %}
+                <div class="bg-gray-900 border border-gray-700 rounded-lg p-3 flex justify-between items-center hover:border-gray-500 transition">
+                    <div>
+                        <p class="text-sm font-bold text-white uppercase">{{ plan.plan_name }}</p>
+                        <p class="text-xs font-bold text-green-400">₹{{ plan.price }}</p>
+                    </div>
+                    
+                    {% set status = plan.status | default('SAFE') %}
+                    {% if status == 'SAFE' %}
+                        <button onclick="buyProduct('{{ plan.id }}', '{{ plan.name }} ({{ plan.plan_name }})', '{{ plan.price }}')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-1.5 rounded-md text-[10px] uppercase shadow-md transition tracking-wider">
+                            BUY NOW
+                        </button>
+                    {% else %}
+                        <button onclick="Swal.fire({title:'UNAVAILABLE', text:'{{ plan.status_msg | default('Product is patched or updating.') }}', icon:'error', background:'#111827', color:'#fff'})" class="bg-gray-700 text-gray-400 font-bold px-4 py-1.5 rounded-md text-[10px] uppercase cursor-not-allowed tracking-wider">
+                            <i class="fa-solid fa-lock mr-1"></i> {{ status }}
+                        </button>
+                    {% endif %}
                 </div>
-                
-                {% set s = p.status | default('SAFE') %}
-                {% if s == 'SAFE' %}
-                    <button onclick="buyProduct('{{ p.id }}', '{{ p.name }}', '{{ p.price }}')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-2 rounded-lg text-xs shadow-[0_0_10px_rgba(37,99,235,0.4)] transition">
-                        Buy Now
-                    </button>
-                {% else %}
-                    <button onclick="Swal.fire({title:'Unavailable', text:'{{ p.status_msg | default('Product is patched or updating.') }}', icon:'error', background:'#111827', color:'#fff'})" class="bg-gray-700 text-gray-400 font-bold px-6 py-2 rounded-lg text-xs cursor-not-allowed">
-                        <i class="fa-solid fa-lock text-[10px] mr-1"></i> {{ s }}
-                    </button>
-                {% endif %}
+                {% endfor %}
             </div>
+            
         </div>
         
     </div>
@@ -103,8 +130,8 @@
 <script>
 function filterCategory(category, btnElement) {
     const buttons = document.querySelectorAll('.cat-btn');
-    buttons.forEach(btn => btn.className = 'cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 hover:text-white px-4 py-1.5 rounded-full text-[11px] font-bold transition');
-    btnElement.className = 'cat-btn shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-[11px] font-bold shadow-md transition';
+    buttons.forEach(btn => btn.className = 'cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 hover:text-white px-4 py-1.5 rounded-full text-[11px] font-bold transition uppercase');
+    btnElement.className = 'cat-btn shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-[11px] font-bold shadow-md transition uppercase';
     
     const cards = document.querySelectorAll('.product-card');
     cards.forEach(card => {
@@ -125,17 +152,17 @@ function searchProducts() {
 
 function buyProduct(productId, name, price) {
     Swal.fire({
-        title: 'Confirm Purchase',
-        html: `<p class="text-sm text-gray-300">Are you sure you want to buy <b>${name}</b> for <b class="text-green-400">₹${price}</b>?</p>`,
+        title: 'CONFIRM PURCHASE',
+        html: `<p class="text-sm text-gray-300 uppercase font-medium mt-2">ARE YOU SURE YOU WANT TO BUY <br><b class="text-white">${name}</b> FOR <b class="text-green-400">₹${price}</b>?</p>`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#2563eb',
         cancelButtonColor: '#1f2937',
-        confirmButtonText: 'Yes, Buy it!',
+        confirmButtonText: 'YES, BUY IT!',
         background: '#111827', color: '#fff'
     }).then((result) => {
         if (result.isConfirmed) {
-            Swal.fire({ title: 'Processing...', allowOutsideClick: false, background: '#111827', color: '#fff', didOpen: () => { Swal.showLoading() } });
+            Swal.fire({ title: 'PROCESSING...', allowOutsideClick: false, background: '#111827', color: '#fff', didOpen: () => { Swal.showLoading() } });
             
             let formData = new FormData();
             formData.append('product_id', productId);
@@ -146,7 +173,7 @@ function buyProduct(productId, name, price) {
                 if(data.success) {
                     Swal.fire({
                         title: 'SUCCESS!',
-                        html: `<p class="text-gray-400 mb-2 uppercase text-xs tracking-widest">Your License Key</p>
+                        html: `<p class="text-gray-400 mb-2 uppercase text-[10px] tracking-widest font-bold">YOUR LICENSE KEY</p>
                                <div class="bg-gray-900 text-green-400 p-4 rounded-lg border border-gray-700 text-sm font-mono font-bold select-all break-all shadow-inner">${data.key}</div>`,
                         icon: 'success',
                         confirmButtonText: 'COPY & CLOSE',
