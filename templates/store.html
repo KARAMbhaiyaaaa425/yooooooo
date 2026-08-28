@@ -97,12 +97,14 @@
         <!-- Details Section -->
         <div class="p-5 bg-card">
             
-            <!-- Status Msg (Yellow Box) -->
-            {% set status_msg = p.plans[0].status_msg | default('SECOND ID USE ALWAYS') %}
+                        <!-- Status Msg (Yellow Box) -->
+            {% set status_msg = p.plans[0].status_msg | default('', true) %}
+            {% if status_msg %}
             <div class="bg-[#1a1506] border border-yellow-900/50 rounded-xl p-3.5 mb-4 flex items-center gap-2.5 shadow-inner">
-                
+                <span class="text-sm drop-shadow-md">??</span>
                 <p class="text-yellow-500 text-[11px] font-bold uppercase tracking-wider">{{ status_msg }}</p>
             </div>
+            {% endif %}
             
             <!-- Features (Lightning Bolts) -->
             {% if p.features %}
@@ -200,7 +202,7 @@ function togglePlanDropdown(index) {
 function buyProduct(productId, name, price) {
     Swal.fire({
         title: 'CONFIRM PURCHASE',
-        html: <p class="text-sm text-gray-300 uppercase font-medium mt-2">ARE YOU SURE YOU WANT TO BUY <br><b class="text-white">+name+</b> FOR <b class="text-green-400">?+price+</b>?</p>,
+        html: '<p class="text-sm text-gray-300 uppercase font-medium mt-2">ARE YOU SURE YOU WANT TO BUY <br><b class="text-white">' + name + '</b> FOR <b class="text-green-400">?' + price + '</b>?</p>',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#2563eb',
@@ -246,6 +248,8 @@ function buyProduct(productId, name, price) {
 }
 </script>
 {% endblock %}
+
+
 
 
 
