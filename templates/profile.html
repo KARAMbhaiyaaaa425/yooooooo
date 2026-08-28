@@ -224,7 +224,7 @@
     }
     
     function setBannerImage(url) {
-        currentBgStyle = url('');
+        currentBgStyle = "url('" + url + "')";
         applyBackground(currentBgStyle);
         updateSelectionUI();
     }
@@ -251,17 +251,20 @@
         // Add checkmark to selected
         const isUrl = currentBgStyle.includes('url');
         if (isUrl) {
-            const url = currentBgStyle.match(/url\('(.*)'\)/)[1];
-            const btn = document.querySelector(.img-btn[data-img=""]);
-            if (btn) {
-                btn.classList.add('border-blue-500');
-                btn.classList.remove('border-transparent');
-                btn.innerHTML = <div class="absolute bottom-1 right-1 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px]"><i class="fa-solid fa-check"></i></div>;
+            const urlMatch = currentBgStyle.match(/url\('(.*)'\)/);
+            if (urlMatch) {
+                const url = urlMatch[1];
+                const btn = document.querySelector('.img-btn[data-img="' + url + '"]');
+                if (btn) {
+                    btn.classList.add('border-blue-500');
+                    btn.classList.remove('border-transparent');
+                    btn.innerHTML = '<div class="absolute bottom-1 right-1 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px]"><i class="fa-solid fa-check"></i></div>';
+                }
             }
         } else {
-            const btn = document.querySelector(.color-btn[data-color=""]);
+            const btn = document.querySelector('.color-btn[data-color="' + currentBgStyle + '"]');
             if (btn) {
-                btn.innerHTML = <i class="fa-solid fa-check text-white text-xs"></i>;
+                btn.innerHTML = '<i class="fa-solid fa-check text-white text-xs"></i>';
             }
         }
     }
