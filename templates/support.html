@@ -39,7 +39,7 @@
     <div class="flex-grow border-t border-gray-800"></div>
 </div>
 
-<div id="chatContainer" class="bg-[#0a0f1c] border border-gray-800 rounded-2xl flex flex-col shadow-lg relative overflow-hidden" style="min-height: 400px; margin-bottom: 90px;">
+<div id="chatContainer" class="bg-[#0a0f1c] border border-gray-800 rounded-2xl flex flex-col shadow-lg relative overflow-hidden" style="height: calc(100dvh - 270px);">
     
     <div class="flex justify-center mt-3">
         <span class="bg-[#121b2d] border border-gray-800 text-gray-400 text-[10px] px-3 py-1 rounded-full">Today</span>
@@ -118,11 +118,9 @@
             
             <i class="fa-solid fa-paperclip absolute left-3 text-gray-400 text-sm cursor-pointer hover:text-white transition z-10" onclick="document.getElementById('mediaUpload').click()"></i>
             
-            <input type="text" id="textInput" placeholder="Type your message..." autocomplete="off" class="flex-1 bg-[#121b2d] border border-gray-700 text-white rounded-full pl-10 pr-12 py-3 text-sm focus:outline-none focus:border-blue-500 transition shadow-inner">
+                        <input type="text" id="textInput" placeholder="Type your message..." autocomplete="off" class="flex-1 bg-[#121b2d] border border-gray-700 text-white rounded-full pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition shadow-inner">
             
-            <i class="fa-solid fa-microphone absolute right-[4.2rem] text-gray-400 text-sm cursor-pointer hover:text-red-400 transition z-10" id="micBtn" onclick="startRecording()"></i>
-            
-            <button type="submit" onclick="return submitChat()" class="w-11 h-11 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0 transition shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                        <button type="submit" onclick="return submitChat()" class="w-11 h-11 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0 transition shadow-[0_0_15px_rgba(37,99,235,0.4)]">
                 <i class="fa-solid fa-paper-plane text-sm -ml-0.5"></i>
             </button>
         </form>
@@ -131,15 +129,7 @@
 
 <script>
     // 1. Fix layout shake
-    document.addEventListener("DOMContentLoaded", () => {
-        const chatContainer = document.getElementById('chatContainer');
-        const calculateHeight = () => {
-            // Screen height minus headers, margins, and bottom navbar
-            const newHeight = window.innerHeight - 270;
-            chatContainer.style.height = newHeight + "px";
-        };
-        calculateHeight();
-        
+        document.addEventListener("DOMContentLoaded", () => {
         // Scroll to bottom
         const chatBox = document.getElementById('chatBox');
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -242,4 +232,9 @@
     }
 </script>
 {% endblock %}
+
+
+
+
+
 

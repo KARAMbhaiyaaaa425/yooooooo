@@ -7,154 +7,172 @@
     .scrollbar-hide::-webkit-scrollbar { display: none; }
 </style>
 
-<div class="mb-4 mt-2 flex items-center justify-between">
-    <button onclick="toggleSidebar()" class="text-white text-xl md:hidden block"><i class="fa-solid fa-bars"></i></button>
-    <div class="bg-card border border-gray-800 rounded-lg px-3 py-1 flex items-center gap-2">
-        <i class="fa-solid fa-wallet text-green-400 text-xs"></i>
-        <span class="text-white font-bold text-sm">₹{{ balance | default(0) }}</span>
+<div class="flex justify-between items-center mb-6 mt-2 px-1">
+    <div class="flex items-center gap-3">
+        <i class="fa-solid fa-cart-shopping text-blue-500 text-xl theme-text"></i>
+        <h2 class="text-2xl font-black text-white tracking-wide">Store</h2>
+    </div>
+    <span class="bg-[#121b2d] border border-blue-900/50 text-blue-400 text-xs font-bold px-4 py-1.5 rounded-full theme-border">User</span>
+</div>
+
+<!-- Search Bar (Gradient Border) -->
+<div class="bg-gradient-to-r from-orange-500 via-yellow-500 to-cyan-500 p-[1.5px] rounded-2xl mb-5 shadow-lg">
+    <div class="relative bg-[#0a0f1c] rounded-2xl theme-bg-subtle">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <i class="fa-solid fa-search text-gray-400"></i>
+        </div>
+        <input type="text" id="searchInput" onkeyup="searchProducts()" class="w-full bg-transparent border-none text-white text-sm rounded-2xl pl-12 pr-4 py-3.5 focus:outline-none focus:ring-0 transition font-medium" placeholder="Search products, features...">
     </div>
 </div>
 
-<!-- Search Bar -->
-<div class="relative mb-4">
-    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <i class="fa-solid fa-search text-gray-500"></i>
+<!-- Balance Box -->
+<div class="flex justify-between items-center bg-card border border-gray-800 theme-border rounded-2xl p-5 mb-5 shadow-lg">
+    <div>
+        <p class="text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-1">Balance</p>
+        <p class="text-2xl font-bold text-yellow-500 theme-text">?{{ balance | default(0) }}</p>
     </div>
-    <input type="text" id="searchInput" onkeyup="searchProducts()" class="w-full bg-card border border-gray-800 text-white text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-blue-500 transition font-medium" placeholder="SEARCH HACKS...">
+    <a href="/deposit" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.4)] transition">
+        <i class="fa-solid fa-wallet"></i> Add Balance
+    </a>
+</div>
+
+<!-- Coupon Box -->
+<div class="flex gap-2 bg-card border border-gray-800 theme-border rounded-2xl p-2.5 mb-8 shadow-lg">
+    <input type="text" placeholder="Enter coupon code" class="flex-1 bg-transparent border-none text-white text-sm px-3 focus:outline-none focus:ring-0">
+    <button class="bg-gray-800 border border-gray-700 theme-border text-blue-400 theme-text text-sm font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 transition hover:bg-gray-700">
+        <i class="fa-solid fa-tag text-xs"></i> Apply
+    </button>
 </div>
 
 <!-- Category Filters -->
 <div class="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-    <button onclick="filterCategory('all', this)" class="cat-btn shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-[11px] font-bold shadow-md transition uppercase">ALL</button>
+    <button onclick="filterCategory('all', this)" class="cat-btn shrink-0 bg-blue-600 text-white px-5 py-2 rounded-full text-[11px] font-bold shadow-md transition uppercase tracking-wider">ALL</button>
     {% set categories = [] %}
     {% for p in products %}
         {% if p.category not in categories %}
             {% set _ = categories.append(p.category) %}
-            <button onclick="filterCategory('{{ p.category }}', this)" class="cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 hover:text-white px-4 py-1.5 rounded-full text-[11px] font-bold transition uppercase">{{ p.category }}</button>
+            <button onclick="filterCategory('{{ p.category }}', this)" class="cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 theme-border hover:text-white px-5 py-2 rounded-full text-[11px] font-bold transition uppercase tracking-wider">{{ p.category }}</button>
         {% endif %}
     {% endfor %}
 </div>
 
-<div class="flex justify-between items-center mb-4">
-    <h3 class="text-sm font-bold text-white uppercase tracking-wider">POPULAR KEYS</h3>
-    <a href="#" class="text-[10px] text-blue-500 theme-text font-bold hover:text-blue-400 uppercase tracking-wider">VIEW ALL</a>
-</div><!-- Products List -->
-<div class="space-y-4 mb-20" id="products-container">
+<!-- Products List -->
+<div class="space-y-6 mb-20" id="products-container">
     {% for p in products %}
     {% set outer_index = loop.index %}
-    <div class="product-card bg-card border border-gray-800 theme-border rounded-3xl overflow-hidden relative shadow-lg shadow-black/50" data-category="{{ p.category }}" data-name="{{ p.name | lower }}">
+    <div class="product-card bg-gray-900 border border-gray-800 theme-border rounded-[1.5rem] overflow-hidden relative shadow-2xl" data-category="{{ p.category }}" data-name="{{ p.name | lower }}">
         
-        <!-- Image Section -->
-        <div class="relative w-full h-[180px] bg-gray-900 flex items-center justify-center overflow-hidden group">
+        <!-- Image Section (Full Top) -->
+        <div class="relative w-full h-[220px] bg-black flex items-center justify-center overflow-hidden group">
             {% if p.media_url %}
                 {% if p.media_url.endswith('.mp4') %}
-                    <video id="vid-{{ outer_index }}" src="{{ p.media_url }}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-500" loop muted playsinline></video>
-                    <button onclick="let v = document.getElementById('vid-{{ outer_index }}'); if(v.paused){v.play(); this.style.display='none';}else{v.pause();}" class="absolute inset-0 flex items-center justify-center z-10">
-                        <div class="w-14 h-14 rounded-full border border-white/20 flex items-center justify-center bg-black/50 backdrop-blur-md shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-                            <i class="fa-solid fa-play text-white ml-1 text-xl"></i>
+                    <video src="{{ p.media_url }}" class="w-full h-full object-cover opacity-90" autoplay loop muted playsinline></video>
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div class="w-16 h-16 rounded-full border-2 border-white/30 flex items-center justify-center bg-black/40 backdrop-blur-sm shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+                            <i class="fa-solid fa-volume-xmark text-white text-lg"></i>
                         </div>
-                    </button>
+                    </div>
                 {% else %}
-                    <img src="{{ p.media_url }}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition duration-500">
+                    <img src="{{ p.media_url }}" class="w-full h-full object-cover opacity-90">
                 {% endif %}
             {% else %}
-                <div class="w-full h-full flex items-center justify-center text-gray-800">
-                    <i class="fa-solid fa-gamepad text-5xl"></i>
+                <div class="w-full h-full flex flex-col items-center justify-center bg-gray-900">
+                    <i class="fa-solid fa-image text-4xl text-gray-700 mb-3"></i>
+                    <p class="text-gray-500 font-bold text-xs tracking-widest uppercase">No Preview</p>
                 </div>
             {% endif %}
             
-            <!-- Category Badge (Top Left) -->
-            <div class="absolute top-4 left-4 z-10">
-                <span class="bg-blue-600 text-white text-[11px] font-bold px-3 py-1 rounded uppercase tracking-wider shadow-md">{{ p.category }}</span>
-            </div>
+            <!-- Bottom Gradient for Title Readability -->
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0a0f1c] via-[#0a0f1c]/40 to-transparent"></div>
             
-            <!-- Status Badge (Top Right) -->
-            <div class="absolute top-4 right-4 z-10 flex gap-1">
-                {% set s = p.plans[0].status | default('SAFE') %}
-                {% if s == 'SAFE' or s == 'WORKING' %}
-                    <span class="bg-green-500 text-white text-[11px] font-bold px-3 py-1 rounded uppercase tracking-wider shadow-md">WORKING</span>
-                {% elif s == 'UPDATING' %}
-                    <span class="bg-yellow-500 text-black text-[11px] font-bold px-3 py-1 rounded uppercase tracking-wider shadow-md">UPDATING</span>
-                {% else %}
-                    <span class="bg-red-600 text-white text-[11px] font-bold px-3 py-1 rounded uppercase tracking-wider shadow-md">PATCHED</span>
-                {% endif %}
-            </div>
+            <!-- Title Overlay -->
+            <h3 class="absolute bottom-5 left-5 text-white font-black text-2xl uppercase tracking-wider drop-shadow-xl z-10 w-[80%] leading-tight">{{ p.name }}</h3>
             
-            <!-- Center Play Button Overlay for images too -->
-            {% if p.media_url and not p.media_url.endswith('.mp4') %}
-            <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                <div class="w-14 h-14 rounded-full border border-white/20 flex items-center justify-center bg-black/50 backdrop-blur-md shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-                    <i class="fa-solid fa-play text-white ml-1 text-xl"></i>
-                </div>
-            </div>
-            {% endif %}
+            <!-- Share Icon -->
+            <button class="absolute bottom-5 right-5 bg-black/50 hover:bg-black/80 transition w-11 h-11 rounded-full flex items-center justify-center text-white z-10 border border-white/10 backdrop-blur-md shadow-lg">
+                <i class="fa-solid fa-share-nodes"></i>
+            </button>
         </div>
         
         <!-- Details Section -->
         <div class="p-5 bg-card">
-            <h3 class="text-white font-black text-[22px] uppercase tracking-wide mb-4">{{ p.name }}</h3>
             
-                                    <!-- Feedback and Update Buttons -->
-            <div class="grid grid-cols-2 gap-2 mb-5">
+            <!-- Pill Badges -->
+            <div class="flex gap-2.5 mb-4">
+                <span class="bg-[#0f182b] border border-blue-900/40 text-blue-400 theme-text text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-lock text-yellow-500"></i> Non Root</span>
+                <span class="bg-[#1a1225] border border-purple-900/40 text-purple-400 text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-robot text-purple-300"></i> Android</span>
+                <span class="bg-[#0f182b] border border-blue-900/40 text-blue-400 theme-text text-[10px] font-bold px-3.5 py-1.5 rounded-full shadow-sm">User</span>
+            </div>
+            
+            <!-- Status Msg (Yellow Box) -->
+            {% set status_msg = p.plans[0].status_msg | default('SECOND ID USE ALWAYS') %}
+            <div class="bg-[#1a1506] border border-yellow-900/50 rounded-xl p-3.5 mb-4 flex items-center gap-2.5 shadow-inner">
+                <span class="text-sm drop-shadow-md">??</span>
+                <p class="text-yellow-500 text-[11px] font-bold uppercase tracking-wider">{{ status_msg }}</p>
+            </div>
+            
+            <!-- Features (Lightning Bolts) -->
+            {% if p.features %}
+            <div class="flex flex-wrap gap-x-5 gap-y-2.5 mb-5 px-1.5">
+                {% for feature in p.features.split('\n') %}
+                    {% if feature.strip() %}
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-bolt text-yellow-500 text-[11px]"></i>
+                        <span class="text-gray-300 text-[10px] font-bold uppercase tracking-widest">{{ feature.replace('??', '').replace('', '').strip() }}</span>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+                        <!-- Feedback and Update Buttons -->
+            <div class="grid grid-cols-2 gap-3 mb-3">
                 {% set product_feedback = p.plans[0].feedback_link | default(global_settings.feedback_link | default('#'), true) %}
-                <a href="{{ product_feedback }}" target="_blank" class="flex flex-col justify-center items-center gap-1.5 bg-gray-800 border border-gray-700 theme-border rounded-xl py-3 px-1 hover:bg-gray-700 transition shadow-md shadow-black/20 text-center">
-                    <i class="fa-regular fa-comment-dots text-blue-500 theme-text text-lg"></i>
-                    <span class="text-[10px] text-gray-300 font-bold leading-tight">Check File<br>Feedback</span>
+                <a href="{{ product_feedback }}" target="_blank" class="flex justify-center items-center gap-2 bg-transparent border border-gray-700 theme-border rounded-xl py-3 hover:bg-gray-800 transition shadow-sm">
+                    <i class="fa-regular fa-comment-dots text-blue-500 theme-text text-sm"></i>
+                    <span class="text-gray-300 font-bold text-[11px] tracking-wide">Feedback</span>
                 </a>
                 
                 {% set product_updates = p.plans[0].updates_link | default(global_settings.updates_link | default('#'), true) %}
-                <a href="{{ product_updates }}" target="_blank" class="flex flex-col justify-center items-center gap-1.5 bg-gray-800 border border-gray-700 theme-border rounded-xl py-3 px-1 hover:bg-gray-700 transition shadow-md shadow-black/20 text-center">
-                    <i class="fa-solid fa-rotate text-blue-500 theme-text text-lg"></i>
-                    <span class="text-[10px] text-gray-300 font-bold leading-tight">Check File<br>Updates</span>
+                <a href="{{ product_updates }}" target="_blank" class="flex justify-center items-center gap-2 bg-transparent border border-yellow-600/80 rounded-xl py-3 hover:bg-yellow-900/20 transition shadow-sm">
+                    <i class="fa-solid fa-download text-yellow-500 text-sm"></i>
+                    <span class="text-yellow-500 font-bold text-[11px] tracking-wide">Download APK</span>
                 </a>
             </div>
             
-            <!-- Dropdown Toggle Button -->
-            <button onclick="togglePlanDropdown({{ outer_index }})" id="btn-{{ outer_index }}" class="w-full bg-gray-800 text-white font-bold py-4 rounded-xl text-sm transition flex items-center justify-between px-5 uppercase tracking-wider border border-gray-700 theme-border  shadow-md">
-                <span>SELECT PLAN</span>
-                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300" id="icon-{{ outer_index }}"></i>
+            <button onclick="togglePlanDropdown({{ outer_index }})" id="btn-{{ outer_index }}" class="w-full flex justify-center items-center gap-2 bg-blue-600 rounded-xl py-4 hover:bg-blue-500 transition shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                <span class="text-white font-bold text-sm tracking-wide">Buy Key ???</span>
+                <i class="fa-solid fa-chevron-down text-sm text-white transition-transform duration-300 ml-1" id="icon-{{ outer_index }}"></i>
             </button>
             
-            <!-- Plans Dropdown -->
-            <div id="plans-{{ outer_index }}" class="plan-dropdown mt-3 bg-gray-800 border border-gray-700 theme-border rounded-2xl overflow-hidden shadow-inner">
-                <div class="p-3 space-y-1">
-                    {% for plan in p.plans %}
-                    {% set status = plan.status | default('SAFE') %}
-                    <label class="flex items-center gap-4 p-4 rounded-xl cursor-pointer transition hover:bg-gray-700 group {% if status != 'SAFE' and status != 'WORKING' %}opacity-50 cursor-not-allowed{% endif %}" onclick="selectPlan({{ outer_index }}, '{{ plan.id }}', '{{ plan.name | escape }} ({{ plan.plan_name | escape }})', '{{ plan.price }}', '{{ status }}')">
-                        <div class="relative flex items-center justify-center w-6 h-6 shrink-0">
-                            <input type="radio" name="plan_{{ outer_index }}" class="peer sr-only" {% if status != 'SAFE' and status != 'WORKING' %}disabled{% endif %}>
-                            <div class="w-6 h-6 rounded-full border-2 border-gray-600 peer-checked:border-blue-500 theme-border-peer peer-checked:bg-transparent transition-all shadow-inner"></div>
-                            <div class="w-3 h-3 rounded-full bg-blue-500 absolute opacity-0 peer-checked:opacity-100 transition-all scale-0 peer-checked:scale-100 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="text-white text-[15px] font-medium tracking-wide">{{ plan.plan_name }}</h4>
-                            <p class="text-xs font-bold text-green-400 mt-1 tracking-wider">₹{{ plan.price }}</p>
-                        </div>
-                    </label>
-                    <div class="h-px bg-gray-700 w-full last:hidden mx-2"></div>
-                    {% endfor %}
+            <!-- Plans Accordion (New Style) -->
+            <div id="plans-{{ outer_index }}" class="plan-dropdown mt-4 space-y-3">
+                {% for plan in p.plans %}
+                {% set status = plan.status | default('SAFE') %}
+                <div class="bg-gray-900 border border-gray-800 theme-border rounded-2xl p-4 flex justify-between items-center transition hover:border-gray-600">
+                    <div>
+                        <h4 class="text-white text-[13px] font-medium tracking-wide">{{ plan.plan_name }}</h4>
+                        <p class="text-white font-black text-xl mt-0.5">?{{ plan.price }}</p>
+                    </div>
+                    {% if status == 'SAFE' or status == 'WORKING' %}
+                        <button onclick="buyProduct('{{ plan.id }}', '{{ plan.name | escape }}', '{{ plan.price }}')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-7 py-3 rounded-xl text-sm shadow-[0_0_15px_rgba(37,99,235,0.4)] transition transform hover:scale-105">Buy</button>
+                    {% else %}
+                        <button disabled class="bg-gray-800 text-gray-500 font-bold px-5 py-3 rounded-xl text-xs uppercase">{{ status }}</button>
+                    {% endif %}
                 </div>
-                
-                <div class="p-4 pt-2">
-                    <button id="buy-btn-{{ outer_index }}" onclick="submitPurchase({{ outer_index }})" disabled class="w-full bg-blue-600 disabled:bg-gray-800 hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-[15px] transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.4)] disabled:shadow-none disabled:text-gray-500 tracking-wider">
-                        <i class="fa-solid fa-cart-shopping"></i> Buy Now
-                    </button>
-                </div>
+                {% endfor %}
             </div>
             
         </div>
-        
     </div>
     {% endfor %}
 </div>
 
 <script>
-let selectedProducts = {};
-
 function filterCategory(category, btnElement) {
     const buttons = document.querySelectorAll('.cat-btn');
-    buttons.forEach(btn => btn.className = 'cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 hover:text-white px-4 py-1.5 rounded-full text-[11px] font-bold transition uppercase');
-    btnElement.className = 'cat-btn shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-[11px] font-bold shadow-md transition uppercase';
+    buttons.forEach(btn => btn.className = 'cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 theme-border hover:text-white px-5 py-2 rounded-full text-[11px] font-bold transition uppercase tracking-wider');
+    btnElement.className = 'cat-btn shrink-0 bg-blue-600 text-white px-5 py-2 rounded-full text-[11px] font-bold shadow-md transition uppercase tracking-wider';
     
     const cards = document.querySelectorAll('.product-card');
     cards.forEach(card => {
@@ -176,38 +194,20 @@ function searchProducts() {
 function togglePlanDropdown(index) {
     const dropdown = document.getElementById('plans-' + index);
     const icon = document.getElementById('icon-' + index);
-    const btn = document.getElementById('btn-' + index);
     
     if (dropdown.classList.contains('open')) {
         dropdown.classList.remove('open');
         icon.style.transform = 'rotate(0deg)';
-        btn.classList.remove('border-blue-900');
     } else {
         dropdown.classList.add('open');
         icon.style.transform = 'rotate(180deg)';
-        btn.classList.add('border-blue-900');
     }
-}
-
-function selectPlan(productIndex, planId, name, price, status) {
-    if (status !== 'SAFE' && status !== 'WORKING') return;
-    
-    selectedProducts[productIndex] = { id: planId, name: name, price: price };
-    
-    const buyBtn = document.getElementById('buy-btn-' + productIndex);
-    buyBtn.disabled = false;
-}
-
-function submitPurchase(productIndex) {
-    const plan = selectedProducts[productIndex];
-    if (!plan) return;
-    buyProduct(plan.id, plan.name, plan.price);
 }
 
 function buyProduct(productId, name, price) {
     Swal.fire({
         title: 'CONFIRM PURCHASE',
-        html: `<p class="text-sm text-gray-300 uppercase font-medium mt-2">ARE YOU SURE YOU WANT TO BUY <br><b class="text-white">${name}</b> FOR <b class="text-green-400">₹${price}</b>?</p>`,
+        html: <p class="text-sm text-gray-300 uppercase font-medium mt-2">ARE YOU SURE YOU WANT TO BUY <br><b class="text-white">+name+</b> FOR <b class="text-green-400">?+price+</b>?</p>,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#2563eb',
@@ -218,27 +218,35 @@ function buyProduct(productId, name, price) {
         if (result.isConfirmed) {
             Swal.fire({ title: 'PROCESSING...', allowOutsideClick: false, background: '#111827', color: '#fff', didOpen: () => { Swal.showLoading() } });
             
-            let formData = new FormData();
-            formData.append('product_id', productId);
-
-            fetch('/buy', { method: 'POST', body: formData })
+            fetch('/buy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ 'product_id': productId })
+            })
             .then(res => res.json())
             .then(data => {
-                if(data.success) {
+                if (data.success) {
                     Swal.fire({
                         title: 'SUCCESS!',
-                        html: `<p class="text-gray-400 mb-2 uppercase text-[10px] tracking-widest font-bold">YOUR LICENSE KEY</p>
-                               <div class="bg-gray-900 text-green-400 p-4 rounded-lg border border-gray-700 text-sm font-mono font-bold select-all break-all shadow-inner">${data.key}</div>`,
+                        text: 'Key purchased successfully!',
                         icon: 'success',
-                        confirmButtonText: 'COPY & CLOSE',
-                        background: '#111827', color: '#fff'
+                        background: '#111827', color: '#fff',
+                        confirmButtonColor: '#2563eb'
                     }).then(() => {
-                        navigator.clipboard.writeText(data.key);
-                        location.reload();
+                        window.location.href = '/history';
                     });
                 } else {
-                    Swal.fire({title: 'FAILED', text: data.msg, icon: 'error', background: '#111827', color: '#fff'});
+                    Swal.fire({
+                        title: 'ERROR!',
+                        text: data.msg,
+                        icon: 'error',
+                        background: '#111827', color: '#fff',
+                        confirmButtonColor: '#ef4444'
+                    });
                 }
+            })
+            .catch(err => {
+                Swal.fire('Error', 'Network error occurred.', 'error');
             });
         }
     });
