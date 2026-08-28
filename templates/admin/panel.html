@@ -1,118 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Karan Store</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="bg-gray-900 text-gray-200">
+{% extends "admin/layout.html" %}
 
-    <div class="flex h-screen overflow-hidden">
-        
-        <!-- Sidebar -->
-        <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col hidden md:flex">
-            <div class="h-16 flex items-center px-6 border-b border-gray-700">
-                <h1 class="text-xl font-black text-white tracking-widest uppercase">ADMIN <span class="text-red-500">PANEL</span></h1>
-            </div>
-            <div class="flex-1 overflow-y-auto py-4">
-                <nav class="space-y-1 px-3">
-                    <a href="/admin/panel" class="bg-gray-900 text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-chart-line text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Dashboard
-                    </a>
-                    <a href="/admin/add_balance" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-money-bill text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Manage Balance
-                    </a>
-                    <a href="/admin/products" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-box text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Products
-                    </a>
-                    <a href="/admin/reorder" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-sort text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Reorder Store
-                    </a>
-                    <a href="/admin/settings" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-gear text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Store Settings
-                    </a>
-                    <!-- Placeholder for future functions -->
-                    <a href="#" class="text-gray-500 group flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-not-allowed" title="Coming soon">
-                        <i class="fa-solid fa-bullhorn text-gray-600 mr-3 text-lg"></i> Broadcast (Soon)
-                    </a>
-                </nav>
-            </div>
-            <div class="p-4 border-t border-gray-700">
-                <a href="/logout" class="flex items-center text-red-400 hover:text-red-300 font-medium">
-                    <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Logout
-                </a>
-            </div>
-        </aside>
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-2xl font-bold text-white">Dashboard Overview</h2>
+</div>
 
-        <!-- Mobile Header (Visible only on small screens) -->
-        <div class="md:hidden fixed top-0 w-full h-16 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-4 z-50">
-            <h1 class="text-lg font-black text-white tracking-widest uppercase">ADMIN <span class="text-red-500">PANEL</span></h1>
-            <a href="/logout" class="text-red-400"><i class="fa-solid fa-arrow-right-from-bracket text-xl"></i></a>
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    
+    <a href="/admin/users" class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-md hover:bg-gray-750 transition block cursor-pointer group">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-blue-900/30 text-blue-400 mr-4 group-hover:bg-blue-600 group-hover:text-white transition">
+                <i class="fa-solid fa-users text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Users</p>
+                <p class="text-3xl font-bold text-white">{{ total_users }}</p>
+            </div>
         </div>
-
-        <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto bg-gray-900 mt-16 md:mt-0">
-            <div class="p-6 max-w-6xl mx-auto">
-                <div class="mb-8">
-                    <h2 class="text-2xl font-bold text-white">Dashboard Overview</h2>
-                </div>
-                
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-md">
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-blue-900/30 text-blue-400 mr-4">
-                                <i class="fa-solid fa-users text-2xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Users</p>
-                                <p class="text-3xl font-bold text-white">{{ total_users }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-md">
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-green-900/30 text-green-400 mr-4">
-                                <i class="fa-solid fa-wallet text-2xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Wallet Balance</p>
-                                <p class="text-3xl font-bold text-white">₹{{ total_balance }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-md">
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-purple-900/30 text-purple-400 mr-4">
-                                <i class="fa-solid fa-shopping-cart text-2xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Orders</p>
-                                <p class="text-3xl font-bold text-white">{{ orders }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Mobile Menu Links -->
-                <div class="md:hidden grid grid-cols-2 gap-4">
-                    <a href="/admin/add_balance" class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col items-center justify-center text-center hover:bg-gray-750">
-                        <i class="fa-solid fa-money-bill text-2xl text-blue-400 mb-2"></i>
-                        <span class="text-sm font-medium text-white">Manage Balance</span>
-                    </a>
-                    <a href="/admin/products" class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col items-center justify-center text-center hover:bg-gray-750">
-                        <i class="fa-solid fa-box text-2xl text-green-400 mb-2"></i>
-                        <span class="text-sm font-medium text-white">Products</span>
-                    </a>
-                </div>
-
+    </a>
+    
+    <a href="/admin/users?sort=balance" class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-md hover:bg-gray-750 transition block cursor-pointer group">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-green-900/30 text-green-400 mr-4 group-hover:bg-green-600 group-hover:text-white transition">
+                <i class="fa-solid fa-wallet text-2xl"></i>
             </div>
-        </main>
-    </div>
+            <div>
+                <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Total User Balance</p>
+                <p class="text-3xl font-bold text-white">₹{{ total_balance }}</p>
+            </div>
+        </div>
+    </a>
 
-</body>
-</html>
+    <a href="/admin/orders" class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-md hover:bg-gray-750 transition block cursor-pointer group">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-purple-900/30 text-purple-400 mr-4 group-hover:bg-purple-600 group-hover:text-white transition">
+                <i class="fa-solid fa-shopping-cart text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Orders</p>
+                <p class="text-3xl font-bold text-white">{{ orders }}</p>
+            </div>
+        </div>
+    </a>
+</div>
+
+<!-- Mobile Quick Actions -->
+<div class="md:hidden grid grid-cols-2 gap-4">
+    <a href="/admin/add_balance" class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col items-center justify-center text-center hover:bg-gray-750">
+        <i class="fa-solid fa-money-bill text-2xl text-blue-400 mb-2"></i>
+        <span class="text-sm font-medium text-white">Manage Balance</span>
+    </a>
+    <a href="/admin/products" class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col items-center justify-center text-center hover:bg-gray-750">
+        <i class="fa-solid fa-box text-2xl text-green-400 mb-2"></i>
+        <span class="text-sm font-medium text-white">Products</span>
+    </a>
+</div>
+{% endblock %}
