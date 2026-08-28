@@ -97,17 +97,10 @@
         <!-- Details Section -->
         <div class="p-5 bg-card">
             
-            <!-- Pill Badges -->
-            <div class="flex gap-2.5 mb-4">
-                <span class="bg-[#0f182b] border border-blue-900/40 text-blue-400 theme-text text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-lock text-yellow-500"></i> Non Root</span>
-                <span class="bg-[#1a1225] border border-purple-900/40 text-purple-400 text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-robot text-purple-300"></i> Android</span>
-                <span class="bg-[#0f182b] border border-blue-900/40 text-blue-400 theme-text text-[10px] font-bold px-3.5 py-1.5 rounded-full shadow-sm">User</span>
-            </div>
-            
             <!-- Status Msg (Yellow Box) -->
             {% set status_msg = p.plans[0].status_msg | default('SECOND ID USE ALWAYS') %}
             <div class="bg-[#1a1506] border border-yellow-900/50 rounded-xl p-3.5 mb-4 flex items-center gap-2.5 shadow-inner">
-                <span class="text-sm drop-shadow-md">??</span>
+                
                 <p class="text-yellow-500 text-[11px] font-bold uppercase tracking-wider">{{ status_msg }}</p>
             </div>
             
@@ -141,7 +134,7 @@
             </div>
             
             <button onclick="togglePlanDropdown({{ outer_index }})" id="btn-{{ outer_index }}" class="w-full flex justify-center items-center gap-2 bg-blue-600 rounded-xl py-4 hover:bg-blue-500 transition shadow-[0_0_15px_rgba(37,99,235,0.4)]">
-                <span class="text-white font-bold text-sm tracking-wide">Buy Key ???</span>
+                <span class="text-white font-bold text-sm tracking-wide">Buy Key</span>
                 <i class="fa-solid fa-chevron-down text-sm text-white transition-transform duration-300 ml-1" id="icon-{{ outer_index }}"></i>
             </button>
             
@@ -253,6 +246,8 @@ function buyProduct(productId, name, price) {
 }
 </script>
 {% endblock %}
+
+
 
 
 
