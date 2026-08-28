@@ -29,11 +29,27 @@ def get_karanpay_key(order_id):
     if order_id.startswith("ADD2_"): return KARANPAY_KEY_2
     return KARANPAY_KEY_1
 
+# ================= MIDDLEWARE =================
+@app.before_request
+def check_maintenance():
+    if request.path.startswith("/admin") or request.path.startswith("/static"):
+        return None
+    settings = db.settings.find_one({"id": "global"})
+    if settings and settings.get("maintenance_mode", False) and request.path != "/":
+        return render_template("login.html", error="🛠 Store is currently under Maintenance. Please try again later.")
+    return None
+
 # ================= USER ROUTES =================
 
 @app.route("/", methods=["GET", "POST"])
 def login():
+    settings = db.settings.find_one({"id": "global"})
+    maintenance = settings.get("maintenance_mode", False) if settings else False
+
     if request.method == "POST":
+        if maintenance:
+            return render_template("login.html", error="🛠 Store is currently under Maintenance. Please try again later.")
+            
         user_id = request.form.get("user_id")
         user = db.users.find_one({"user_id": user_id})
         if user:
@@ -48,8 +64,28 @@ def login():
 def store():
     if "user_id" not in session: return redirect("/")
     user = db.users.find_one({"user_id": session["user_id"]})
-    products = list(db.products.find({}).sort("order", 1))
-    return render_template("store.html", user=user, balance=user.get("balance", 0.0), products=products)
+    raw_products = list(db.products.find({}).sort("order", 1))
+    
+    settings = db.settings.find_one({"id": "global"}) or {}
+    hidden_cats = [c.strip().upper() for c in settings.get("hidden_categories", "").split(",")]
+    
+    # Group by category and name
+    grouped_products = {}
+    for p in raw_products:
+        if p['category'].upper() in hidden_cats: continue
+        
+        key = f"{p['category']}_{p['name']}"
+        if key not in grouped_products:
+            grouped_products[key] = {
+                "name": p["name"],
+                "category": p["category"],
+                "media_url": p.get("media_url", ""),
+                "features": p.get("features", ""),
+                "plans": []
+            }
+        grouped_products[key]["plans"].append(p)
+        
+    return render_template("store.html", user=user, balance=user.get("balance", 0.0), products=list(grouped_products.values()))
 
 @app.route("/profile")
 def profile():
@@ -256,6 +292,59 @@ def admin_delete_product(pid):
     if not session.get("admin"): return redirect("/admin")
     db.products.delete_one({"id": pid})
     return redirect("/admin/products")
+
+@app.route("/admin/product/add", methods=["GET", "POST"])
+def admin_add_product():
+    if not session.get("admin"): return redirect("/admin")
+    if request.method == "POST":
+        name = request.form.get("name")
+        category = request.form.get("category")
+        plan_name = request.form.get("plan_name")
+        price = float(request.form.get("price"))
+        product_id = request.form.get("product_id")
+        media_url = request.form.get("media_url", "")
+        features = request.form.get("features", "")
+        
+        new_id = 1
+        last_product = db.products.find_one({}, sort=[("id", -1)])
+        if last_product: new_id = last_product["id"] + 1
+        
+        db.products.insert_one({
+            "id": new_id,
+            "name": name,
+            "category": category,
+            "plan_name": plan_name,
+            "price": price,
+            "product_id": int(product_id),
+            "media_url": media_url,
+            "features": features,
+            "order": new_id
+        })
+        return redirect("/admin/products")
+    return render_template("admin/add_product.html")
+
+@app.route("/admin/settings", methods=["GET", "POST"])
+def admin_settings():
+    if not session.get("admin"): return redirect("/admin")
+    settings = db.settings.find_one({"id": "global"}) or {"maintenance_mode": False, "hidden_categories": ""}
+    
+    if request.method == "POST":
+        maintenance = request.form.get("maintenance_mode") == "on"
+        hidden = request.form.get("hidden_categories", "")
+        db.settings.update_one({"id": "global"}, {"$set": {"maintenance_mode": maintenance, "hidden_categories": hidden}}, upsert=True)
+        return redirect("/admin/settings")
+        
+    return render_template("admin/settings.html", settings=settings)
+
+@app.route("/admin/reorder", methods=["GET", "POST"])
+def admin_reorder():
+    if not session.get("admin"): return redirect("/admin")
+    if request.method == "POST":
+        for pid, order_val in request.form.items():
+            db.products.update_one({"id": int(pid)}, {"$set": {"order": int(order_val)}})
+        return redirect("/admin/products")
+    products = list(db.products.find({}).sort("order", 1))
+    return render_template("admin/reorder.html", products=products)
 
 @app.route("/logout")
 def logout():
