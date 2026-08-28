@@ -130,10 +130,11 @@ def dashboard():
     # Add real deposits
     deposits = list(db.deposit_history.find({"user_id": session["user_id"]}).sort("timestamp", -1).limit(3))
     for d in deposits:
+        is_owner = "OWNER" in d.get("order_id", "")
         transactions.append({
             "type": "deposit",
             "id": d.get("order_id"),
-            "desc": "UPI Deposit",
+            "desc": "Added by Owner" if is_owner else "UPI Deposit",
             "amount": d.get("amount", 0),
             "date": d.get("timestamp", "").split(" ")[0]
         })
@@ -165,7 +166,7 @@ def store():
             }
         grouped_products[key]["plans"].append(p)
         
-    return render_template("store.html", user=user, balance=user.get("balance", 0.0), products=list(grouped_products.values()))
+    return render_template("store.html", user=user, balance=user.get("balance", 0.0), products=list(grouped_products.values()), global_settings=settings)
 
 @app.route('/settings')
 def user_settings():
@@ -193,14 +194,14 @@ def history():
     if "user_id" not in session: return redirect("/")
     user_id = session["user_id"]
     orders = list(db.history.find({"user_id": user_id}).sort("date", -1))
-    return render_template("history.html", orders=orders)
+    return render_template("history.html", history=orders)
 
 @app.route("/deposit_history")
 def deposit_history():
     if "user_id" not in session: return redirect("/")
     user_id = session["user_id"]
     deposits = list(db.deposit_history.find({"user_id": user_id}).sort("timestamp", -1))
-    return render_template("deposit_history.html", deposits=deposits)
+    return render_template("deposit_history.html", history=deposits)
 
 @app.route("/deposit", methods=["GET", "POST"])
 def deposit():
@@ -467,7 +468,19 @@ def admin_add_balance():
         uid = request.form.get("user_id")
         amt = float(request.form.get("amount", 0))
         db.users.update_one({"user_id": uid}, {"$inc": {"balance": amt}})
-        msg = f"Added ₹{amt} to {uid}"
+        
+        # Add to deposit history
+        db.deposit_history.insert_one({
+            "user_id": uid,
+            "order_id": f"OWNER_{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            "amount": amt,
+            "utr": "ADDED BY OWNER",
+            "sender": "OWNER",
+            "status": "completed",
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+        
+        msg = f"Added ?{amt} to {uid}"
     return render_template("admin/add_balance.html", msg=msg)
 
 @app.route("/admin/products", methods=["GET"])
@@ -567,7 +580,9 @@ def admin_settings():
             "telegram": request.form.get("telegram", "Karan_store"),
             "instagram": request.form.get("instagram", "Karan_store"),
             "video_deposit": request.form.get("video_deposit", ""),
-            "video_use": request.form.get("video_use", "")
+            "video_use": request.form.get("video_use", ""),
+            "feedback_link": request.form.get("feedback_link", ""),
+            "updates_link": request.form.get("updates_link", "")
         }}, upsert=True)
         return redirect("/admin/settings")
         
@@ -808,6 +823,10 @@ def upload_banner():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
+
+
 
 
 
