@@ -15,7 +15,11 @@
                     <i class="fa-solid fa-arrow-down"></i>
                 </div>
                 <div>
+                    {% if 'OWNER' in item.order_id %}
+                    <p class="text-sm font-bold text-blue-400 uppercase tracking-wider">Added By Owner</p>
+                    {% else %}
                     <p class="text-sm font-bold text-white uppercase tracking-wider">Deposit</p>
+                    {% endif %}
                     <p class="text-[9px] text-gray-500 mt-0.5">ID: {{ item.order_id }}</p>
                     <p class="text-[9px] text-gray-500">{{ item.timestamp }}</p>
                 </div>

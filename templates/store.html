@@ -43,82 +43,101 @@
 <!-- Products List -->
 <div class="space-y-4 mb-20" id="products-container">
     {% for p in products %}
-    <div class="product-card bg-card border border-gray-800 rounded-2xl overflow-hidden relative" data-category="{{ p.category }}" data-name="{{ p.name | lower }}">
+    <div class="product-card bg-[#0e1628] border border-blue-900/30 rounded-3xl overflow-hidden relative shadow-lg shadow-black/50" data-category="{{ p.category }}" data-name="{{ p.name | lower }}">
         
         <!-- Image Section -->
-        <div class="relative w-full h-40 bg-black flex items-center justify-center border-b border-gray-800 overflow-hidden group">
+        <div class="relative w-full h-[180px] bg-[#050810] flex items-center justify-center overflow-hidden group">
             {% if p.media_url %}
                 {% if p.media_url.endswith('.mp4') %}
-                    <video id="vid-{{ loop.index }}" src="{{ p.media_url }}" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-500" loop muted playsinline></video>
+                    <video id="vid-{{ loop.index }}" src="{{ p.media_url }}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-500" loop muted playsinline></video>
                     <button onclick="let v = document.getElementById('vid-{{ loop.index }}'); if(v.paused){v.play(); this.style.display='none';}else{v.pause();}" class="absolute inset-0 flex items-center justify-center z-10">
-                        <div class="w-12 h-12 rounded-full border border-white/50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                            <i class="fa-solid fa-play text-white ml-1"></i>
+                        <div class="w-14 h-14 rounded-full border border-white/20 flex items-center justify-center bg-black/50 backdrop-blur-md shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                            <i class="fa-solid fa-play text-white ml-1 text-xl"></i>
                         </div>
                     </button>
                 {% else %}
-                    <img src="{{ p.media_url }}" class="w-full h-full object-cover opacity-80">
+                    <img src="{{ p.media_url }}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition duration-500">
                 {% endif %}
             {% else %}
-                <div class="w-full h-full flex items-center justify-center text-gray-700">
-                    <i class="fa-solid fa-gamepad text-4xl"></i>
+                <div class="w-full h-full flex items-center justify-center text-gray-800">
+                    <i class="fa-solid fa-gamepad text-5xl"></i>
                 </div>
             {% endif %}
             
-            <div class="absolute top-2 left-2 z-10">
-                <span class="bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">{{ p.category }}</span>
+            <!-- Category Badge (Top Left) -->
+            <div class="absolute top-4 left-4 z-10">
+                <span class="bg-blue-600 text-white text-[11px] font-bold px-3 py-1 rounded uppercase tracking-wider shadow-md">{{ p.category }}</span>
             </div>
             
-            <!-- Badges -->
-            <div class="absolute top-2 right-2 z-10 flex gap-1">
+            <!-- Status Badge (Top Right) -->
+            <div class="absolute top-4 right-4 z-10 flex gap-1">
                 {% set s = p.plans[0].status | default('SAFE') %}
-                {% if s == 'SAFE' %}
-                    <span class="bg-green-500/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">✅ SAFE</span>
+                {% if s == 'SAFE' or s == 'WORKING' %}
+                    <span class="bg-green-500 text-white text-[11px] font-bold px-3 py-1 rounded uppercase tracking-wider shadow-md">WORKING</span>
                 {% elif s == 'UPDATING' %}
-                    <span class="bg-yellow-500/90 text-black text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">⚠️ UPDATING</span>
+                    <span class="bg-yellow-500 text-black text-[11px] font-bold px-3 py-1 rounded uppercase tracking-wider shadow-md">UPDATING</span>
                 {% else %}
-                    <span class="bg-red-600/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">❌ PATCHED</span>
+                    <span class="bg-red-600 text-white text-[11px] font-bold px-3 py-1 rounded uppercase tracking-wider shadow-md">PATCHED</span>
                 {% endif %}
             </div>
+            
+            <!-- Center Play Button Overlay for images too -->
+            {% if p.media_url and not p.media_url.endswith('.mp4') %}
+            <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                <div class="w-14 h-14 rounded-full border border-white/20 flex items-center justify-center bg-black/50 backdrop-blur-md shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                    <i class="fa-solid fa-play text-white ml-1 text-xl"></i>
+                </div>
+            </div>
+            {% endif %}
         </div>
         
         <!-- Details Section -->
-        <div class="p-4">
-            <h3 class="text-white font-black text-xl uppercase tracking-wide mb-2">{{ p.name }}</h3>
+        <div class="p-5 bg-[#0e1628]">
+            <h3 class="text-white font-black text-[22px] uppercase tracking-wide mb-4">{{ p.name }}</h3>
             
-            <!-- Features list if present -->
-            {% if p.features %}
-            <div class="text-[10px] text-gray-400 mb-4 font-medium leading-relaxed uppercase whitespace-pre-line">
-                {{ p.features }}
+            <!-- Feedback and Update Buttons -->
+            <div class="grid grid-cols-2 gap-3 mb-5">
+                <a href="{{ global_settings.feedback_link | default('#') }}" target="_blank" class="flex justify-center items-center gap-2 bg-[#16223f] border border-[#1e2f5c] rounded-xl py-2.5 hover:bg-[#1e2f5c] transition shadow-md shadow-black/20">
+                    <i class="fa-regular fa-comment-dots text-blue-500 text-sm"></i>
+                    <span class="text-[11px] text-gray-300 font-bold">Check File Feedback</span>
+                </a>
+                <a href="{{ global_settings.updates_link | default('#') }}" target="_blank" class="flex justify-center items-center gap-2 bg-[#16223f] border border-[#1e2f5c] rounded-xl py-2.5 hover:bg-[#1e2f5c] transition shadow-md shadow-black/20">
+                    <i class="fa-solid fa-rotate text-blue-500 text-sm"></i>
+                    <span class="text-[11px] text-gray-300 font-bold">Check File Updates</span>
+                </a>
             </div>
-            {% endif %}
             
             <!-- Dropdown Toggle Button -->
-            <button onclick="document.getElementById('plans-{{ loop.index }}').classList.toggle('open')" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-lg text-xs shadow-md transition flex items-center justify-between px-4 uppercase tracking-wider">
+            <button onclick="togglePlanDropdown({{ loop.index }})" id="btn-{{ loop.index }}" class="w-full bg-[#16223f] text-white font-bold py-4 rounded-xl text-sm transition flex items-center justify-between px-5 uppercase tracking-wider border border-[#1e2f5c] hover:border-blue-900 shadow-md">
                 <span>SELECT PLAN</span>
-                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300" id="icon-{{ loop.index }}"></i>
             </button>
             
             <!-- Plans Dropdown -->
-            <div id="plans-{{ loop.index }}" class="plan-dropdown mt-2 space-y-2">
-                {% for plan in p.plans %}
-                <div class="bg-gray-900 border border-gray-700 rounded-lg p-3 flex justify-between items-center hover:border-gray-500 transition">
-                    <div>
-                        <p class="text-sm font-bold text-white uppercase">{{ plan.plan_name }}</p>
-                        <p class="text-xs font-bold text-green-400">₹{{ plan.price }}</p>
-                    </div>
-                    
+            <div id="plans-{{ loop.index }}" class="plan-dropdown mt-3 bg-[#16223f] border border-[#1e2f5c] rounded-2xl overflow-hidden shadow-inner">
+                <div class="p-3 space-y-1">
+                    {% for plan in p.plans %}
                     {% set status = plan.status | default('SAFE') %}
-                    {% if status == 'SAFE' %}
-                        <button onclick="buyProduct('{{ plan.id }}', '{{ plan.name }} ({{ plan.plan_name }})', '{{ plan.price }}')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-1.5 rounded-md text-[10px] uppercase shadow-md transition tracking-wider">
-                            BUY NOW
-                        </button>
-                    {% else %}
-                        <button onclick="Swal.fire({title:'UNAVAILABLE', text:'{{ plan.status_msg | default('Product is patched or updating.') }}', icon:'error', background:'#111827', color:'#fff'})" class="bg-gray-700 text-gray-400 font-bold px-4 py-1.5 rounded-md text-[10px] uppercase cursor-not-allowed tracking-wider">
-                            <i class="fa-solid fa-lock mr-1"></i> {{ status }}
-                        </button>
-                    {% endif %}
+                    <label class="flex items-center gap-4 p-4 rounded-xl cursor-pointer transition hover:bg-[#1e2f5c] group {% if status != 'SAFE' and status != 'WORKING' %}opacity-50 cursor-not-allowed{% endif %}" onclick="selectPlan({{ loop.parent.loop.index }}, '{{ plan.id }}', '{{ plan.name | escape }} ({{ plan.plan_name | escape }})', '{{ plan.price }}', '{{ status }}')">
+                        <div class="relative flex items-center justify-center w-6 h-6 shrink-0">
+                            <input type="radio" name="plan_{{ loop.parent.loop.index }}" class="peer sr-only" {% if status != 'SAFE' and status != 'WORKING' %}disabled{% endif %}>
+                            <div class="w-6 h-6 rounded-full border-2 border-gray-600 peer-checked:border-blue-500 peer-checked:bg-transparent transition-all shadow-inner"></div>
+                            <div class="w-3 h-3 rounded-full bg-blue-500 absolute opacity-0 peer-checked:opacity-100 transition-all scale-0 peer-checked:scale-100 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-white text-[15px] font-medium tracking-wide">{{ plan.plan_name }}</h4>
+                            <p class="text-xs font-bold text-green-400 mt-1 tracking-wider">?{{ plan.price }}</p>
+                        </div>
+                    </label>
+                    <div class="h-px bg-[#1e2f5c] w-full last:hidden mx-2"></div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
+                
+                <div class="p-4 pt-2">
+                    <button id="buy-btn-{{ loop.index }}" onclick="submitPurchase({{ loop.index }})" disabled class="w-full bg-blue-600 disabled:bg-[#1e2f5c] hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-[15px] transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.4)] disabled:shadow-none disabled:text-gray-500 tracking-wider">
+                        <i class="fa-solid fa-cart-shopping"></i> Buy Now
+                    </button>
+                </div>
             </div>
             
         </div>
@@ -128,6 +147,8 @@
 </div>
 
 <script>
+let selectedProducts = {};
+
 function filterCategory(category, btnElement) {
     const buttons = document.querySelectorAll('.cat-btn');
     buttons.forEach(btn => btn.className = 'cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 hover:text-white px-4 py-1.5 rounded-full text-[11px] font-bold transition uppercase');
@@ -148,6 +169,37 @@ function searchProducts() {
         if (name.includes(input)) card.style.display = 'block';
         else card.style.display = 'none';
     });
+}
+
+function togglePlanDropdown(index) {
+    const dropdown = document.getElementById('plans-' + index);
+    const icon = document.getElementById('icon-' + index);
+    const btn = document.getElementById('btn-' + index);
+    
+    if (dropdown.classList.contains('open')) {
+        dropdown.classList.remove('open');
+        icon.style.transform = 'rotate(0deg)';
+        btn.classList.remove('border-blue-900');
+    } else {
+        dropdown.classList.add('open');
+        icon.style.transform = 'rotate(180deg)';
+        btn.classList.add('border-blue-900');
+    }
+}
+
+function selectPlan(productIndex, planId, name, price, status) {
+    if (status !== 'SAFE' && status !== 'WORKING') return;
+    
+    selectedProducts[productIndex] = { id: planId, name: name, price: price };
+    
+    const buyBtn = document.getElementById('buy-btn-' + productIndex);
+    buyBtn.disabled = false;
+}
+
+function submitPurchase(productIndex) {
+    const plan = selectedProducts[productIndex];
+    if (!plan) return;
+    buyProduct(plan.id, plan.name, plan.price);
 }
 
 function buyProduct(productId, name, price) {
@@ -191,3 +243,4 @@ function buyProduct(productId, name, price) {
 }
 </script>
 {% endblock %}
+
