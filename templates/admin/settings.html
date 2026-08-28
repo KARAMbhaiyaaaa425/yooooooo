@@ -56,29 +56,6 @@
                 <input type="url" name="video_use" value="{{ settings.video_use | default('') }}" placeholder="https://youtube.com/..." class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg">
             </div>
 
-            <!-- API Configuration Settings -->
-            <div class="mb-6 p-4 bg-gray-900 border border-gray-700 rounded-xl">
-                <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-code mr-2 text-green-400"></i> API Configuration</h3>
-                
-                <h4 class="text-sm font-bold text-blue-400 mb-2 border-b border-gray-700 pb-2">Store API (Reseller)</h4>
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">API Endpoint URL</label>
-                <input type="text" name="api_endpoint" value="{{ settings.api_endpoint | default('https://adminpanels.shop/api/reseller_v1.php') }}" class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-4">
-                
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Store API Key</label>
-                <input type="password" name="api_key" value="{{ settings.api_key | default('4936a17fb44211207c7ca20bdc6a4a57') }}" class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-4">
-                
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Store Master Key</label>
-                <input type="password" name="master_key" value="{{ settings.master_key | default('a7f3e8b2c9d1f4a6b8c2d5e9f1a3b6c8') }}" class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-6">
-                
-                <h4 class="text-sm font-bold text-green-400 mb-2 border-b border-gray-700 pb-2">Payment Gateway (GuruPay)</h4>
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">GuruPay Key 1 (Primary)</label>
-                <input type="password" name="karanpay_key_1" value="{{ settings.karanpay_key_1 | default('guru131e012b5141689b9135317fb6fa7f') }}" class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-4">
-                
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">GuruPay Key 2 (Secondary)</label>
-                <input type="password" name="karanpay_key_2" value="{{ settings.karanpay_key_2 | default('guru1eff587f747b3df8c7a355570f90ce') }}" class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-6">
-                
-            </div>
-            
             <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex justify-center items-center gap-2">
                 <i class="fa-solid fa-save"></i> Save Settings
             </button>
@@ -86,3 +63,4 @@
     </div>
 </div>
 {% endblock %}
+

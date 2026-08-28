@@ -45,6 +45,77 @@
     </a>
 </div>
 
+<div class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-md mb-8">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-white uppercase tracking-wider">Revenue (Last 7 Days)</h3>
+        <i class="fa-solid fa-chart-line text-blue-500"></i>
+    </div>
+    <div class="w-full h-64">
+        <canvas id="salesChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    
+    // Create gradient
+    let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.5)'); // Blue-600
+    gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ sales_labels | tojson }},
+            datasets: [{
+                label: 'Revenue (₹)',
+                data: {{ sales_data | tojson }},
+                borderColor: '#3b82f6', // blue-500
+                backgroundColor: gradient,
+                borderWidth: 3,
+                pointBackgroundColor: '#1d4ed8', // blue-700
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#3b82f6',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.9)', // gray-900
+                    titleColor: '#fff',
+                    bodyColor: '#3b82f6',
+                    bodyFont: { weight: 'bold' },
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) { return '₹ ' + context.parsed.y; }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(55, 65, 81, 0.3)', borderDash: [5, 5] }, // gray-700
+                    ticks: { color: '#9ca3af', callback: function(value) { return '₹' + value; } } // gray-400
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#9ca3af', font: { weight: 'bold' } }
+                }
+            }
+        }
+    });
+</script>
+
 <!-- Mobile Quick Actions -->
 <div class="md:hidden grid grid-cols-2 gap-4">
     <a href="/admin/add_balance" class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col items-center justify-center text-center hover:bg-gray-750">
@@ -57,3 +128,4 @@
     </a>
 </div>
 {% endblock %}
+
