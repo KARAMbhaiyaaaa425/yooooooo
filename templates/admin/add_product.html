@@ -4,72 +4,78 @@
 <div class="max-w-2xl mx-auto mt-6">
     <div class="flex items-center gap-4 mb-8">
         <a href="/admin/products" class="text-gray-400 hover:text-white"><i class="fa-solid fa-arrow-left text-xl"></i></a>
-        <h2 class="text-2xl font-bold text-white">Add New Product</h2>
+        <h2 class="text-2xl font-bold text-white">Add New Product Plan</h2>
     </div>
 
-    <div class="bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-700">
+    <div class="bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-700 mb-20">
         <form method="POST">
             <div class="mb-4">
                 <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Product Type</label>
                 <select name="type" id="productType" onchange="toggleApiId()" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
-                    <option value="api">API Product</option>
-                    <option value="manual">Manual Keys (Coming Soon)</option>
+                    <option value="api" {% if request.args.get('type') == 'api' %}selected{% endif %}>API Product (Reseller)</option>
+                    <option value="manual" {% if request.args.get('type') == 'manual' %}selected{% endif %}>Manual Keys Product</option>
                 </select>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="mb-4">
                     <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Category Name</label>
-                    <input type="text" name="category" placeholder="e.g. FREEFIRE" required class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                    <input type="text" name="category" value="{{ request.args.get('category', '') }}" placeholder="e.g. FREEFIRE" required class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Product Title</label>
-                    <input type="text" name="name" placeholder="e.g. BALA MOD XYZ" required class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                    <input type="text" name="name" value="{{ request.args.get('name', '') }}" placeholder="e.g. BALA MOD XYZ" required class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="mb-4">
                     <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Plan Name</label>
-                    <input type="text" name="plan_name" placeholder="e.g. 1 Hours" required class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                    <input type="text" name="plan_name" placeholder="e.g. 1 Hours" required class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500" autofocus>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Price (₹)</label>
+                    <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Price (?)</label>
                     <input type="number" step="0.01" name="price" placeholder="10.00" required class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
                 </div>
                 <div class="mb-4" id="apiIdBox">
                     <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">API ID</label>
-                    <input type="number" name="product_id" id="productIdInput" placeholder="e.g. 153" required class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                    <input type="number" name="product_id" id="productIdInput" value="{{ request.args.get('product_id', '') }}" placeholder="e.g. 153" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
                 </div>
             </div>
 
             <div class="mb-4">
                 <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Image or Video URL</label>
-                <input type="url" name="media_url" placeholder="https://example.com/video.mp4" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                <input type="url" name="media_url" value="{{ request.args.get('media_url', '') }}" placeholder="https://example.com/video.mp4" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="mb-4">
                     <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Status</label>
                     <select name="status" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
-                        <option value="SAFE" class="text-green-500">✅ SAFE</option>
-                        <option value="UPDATING" class="text-yellow-500">⚠️ UPDATING</option>
-                        <option value="PATCHED" class="text-red-500">❌ PATCHED</option>
+                        <option value="SAFE" class="text-green-500" {% if request.args.get('status') == 'SAFE' %}selected{% endif %}>?? SAFE</option>
+                        <option value="UPDATING" class="text-yellow-500" {% if request.args.get('status') == 'UPDATING' %}selected{% endif %}>? UPDATING</option>
+                        <option value="PATCHED" class="text-red-500" {% if request.args.get('status') == 'PATCHED' %}selected{% endif %}>? PATCHED</option>
                     </select>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Status Message (Pop-up alert)</label>
-                    <input type="text" name="status_msg" placeholder="Bhai ye product patch ho gaya hai..." class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                    <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Status Message</label>
+                    <input type="text" name="status_msg" value="{{ request.args.get('status_msg', '') }}" placeholder="Bhai ye product patch ho gaya hai..." class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
                 </div>
             </div>
             
             <div class="mb-6">
                 <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Features (One per line)</label>
-                <textarea name="features" rows="4" placeholder="✅ NON ROOT&#10;✅ Aimbot" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500"></textarea>
+                <textarea name="features" rows="4" placeholder="?? NON ROOT&#10;?? Aimbot" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">{{ request.args.get('features', '') }}</textarea>
             </div>
             
-            <button type="submit" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-900/30 transition flex justify-center items-center gap-2">
-                <i class="fa-solid fa-plus"></i> Add Product to Store
+            <div class="mb-6 flex items-center gap-3 bg-gray-900/50 p-4 rounded-xl border border-blue-900/50">
+                <input type="checkbox" name="add_another" id="addAnother" class="w-5 h-5 rounded bg-gray-800 border-gray-600 text-blue-600 focus:ring-blue-600 focus:ring-2 cursor-pointer">
+                <label for="addAnother" class="text-white text-sm font-bold cursor-pointer">Add another Plan for this Product</label>
+                <p class="text-[10px] text-gray-400 ml-auto">After saving, you can instantly add next plan.</p>
+            </div>
+            
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-lg transition">
+                Save Plan & Continue
             </button>
         </form>
     </div>
@@ -83,12 +89,11 @@
         if (type === 'manual') {
             apiBox.style.display = 'none';
             apiInput.required = false;
-            apiInput.value = '0';
         } else {
             apiBox.style.display = 'block';
             apiInput.required = true;
-            apiInput.value = '';
         }
     }
+    document.addEventListener('DOMContentLoaded', toggleApiId);
 </script>
 {% endblock %}
