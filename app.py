@@ -353,9 +353,8 @@ def buy():
             api_res = tls_session.post(current_api_endpoint, data=payload, headers=headers, timeout_seconds=15)
             data = api_res.json()
             
-            key_data = data.get("key") or data.get("license") or "Error"
-            
-            if "Error" not in key_data:
+            if data.get("status") == "success" or data.get("success") == True:
+                key_data = data.get("key") or data.get("license") or "N/A"
                 db.history.insert_one({
                     "user_id": user_id,
                     "product": plan["name"],
@@ -367,7 +366,8 @@ def buy():
                 return jsonify({"success": True, "key": key_data})
             else:
                 db.users.update_one({"user_id": user_id}, {"$inc": {"balance": price}})
-                return jsonify({"success": False, "msg": data.get("message", "API Error: Invalid response from Reseller")})
+                error_msg = data.get("msg") or data.get("message") or "API Error: Unknown Error"
+                return jsonify({"success": False, "msg": error_msg})
     except Exception as e:
         import traceback
         traceback.print_exc()
