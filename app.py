@@ -541,7 +541,7 @@ def admin_edit_product(pid):
         category = request.form.get("category", product.get("category"))
         plan_name = request.form.get("plan_name", product.get("plan_name"))
         try:
-            price = float(request.form.get("price", product.get("price"))
+            price = float(request.form.get("price", product.get("price")))
         except (TypeError, ValueError):
             price = 0.0
         try:
@@ -900,6 +900,7 @@ def upload_banner():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
