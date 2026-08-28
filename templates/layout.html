@@ -98,17 +98,15 @@
                 </div>
             </div>
 
-            <!-- MORE -->
+                                    <!-- MORE -->
             <div>
                 <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-3">More</h3>
                 <div class="space-y-1">
-                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium">
-                        <i class="fa-solid fa-gift w-5 text-center text-yellow-500"></i> Referral 
-                        <span class="text-[9px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded ml-auto">New</span>
-                    </a>
                     <a href="/notifications" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/notifications' %}nav-active{% endif %}">
                         <i class="fa-solid fa-bell w-5 text-center text-indigo-400"></i> Notifications
-                        <span class="text-[9px] bg-purple-500 text-white px-2 py-0.5 rounded-full ml-auto">New</span>
+                        {% if unread_count > 0 %}
+                            <span class="text-[9px] bg-red-600 text-white px-2 py-0.5 rounded-full ml-auto font-bold">{{ unread_count }}</span>
+                        {% endif %}
                     </a>
                     <a href="/tutorial" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/tutorial' %}nav-active{% endif %}">
                         <i class="fa-solid fa-book w-5 text-center text-teal-400"></i> Tutorial
@@ -244,4 +242,6 @@
     </script>
 </body>
 </html>
+
+
 

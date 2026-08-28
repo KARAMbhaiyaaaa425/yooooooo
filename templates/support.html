@@ -1,17 +1,58 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="mb-4 flex items-center gap-3">
+<div class="mb-4 flex items-center gap-3 mt-2">
     <a href="/dashboard" class="w-8 h-8 rounded-full bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition shadow-md">
         <i class="fa-solid fa-chevron-left text-sm"></i>
     </a>
     <div>
         <h2 class="text-xl font-bold text-white tracking-wide">Live Support</h2>
-        <p class="text-green-400 text-[10px] mt-0.5">● We typically reply within a few minutes</p>
+        <p class="text-green-400 text-[10px] mt-0.5">? We typically reply within a few minutes</p>
     </div>
 </div>
 
-<div class="bg-card border border-gray-800 rounded-2xl flex flex-col h-[70vh] mb-20 shadow-lg relative overflow-hidden">
+<h3 class="text-[11px] font-bold text-white mt-6 mb-3 px-1">Connect with us on</h3>
+
+<div class="grid grid-cols-2 gap-3 mb-6">
+    <a href="{{ global_settings.whatsapp_support | default('#') }}" target="_blank" class="bg-[#0f1f16] border border-[#1b3d2b] rounded-2xl p-4 hover:bg-[#152e1f] transition shadow-md">
+        <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white mb-3 shadow-[0_0_15px_rgba(34,197,94,0.4)]">
+            <i class="fa-brands fa-whatsapp text-xl"></i>
+        </div>
+        <div class="flex justify-between items-end">
+            <div>
+                <h4 class="text-white font-bold text-sm">WhatsApp</h4>
+                <p class="text-gray-400 text-[9px] mt-0.5">Chat with us on WhatsApp</p>
+            </div>
+            <i class="fa-solid fa-chevron-right text-white text-[10px]"></i>
+        </div>
+    </a>
+    
+    <a href="{{ global_settings.telegram_support | default('#') }}" target="_blank" class="bg-[#0e1628] border border-[#1e2f5c] rounded-2xl p-4 hover:bg-[#16223f] transition shadow-md">
+        <div class="w-10 h-10 rounded-full bg-[#2AABEE] flex items-center justify-center text-white mb-3 shadow-[0_0_15px_rgba(42,171,238,0.4)]">
+            <i class="fa-brands fa-telegram text-xl -ml-0.5"></i>
+        </div>
+        <div class="flex justify-between items-end">
+            <div>
+                <h4 class="text-white font-bold text-sm">Telegram</h4>
+                <p class="text-gray-400 text-[9px] mt-0.5">Chat with us on Telegram</p>
+            </div>
+            <i class="fa-solid fa-chevron-right text-white text-[10px]"></i>
+        </div>
+    </a>
+</div>
+
+<div class="relative flex py-3 items-center mb-2">
+    <div class="flex-grow border-t border-gray-800"></div>
+    <span class="flex-shrink-0 mx-4 text-white text-xs font-bold">Chat with Support</span>
+    <div class="flex-grow border-t border-gray-800"></div>
+</div>
+
+<div class="bg-[#0a0f1c] border border-gray-800 rounded-2xl flex flex-col h-[55vh] mb-20 shadow-lg relative overflow-hidden">
+    
+    <div class="flex justify-center mt-3">
+        <span class="bg-[#121b2d] border border-gray-800 text-gray-400 text-[10px] px-3 py-1 rounded-full">Today</span>
+    </div>
+
     <!-- Chat Area -->
     <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chatBox">
         
@@ -20,8 +61,9 @@
             <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-[0_0_10px_rgba(37,99,235,0.4)]">
                 <i class="fa-solid fa-headset text-xs"></i>
             </div>
-            <div class="bg-gray-800 border border-gray-700 rounded-2xl rounded-tl-sm px-4 py-2 max-w-[80%]">
-                <p class="text-sm text-white">Hello {{ user.username }}! How can we help you today?</p>
+            <div class="bg-[#1a253a] border border-[#253554] rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%] shadow-md">
+                <p class="text-[13px] text-gray-200 leading-relaxed">Hello {{ user.username }}! How can we help you today?</p>
+                <p class="text-[9px] text-gray-400 mt-1.5 text-right">System</p>
             </div>
         </div>
 
@@ -29,12 +71,12 @@
             {% if msg.sender == 'admin' %}
             <!-- Admin Message -->
             <div class="flex gap-3">
-                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-[0_0_10px_rgba(37,99,235,0.4)] theme-bg">
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-[0_0_10px_rgba(37,99,235,0.4)]">
                     <i class="fa-solid fa-headset text-xs"></i>
                 </div>
                 <div>
-                    <div class="bg-gray-800 border border-gray-700 rounded-2xl rounded-tl-sm px-4 py-2 max-w-[85%]">
-                        <p class="text-sm text-white">{{ msg.text }}</p>
+                    <div class="bg-[#1a253a] border border-[#253554] rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] shadow-md">
+                        <p class="text-[13px] text-gray-200 leading-relaxed">{{ msg.text }}</p>
                     </div>
                     <p class="text-[9px] text-gray-500 mt-1 ml-1">{{ msg.time }}</p>
                 </div>
@@ -42,11 +84,11 @@
             {% else %}
             <!-- User Message -->
             <div class="flex flex-row-reverse gap-3">
-                <div>
-                    <div class="bg-blue-600 rounded-2xl rounded-tr-sm px-4 py-2 max-w-[100%] shadow-[0_0_15px_rgba(37,99,235,0.2)] theme-bg">
-                        <p class="text-sm text-white">{{ msg.text }}</p>
+                <div class="max-w-[85%]">
+                    <div class="bg-blue-600 rounded-2xl rounded-tr-sm px-4 py-3 shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+                        <p class="text-[13px] text-white leading-relaxed">{{ msg.text }}</p>
                     </div>
-                    <p class="text-[9px] text-gray-500 mt-1 mr-1 text-right">{{ msg.time }}</p>
+                    <p class="text-[9px] text-gray-500 mt-1 mr-1 text-right">{{ msg.time }} <i class="fa-solid fa-check-double text-[8px] text-blue-400 ml-0.5"></i></p>
                 </div>
             </div>
             {% endif %}
@@ -54,10 +96,11 @@
     </div>
 
     <!-- Input Area -->
-    <div class="p-3 bg-gray-900 border-t border-gray-800">
-        <form method="POST" class="flex gap-2">
-            <input type="text" name="message" required placeholder="Type your message..." autocomplete="off" class="flex-1 bg-gray-800 border border-gray-700 text-white rounded-full px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition">
-            <button type="submit" class="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0 transition shadow-[0_0_15px_rgba(37,99,235,0.4)] theme-bg">
+    <div class="p-3 bg-[#0a0f1c] border-t border-gray-800">
+        <form method="POST" class="flex gap-2 relative items-center">
+            <input type="text" name="message" required placeholder="Type your message..." autocomplete="off" class="flex-1 bg-[#121b2d] border border-gray-700 text-white rounded-full pl-5 pr-12 py-3 text-sm focus:outline-none focus:border-blue-500 transition shadow-inner">
+            <i class="fa-solid fa-paperclip absolute right-[4.5rem] text-gray-400 text-sm cursor-pointer hover:text-white transition"></i>
+            <button type="submit" class="w-11 h-11 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0 transition shadow-[0_0_15px_rgba(37,99,235,0.4)]">
                 <i class="fa-solid fa-paper-plane text-sm -ml-0.5"></i>
             </button>
         </form>

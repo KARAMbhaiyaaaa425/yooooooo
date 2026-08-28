@@ -38,19 +38,18 @@
 <div class="flex justify-between items-center mb-4">
     <h3 class="text-sm font-bold text-white uppercase tracking-wider">POPULAR KEYS</h3>
     <a href="#" class="text-[10px] text-blue-500 font-bold hover:text-blue-400 uppercase tracking-wider">VIEW ALL</a>
-</div>
-
-<!-- Products List -->
+</div><!-- Products List -->
 <div class="space-y-4 mb-20" id="products-container">
     {% for p in products %}
+    {% set outer_index = loop.index %}
     <div class="product-card bg-[#0e1628] border border-blue-900/30 rounded-3xl overflow-hidden relative shadow-lg shadow-black/50" data-category="{{ p.category }}" data-name="{{ p.name | lower }}">
         
         <!-- Image Section -->
         <div class="relative w-full h-[180px] bg-[#050810] flex items-center justify-center overflow-hidden group">
             {% if p.media_url %}
                 {% if p.media_url.endswith('.mp4') %}
-                    <video id="vid-{{ loop.index }}" src="{{ p.media_url }}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-500" loop muted playsinline></video>
-                    <button onclick="let v = document.getElementById('vid-{{ loop.index }}'); if(v.paused){v.play(); this.style.display='none';}else{v.pause();}" class="absolute inset-0 flex items-center justify-center z-10">
+                    <video id="vid-{{ outer_index }}" src="{{ p.media_url }}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-500" loop muted playsinline></video>
+                    <button onclick="let v = document.getElementById('vid-{{ outer_index }}'); if(v.paused){v.play(); this.style.display='none';}else{v.pause();}" class="absolute inset-0 flex items-center justify-center z-10">
                         <div class="w-14 h-14 rounded-full border border-white/20 flex items-center justify-center bg-black/50 backdrop-blur-md shadow-[0_0_20px_rgba(0,0,0,0.5)]">
                             <i class="fa-solid fa-play text-white ml-1 text-xl"></i>
                         </div>
@@ -108,25 +107,25 @@
             </div>
             
             <!-- Dropdown Toggle Button -->
-            <button onclick="togglePlanDropdown({{ loop.index }})" id="btn-{{ loop.index }}" class="w-full bg-[#16223f] text-white font-bold py-4 rounded-xl text-sm transition flex items-center justify-between px-5 uppercase tracking-wider border border-[#1e2f5c] hover:border-blue-900 shadow-md">
+            <button onclick="togglePlanDropdown({{ outer_index }})" id="btn-{{ outer_index }}" class="w-full bg-[#16223f] text-white font-bold py-4 rounded-xl text-sm transition flex items-center justify-between px-5 uppercase tracking-wider border border-[#1e2f5c] hover:border-blue-900 shadow-md">
                 <span>SELECT PLAN</span>
-                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300" id="icon-{{ loop.index }}"></i>
+                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300" id="icon-{{ outer_index }}"></i>
             </button>
             
             <!-- Plans Dropdown -->
-            <div id="plans-{{ loop.index }}" class="plan-dropdown mt-3 bg-[#16223f] border border-[#1e2f5c] rounded-2xl overflow-hidden shadow-inner">
+            <div id="plans-{{ outer_index }}" class="plan-dropdown mt-3 bg-[#16223f] border border-[#1e2f5c] rounded-2xl overflow-hidden shadow-inner">
                 <div class="p-3 space-y-1">
                     {% for plan in p.plans %}
                     {% set status = plan.status | default('SAFE') %}
-                    <label class="flex items-center gap-4 p-4 rounded-xl cursor-pointer transition hover:bg-[#1e2f5c] group {% if status != 'SAFE' and status != 'WORKING' %}opacity-50 cursor-not-allowed{% endif %}" onclick="selectPlan({{ loop.parent.loop.index }}, '{{ plan.id }}', '{{ plan.name | escape }} ({{ plan.plan_name | escape }})', '{{ plan.price }}', '{{ status }}')">
+                    <label class="flex items-center gap-4 p-4 rounded-xl cursor-pointer transition hover:bg-[#1e2f5c] group {% if status != 'SAFE' and status != 'WORKING' %}opacity-50 cursor-not-allowed{% endif %}" onclick="selectPlan({{ outer_index }}, '{{ plan.id }}', '{{ plan.name | escape }} ({{ plan.plan_name | escape }})', '{{ plan.price }}', '{{ status }}')">
                         <div class="relative flex items-center justify-center w-6 h-6 shrink-0">
-                            <input type="radio" name="plan_{{ loop.parent.loop.index }}" class="peer sr-only" {% if status != 'SAFE' and status != 'WORKING' %}disabled{% endif %}>
+                            <input type="radio" name="plan_{{ outer_index }}" class="peer sr-only" {% if status != 'SAFE' and status != 'WORKING' %}disabled{% endif %}>
                             <div class="w-6 h-6 rounded-full border-2 border-gray-600 peer-checked:border-blue-500 peer-checked:bg-transparent transition-all shadow-inner"></div>
                             <div class="w-3 h-3 rounded-full bg-blue-500 absolute opacity-0 peer-checked:opacity-100 transition-all scale-0 peer-checked:scale-100 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
                         </div>
                         <div class="flex-1">
                             <h4 class="text-white text-[15px] font-medium tracking-wide">{{ plan.plan_name }}</h4>
-                            <p class="text-xs font-bold text-green-400 mt-1 tracking-wider">?{{ plan.price }}</p>
+                            <p class="text-xs font-bold text-green-400 mt-1 tracking-wider">₹{{ plan.price }}</p>
                         </div>
                     </label>
                     <div class="h-px bg-[#1e2f5c] w-full last:hidden mx-2"></div>
@@ -134,7 +133,7 @@
                 </div>
                 
                 <div class="p-4 pt-2">
-                    <button id="buy-btn-{{ loop.index }}" onclick="submitPurchase({{ loop.index }})" disabled class="w-full bg-blue-600 disabled:bg-[#1e2f5c] hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-[15px] transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.4)] disabled:shadow-none disabled:text-gray-500 tracking-wider">
+                    <button id="buy-btn-{{ outer_index }}" onclick="submitPurchase({{ outer_index }})" disabled class="w-full bg-blue-600 disabled:bg-[#1e2f5c] hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-[15px] transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.4)] disabled:shadow-none disabled:text-gray-500 tracking-wider">
                         <i class="fa-solid fa-cart-shopping"></i> Buy Now
                     </button>
                 </div>
