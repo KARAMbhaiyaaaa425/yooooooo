@@ -6,7 +6,7 @@
     <h2 class="text-lg font-bold text-white">My Profile</h2>
 </div>
 
-<div class="bg-card border border-gray-800 rounded-2xl p-6 mb-6 text-center">
+<div id="profileHeaderCard" class="bg-card border border-gray-800 rounded-2xl p-6 mb-6 text-center transition-colors duration-500">
     <div class="relative w-24 h-24 mx-auto mb-4 group cursor-pointer" onclick="document.getElementById('avatarUpload').click()">
         {% if user.avatar %}
             <img id="avatarPreview" src="{{ user.avatar }}" class="w-24 h-24 rounded-full border-4 border-blue-600 object-cover shadow-[0_0_15px_rgba(37,99,235,0.4)] theme-border" alt="Profile Picture">
@@ -38,7 +38,46 @@
         <span class="text-xs font-bold text-green-400 uppercase tracking-widest theme-text">Active Member</span>
     </div>
 </div>
+<!-- Background Customizer -->
+<div class="bg-card border border-gray-800 rounded-2xl p-5 mb-6">
+    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Profile Background</h3>
+    <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+        <!-- Solid Colors -->
+        <div onclick="setProfileBg('bg-card')" class="w-10 h-10 shrink-0 rounded-full bg-[#111827] border-2 border-gray-600 cursor-pointer hover:scale-110 transition"></div>
+        <div onclick="setProfileBg('bg-blue-900/40')" class="w-10 h-10 shrink-0 rounded-full bg-blue-900/40 border-2 border-blue-600 cursor-pointer hover:scale-110 transition"></div>
+        <div onclick="setProfileBg('bg-red-900/40')" class="w-10 h-10 shrink-0 rounded-full bg-red-900/40 border-2 border-red-600 cursor-pointer hover:scale-110 transition"></div>
+        <div onclick="setProfileBg('bg-purple-900/40')" class="w-10 h-10 shrink-0 rounded-full bg-purple-900/40 border-2 border-purple-600 cursor-pointer hover:scale-110 transition"></div>
+        <div onclick="setProfileBg('bg-green-900/40')" class="w-10 h-10 shrink-0 rounded-full bg-green-900/40 border-2 border-green-600 cursor-pointer hover:scale-110 transition"></div>
+        <div onclick="setProfileBg('bg-yellow-900/40')" class="w-10 h-10 shrink-0 rounded-full bg-yellow-900/40 border-2 border-yellow-600 cursor-pointer hover:scale-110 transition"></div>
+        
+        <!-- Premium Gradients -->
+        <div onclick="setProfileBg('bg-gradient-to-br from-indigo-900 to-purple-900')" class="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-indigo-900 to-purple-900 border-2 border-purple-400 cursor-pointer hover:scale-110 transition relative"><i class="fa-solid fa-crown absolute -top-1 -right-1 text-yellow-400 text-[10px]"></i></div>
+        <div onclick="setProfileBg('bg-gradient-to-tr from-orange-900 to-red-900')" class="w-10 h-10 shrink-0 rounded-full bg-gradient-to-tr from-orange-900 to-red-900 border-2 border-orange-400 cursor-pointer hover:scale-110 transition relative"><i class="fa-solid fa-crown absolute -top-1 -right-1 text-yellow-400 text-[10px]"></i></div>
+        <div onclick="setProfileBg('bg-gradient-to-tl from-emerald-900 to-teal-900')" class="w-10 h-10 shrink-0 rounded-full bg-gradient-to-tl from-emerald-900 to-teal-900 border-2 border-teal-400 cursor-pointer hover:scale-110 transition relative"><i class="fa-solid fa-crown absolute -top-1 -right-1 text-yellow-400 text-[10px]"></i></div>
+    </div>
+</div>
 
+<script>
+    function setProfileBg(bgClass) {
+        localStorage.setItem('profile_bg', bgClass);
+        applyProfileBg();
+    }
+    
+    function applyProfileBg() {
+        const bgClass = localStorage.getItem('profile_bg') || 'bg-card';
+        const card = document.getElementById('profileHeaderCard');
+        
+        // Remove all possible bg classes
+        card.className = card.className.replace(/bg-\S+/g, '');
+        card.className = card.className.replace(/from-\S+/g, '');
+        card.className = card.className.replace(/to-\S+/g, '');
+        
+        // Add the new one
+        card.className = card.className + ' ' + bgClass;
+    }
+    
+    document.addEventListener('DOMContentLoaded', applyProfileBg);
+</script>
 <div class="space-y-3 mb-16">
     <div class="bg-card border border-gray-800 rounded-xl p-4 flex justify-between items-center">
         <div class="flex items-center gap-3">
@@ -139,3 +178,4 @@ async function handleAvatarUpload(event) {
 }
 </script>
 {% endblock %}
+

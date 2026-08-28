@@ -58,7 +58,7 @@
                 <!-- UPI 1 (Selected by default) -->
                 <label class="relative block cursor-pointer">
                     <input type="radio" name="gateway" value="1" class="peer sr-only" checked>
-                    <div class="bg-card border border-gray-800 rounded-xl p-3 flex items-center gap-4 transition-all peer-checked:border-blue-500 peer-checked:bg-blue-900/10 theme-border-peer peer-checked:shadow-[0_0_15px_rgba(37,99,235,0.1)]">
+                    <div class="bg-card border border-gray-800 rounded-xl p-3 flex items-center gap-4 transition-all peer-checked:border-green-500 peer-checked:bg-green-900/10 theme-border-peer peer-checked:shadow-[0_0_15px_rgba(37,99,235,0.1)]">
                         <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center p-2 shrink-0">
                             <!-- Fake UPI Logo -->
                             <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" class="w-full object-contain">
@@ -67,7 +67,7 @@
                             <h3 class="text-white font-bold text-sm">UPI 1</h3>
                             <p class="text-[10px] text-gray-400 mt-0.5"><span class="text-green-400">Recommended</span> • Fast & Reliable</p>
                         </div>
-                        <div class="w-6 h-6 rounded-full border-2 border-gray-600 flex items-center justify-center peer-checked:border-blue-500 peer-checked:bg-blue-500 transition-colors theme-bg-peer theme-border-peer shrink-0">
+                        <div class="w-6 h-6 rounded-full border-2 border-gray-600 flex items-center justify-center peer-checked:border-green-500 peer-checked:bg-green-500 transition-colors theme-bg-peer theme-border-peer shrink-0">
                             <i class="fa-solid fa-check text-white text-[10px] opacity-0 peer-checked:opacity-100"></i>
                         </div>
                     </div>
@@ -76,7 +76,7 @@
                 <!-- UPI 2 -->
                 <label class="relative block cursor-pointer">
                     <input type="radio" name="gateway" value="2" class="peer sr-only">
-                    <div class="bg-card border border-gray-800 rounded-xl p-3 flex items-center gap-4 transition-all peer-checked:border-blue-500 peer-checked:bg-blue-900/10 theme-border-peer peer-checked:shadow-[0_0_15px_rgba(37,99,235,0.1)]">
+                    <div class="bg-card border border-gray-800 rounded-xl p-3 flex items-center gap-4 transition-all peer-checked:border-green-500 peer-checked:bg-green-900/10 theme-border-peer peer-checked:shadow-[0_0_15px_rgba(37,99,235,0.1)]">
                         <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center p-2 shrink-0">
                             <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" class="w-full object-contain">
                         </div>
@@ -84,7 +84,7 @@
                             <h3 class="text-white font-bold text-sm">UPI 2</h3>
                             <p class="text-[10px] text-gray-400 mt-0.5"><span class="text-orange-400">Backup</span> • Try if UPI 1 fails</p>
                         </div>
-                        <div class="w-6 h-6 rounded-full border-2 border-gray-600 flex items-center justify-center peer-checked:border-blue-500 peer-checked:bg-blue-500 transition-colors theme-bg-peer theme-border-peer shrink-0">
+                        <div class="w-6 h-6 rounded-full border-2 border-gray-600 flex items-center justify-center peer-checked:border-green-500 peer-checked:bg-green-500 transition-colors theme-bg-peer theme-border-peer shrink-0">
                             <i class="fa-solid fa-check text-white text-[10px] opacity-0 peer-checked:opacity-100"></i>
                         </div>
                     </div>
@@ -113,7 +113,7 @@
 
         <!-- Submit Button -->
         <div class="mt-8">
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg py-4 rounded-xl transition shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center justify-center gap-3 theme-bg">
+            <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-lg py-4 rounded-xl transition-all shadow-[0_0_25px_rgba(37,99,235,0.5)] hover:shadow-[0_0_35px_rgba(37,99,235,0.7)] flex items-center justify-center gap-3 border border-blue-400/30 transform hover:-translate-y-1">
                 <i class="fa-solid fa-lock text-sm"></i> Proceed to Pay <i class="fa-solid fa-arrow-right ml-auto mr-2"></i>
             </button>
             <div class="text-center mt-3 flex justify-center items-center gap-1.5">
@@ -129,3 +129,4 @@
     // Remove the fake radio styling code, peer-checked handles it all purely via Tailwind CSS!
 </script>
 {% endblock %}
+
