@@ -342,6 +342,54 @@ def buy():
 
 # ================= ADMIN ROUTES =================
 
+@app.route("/support", methods=["GET", "POST"])
+def support():
+    if "user_id" not in session: return redirect("/")
+    user_id = session["user_id"]
+    
+    if request.method == "POST":
+        message = request.form.get("message")
+        if message:
+            ticket = db.tickets.find_one({"user_id": user_id})
+            new_msg = {"sender": "user", "text": message, "time": datetime.now().strftime("%I:%M %p")}
+            if ticket:
+                db.tickets.update_one({"user_id": user_id}, {"$push": {"messages": new_msg}, "$set": {"status": "open", "last_updated": datetime.now()}})
+            else:
+                db.tickets.insert_one({
+                    "user_id": user_id,
+                    "username": session.get("username", "User"),
+                    "status": "open",
+                    "messages": [new_msg],
+                    "last_updated": datetime.now()
+                })
+        return redirect("/support")
+        
+    user = db.users.find_one({"user_id": user_id})
+    ticket = db.tickets.find_one({"user_id": user_id})
+    messages = ticket.get("messages", []) if ticket else []
+    return render_template("support.html", user=user, balance=user.get("balance", 0.0), messages=messages)
+
+@app.route("/admin/support")
+def admin_support_list():
+    if not session.get("admin"): return redirect("/admin")
+    tickets = list(db.tickets.find().sort("last_updated", -1))
+    return render_template("admin/support_list.html", tickets=tickets)
+
+@app.route("/admin/support/<user_id>", methods=["GET", "POST"])
+def admin_support_chat(user_id):
+    if not session.get("admin"): return redirect("/admin")
+    
+    if request.method == "POST":
+        message = request.form.get("message")
+        if message:
+            new_msg = {"sender": "admin", "text": message, "time": datetime.now().strftime("%I:%M %p")}
+            db.tickets.update_one({"user_id": user_id}, {"$push": {"messages": new_msg}, "$set": {"status": "replied", "last_updated": datetime.now()}})
+        return redirect(f"/admin/support/{user_id}")
+        
+    ticket = db.tickets.find_one({"user_id": user_id})
+    if not ticket: return redirect("/admin/support")
+    return render_template("admin/support_chat.html", ticket=ticket)
+
 @app.route("/admin", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -442,23 +490,37 @@ def admin_settings():
     settings = db.settings.find_one({"id": "global"}) or {"maintenance_mode": False, "hidden_categories": ""}
     
     if request.method == "POST":
-        maintenance = request.form.get("maintenance_mode") == "on"
-        hidden = request.form.get("hidden_categories", "")
-        app_name = request.form.get("app_name", "Karan Store")
-        app_logo = request.form.get("app_logo", "")
-        telegram = request.form.get("telegram", "Karan_store")
-        instagram = request.form.get("instagram", "Karan_store")
         db.settings.update_one({"id": "global"}, {"$set": {
-            "maintenance_mode": maintenance, 
-            "hidden_categories": hidden,
-            "app_name": app_name,
-            "app_logo": app_logo,
-            "telegram": telegram,
-            "instagram": instagram
+            "maintenance_mode": request.form.get("maintenance_mode") == "on", 
+            "hidden_categories": request.form.get("hidden_categories", ""),
+            "popup_message": request.form.get("popup_message", ""),
+            "app_name": request.form.get("app_name", "Karan Store"),
+            "app_logo": request.form.get("app_logo", ""),
+            "telegram": request.form.get("telegram", "Karan_store"),
+            "instagram": request.form.get("instagram", "Karan_store"),
+            "video_deposit": request.form.get("video_deposit", ""),
+            "video_use": request.form.get("video_use", "")
         }}, upsert=True)
         return redirect("/admin/settings")
         
     return render_template("admin/settings.html", settings=settings)
+
+@app.route("/admin/api_settings", methods=["GET", "POST"])
+def admin_api_settings():
+    if not session.get("admin"): return redirect("/admin")
+    settings = db.settings.find_one({"id": "global"}) or {}
+    
+    if request.method == "POST":
+        db.settings.update_one({"id": "global"}, {"$set": {
+            "api_endpoint": request.form.get("api_endpoint", "https://adminpanels.shop/api/reseller_v1.php"),
+            "api_key": request.form.get("api_key", "4936a17fb44211207c7ca20bdc6a4a57"),
+            "master_key": request.form.get("master_key", "a7f3e8b2c9d1f4a6b8c2d5e9f1a3b6c8"),
+            "karanpay_key_1": request.form.get("karanpay_key_1", "guru131e012b5141689b9135317fb6fa7f"),
+            "karanpay_key_2": request.form.get("karanpay_key_2", "guru1eff587f747b3df8c7a355570f90ce")
+        }}, upsert=True)
+        return redirect("/admin/api_settings")
+        
+    return render_template("admin/api_settings.html", settings=settings)
 
 @app.route("/admin/reorder", methods=["GET", "POST"])
 def admin_reorder():
@@ -629,6 +691,9 @@ def upload_avatar():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
+
 
 
 
