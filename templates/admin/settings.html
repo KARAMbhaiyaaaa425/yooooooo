@@ -61,7 +61,13 @@
                 <input type="url" name="feedback_link" value="{{ settings.feedback_link | default('') }}" placeholder="https://t.me/..." class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-4">
                 
                 <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Check File Updates Link (Telegram)</label>
-                <input type="url" name="updates_link" value="{{ settings.updates_link | default('') }}" placeholder="https://t.me/..." class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg">
+                <input type="url" name="updates_link" value="{{ settings.updates_link | default('') }}" placeholder="https://t.me/..." class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-4">
+                
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Live Support: WhatsApp Link</label>
+                <input type="url" name="whatsapp_support" value="{{ settings.whatsapp_support | default('') }}" placeholder="https://wa.me/..." class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-4">
+                
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Live Support: Telegram Link</label>
+                <input type="url" name="telegram_support" value="{{ settings.telegram_support | default('') }}" placeholder="https://t.me/..." class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg">
             </div>
 
             <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex justify-center items-center gap-2">
