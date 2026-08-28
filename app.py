@@ -51,6 +51,17 @@ def check_maintenance():
 
 # ================= USER ROUTES =================
 
+
+@app.context_processor
+def inject_unread():
+    if "user_id" in session:
+        user = db.users.find_one({"user_id": session["user_id"]})
+        if user:
+            last_seen = user.get("last_seen_notification", "")
+            count = db.notifications.count_documents({"date": {"$gt": last_seen}})
+            return {"unread_count": count}
+    return {"unread_count": 0}
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     settings = db.settings.find_one({"id": "global"})
@@ -273,15 +284,24 @@ def transfer():
     if "user_id" not in session: return redirect("/")
     user = db.users.find_one({"user_id": session["user_id"]})
     msg = ""
+    error = ""
     if request.method == "POST":
         target = request.form.get("target_id")
         amount = float(request.form.get("amount", 0))
-        if amount >= 1 and user["balance"] >= amount:
+        if amount >= 1 and user.get("balance", 0) >= amount:
             target_user = db.users.find_one({"user_id": target})
             if target_user and target != session["user_id"]:
                 db.users.update_one({"user_id": session["user_id"]}, {"$inc": {"balance": -amount}})
                 db.users.update_one({"user_id": target}, {"$inc": {"balance": amount}})
-                msg = f"Success! Transferred ₹{amount} to {target}"
+                msg = f"Success! Transferred ?{amount} to {target}"
+            else:
+                error = "Invalid User ID or cannot transfer to yourself."
+        else:
+            error = "Invalid amount or insufficient balance."
+            
+    # Refresh user to get new balance
+    user = db.users.find_one({"user_id": session["user_id"]})
+    return render_template("transfer.html", user=user, balance=user.get("balance", 0.0), msg=msg, error=error)
 
 @app.route("/buy", methods=["POST"])
 def buy():
@@ -500,7 +520,24 @@ def admin_edit_product(pid):
         features = request.form.get("features", "")
         status = request.form.get("status", "SAFE")
         status_msg = request.form.get("status_msg", "")
-        db.products.update_one({"id": pid}, {"$set": {"media_url": media_url, "features": features, "status": status, "status_msg": status_msg}})
+        
+        name = request.form.get("name", product.get("name"))
+        category = request.form.get("category", product.get("category"))
+        plan_name = request.form.get("plan_name", product.get("plan_name"))
+        price = float(request.form.get("price", product.get("price")))
+        api_id = request.form.get("product_id", product.get("product_id"))
+        
+        db.products.update_one({"id": pid}, {"$set": {
+            "media_url": media_url, 
+            "features": features, 
+            "status": status, 
+            "status_msg": status_msg,
+            "name": name,
+            "category": category,
+            "plan_name": plan_name,
+            "price": price,
+            "product_id": api_id
+        }})
         return redirect("/admin/products")
         
     return render_template("admin/edit_product.html", product=product)
@@ -582,7 +619,9 @@ def admin_settings():
             "video_deposit": request.form.get("video_deposit", ""),
             "video_use": request.form.get("video_use", ""),
             "feedback_link": request.form.get("feedback_link", ""),
-            "updates_link": request.form.get("updates_link", "")
+            "updates_link": request.form.get("updates_link", ""),
+            "whatsapp_support": request.form.get("whatsapp_support", ""),
+            "telegram_support": request.form.get("telegram_support", "")
         }}, upsert=True)
         return redirect("/admin/settings")
         
@@ -734,7 +773,10 @@ def admin_notifications():
 @app.route("/notifications")
 def user_notifications():
     if "user_id" not in session: return redirect("/")
-    user = db.users.find_one({"user_id": session["user_id"]})
+    user_id = session["user_id"]
+    from datetime import datetime
+    db.users.update_one({"user_id": user_id}, {"$set": {"last_seen_notification": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}})
+    user = db.users.find_one({"user_id": user_id})
     notifications = list(db.notifications.find().sort("date", -1))
     return render_template("notifications.html", user=user, balance=user.get("balance", 0.0), notifications=notifications)
 
@@ -823,6 +865,14 @@ def upload_banner():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
+
+
+
+
+
+
 
 
 
