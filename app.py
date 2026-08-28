@@ -55,10 +55,37 @@ def login():
         if user:
             session["user_id"] = user_id
             session["username"] = user.get("username", "User")
-            return redirect("/store")
+            return redirect("/dashboard")
         else:
             return render_template("login.html", error="User ID not found! Pehle Telegram bot par /start karein.")
     return render_template("login.html")
+
+@app.route("/dashboard")
+def dashboard():
+    if "user_id" not in session: return redirect("/")
+    user = db.users.find_one({"user_id": session["user_id"]})
+    
+    # Calculate stats
+    orders = list(db.history.find({"user_id": session["user_id"]}).sort("date", -1))
+    total_orders = len(orders)
+    total_spent = sum(float(o.get("price", 0)) for o in orders)
+    active_keys_count = len(orders) # In a real app we'd check validity
+    
+    # Fake recent transactions for UI
+    transactions = []
+    
+    # Add real deposits
+    deposits = list(db.deposit_history.find({"user_id": session["user_id"]}).sort("timestamp", -1).limit(3))
+    for d in deposits:
+        transactions.append({
+            "type": "deposit",
+            "id": d.get("order_id"),
+            "desc": "UPI Deposit",
+            "amount": d.get("amount", 0),
+            "date": d.get("timestamp", "").split(" ")[0]
+        })
+        
+    return render_template("dashboard.html", user=user, balance=user.get("balance", 0.0), total_orders=total_orders, total_spent=total_spent, active_keys_count=active_keys_count, transactions=transactions)
 
 @app.route("/store")
 def store():
