@@ -15,6 +15,8 @@ API_ENDPOINT = "https://adminpanels.shop/api/reseller_v1.php"
 API_KEY = "4936a17fb44211207c7ca20bdc6a4a57"
 MASTER_KEY = "a7f3e8b2c9d1f4a6b8c2d5e9f1a3b6c8"
 
+# ================= USER ROUTES =================
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -23,21 +25,58 @@ def login():
         if user:
             session["user_id"] = user_id
             session["username"] = user.get("username", "User")
-            return redirect("/dashboard")
+            return redirect("/store")
         else:
             return render_template("login.html", error="User ID not found! Pehle Telegram bot par /start karein.")
     return render_template("login.html")
 
-@app.route("/dashboard")
-def dashboard():
-    if "user_id" not in session:
-        return redirect("/")
-    
+@app.route("/store")
+def store():
+    if "user_id" not in session: return redirect("/")
     user = db.users.find_one({"user_id": session["user_id"]})
-    balance = user.get("balance", 0.0)
-    
     products = list(db.products.find({}).sort("order", 1))
-    return render_template("dashboard.html", user=user, balance=balance, products=products)
+    return render_template("store.html", user=user, balance=user.get("balance", 0.0), products=products)
+
+@app.route("/profile")
+def profile():
+    if "user_id" not in session: return redirect("/")
+    user = db.users.find_one({"user_id": session["user_id"]})
+    return render_template("profile.html", user=user, balance=user.get("balance", 0.0))
+
+@app.route("/history")
+def history():
+    if "user_id" not in session: return redirect("/")
+    user_id = session["user_id"]
+    orders = list(db.history.find({"user_id": user_id}).sort("date", -1))
+    return render_template("history.html", orders=orders)
+
+@app.route("/deposit_history")
+def deposit_history():
+    if "user_id" not in session: return redirect("/")
+    user_id = session["user_id"]
+    deposits = list(db.deposit_history.find({"user_id": user_id}).sort("timestamp", -1))
+    return render_template("deposit_history.html", deposits=deposits)
+
+@app.route("/transfer", methods=["GET", "POST"])
+def transfer():
+    if "user_id" not in session: return redirect("/")
+    user = db.users.find_one({"user_id": session["user_id"]})
+    msg = ""
+    if request.method == "POST":
+        target = request.form.get("target_id")
+        amount = float(request.form.get("amount", 0))
+        if amount >= 1 and user["balance"] >= amount:
+            target_user = db.users.find_one({"user_id": target})
+            if target_user and target != session["user_id"]:
+                db.users.update_one({"user_id": session["user_id"]}, {"$inc": {"balance": -amount}})
+                db.users.update_one({"user_id": target}, {"$inc": {"balance": amount}})
+                msg = f"Success! Transferred ₹{amount} to {target}"
+                user["balance"] -= amount
+            else:
+                msg = "Invalid Target User ID"
+        else:
+            msg = "Invalid amount or insufficient balance"
+    return render_template("transfer.html", user=user, balance=user.get("balance", 0.0), msg=msg)
 
 @app.route("/buy", methods=["POST"])
 def buy():
@@ -87,12 +126,13 @@ def buy():
         db.users.update_one({"user_id": user_id}, {"$inc": {"balance": price}}) # Refund
         return jsonify({"success": False, "msg": "Failed to connect to API"})
 
+# ================= ADMIN ROUTES =================
+
 @app.route("/admin", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        # Hardcoded Admin Credentials
         if username == "admin" and password == "karan123":
             session["admin"] = True
             return redirect("/admin/panel")
@@ -102,20 +142,32 @@ def admin_login():
 
 @app.route("/admin/panel")
 def admin_panel():
-    if not session.get("admin"):
-        return redirect("/admin")
-        
+    if not session.get("admin"): return redirect("/admin")
+    
     total_users = db.users.count_documents({})
-    # Get total balance
     users = list(db.users.find({}))
     total_balance = sum(u.get("balance", 0) for u in users)
     
-    return f"""
-    <h1 style="color:red;">Owner Admin Panel</h1>
-    <p>Total Users: {total_users}</p>
-    <p>Total Users Balance: ₹{total_balance}</p>
-    <a href="/logout">Logout</a>
-    """
+    orders = db.orders.count_documents({"status": "completed"})
+    
+    return render_template("admin/panel.html", total_users=total_users, total_balance=total_balance, orders=orders)
+
+@app.route("/admin/add_balance", methods=["GET", "POST"])
+def admin_add_balance():
+    if not session.get("admin"): return redirect("/admin")
+    msg = ""
+    if request.method == "POST":
+        uid = request.form.get("user_id")
+        amt = float(request.form.get("amount", 0))
+        db.users.update_one({"user_id": uid}, {"$inc": {"balance": amt}})
+        msg = f"Added ₹{amt} to {uid}"
+    return render_template("admin/add_balance.html", msg=msg)
+
+@app.route("/admin/products", methods=["GET"])
+def admin_products():
+    if not session.get("admin"): return redirect("/admin")
+    products = list(db.products.find({}).sort("order", 1))
+    return render_template("admin/products.html", products=products)
 
 @app.route("/logout")
 def logout():
