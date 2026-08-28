@@ -205,6 +205,20 @@ def history():
     if "user_id" not in session: return redirect("/")
     user_id = session["user_id"]
     orders = list(db.history.find({"user_id": user_id}).sort("date", -1))
+    
+    # Inject media_url from products
+    for order in orders:
+        prod = db.products.find_one({"name": order.get("product"), "plan_name": order.get("plan")})
+        if prod:
+            order["media_url"] = prod.get("media_url", "")
+        else:
+            # Try to match just by name
+            prod_any = db.products.find_one({"name": order.get("product")})
+            if prod_any:
+                order["media_url"] = prod_any.get("media_url", "")
+            else:
+                order["media_url"] = ""
+                
     return render_template("history.html", history=orders)
 
 @app.route("/deposit_history")
@@ -517,6 +531,8 @@ def admin_edit_product(pid):
     
     if request.method == "POST":
         media_url = request.form.get("media_url", "")
+        feedback_link = request.form.get("feedback_link", "")
+        updates_link = request.form.get("updates_link", "")
         features = request.form.get("features", "")
         status = request.form.get("status", "SAFE")
         status_msg = request.form.get("status_msg", "")
@@ -528,7 +544,9 @@ def admin_edit_product(pid):
         api_id = request.form.get("product_id", product.get("product_id"))
         
         db.products.update_one({"id": pid}, {"$set": {
-            "media_url": media_url, 
+            "media_url": media_url,
+            "feedback_link": feedback_link,
+            "updates_link": updates_link, 
             "features": features, 
             "status": status, 
             "status_msg": status_msg,
@@ -560,6 +578,8 @@ def admin_add_product():
         product_id = request.form.get("product_id", "0")
         if not product_id: product_id = "0"
         media_url = request.form.get("media_url", "")
+        feedback_link = request.form.get("feedback_link", "")
+        updates_link = request.form.get("updates_link", "")
         features = request.form.get("features", "")
         status = request.form.get("status", "SAFE")
         status_msg = request.form.get("status_msg", "")
@@ -578,6 +598,8 @@ def admin_add_product():
             "price": price,
             "product_id": int(product_id),
             "media_url": media_url,
+            "feedback_link": feedback_link,
+            "updates_link": updates_link,
             "features": features,
             "status": status,
             "status_msg": status_msg,
@@ -591,7 +613,9 @@ def admin_add_product():
                 "name": name,
                 "category": category,
                 "media_url": media_url,
-                "features": features,
+            "feedback_link": feedback_link,
+            "updates_link": updates_link,
+            "features": features,
                 "status": status,
                 "status_msg": status_msg,
                 "product_id": product_id
@@ -865,6 +889,7 @@ def upload_banner():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
