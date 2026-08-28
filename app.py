@@ -105,6 +105,9 @@ def register():
         if db.users.find_one({"username": username}):
             return render_template("register.html", error="Username is taken. Choose another.")
             
+                default_avatar = settings.get("default_avatar", "") if settings else ""
+        default_banner = settings.get("default_banner", "") if settings else ""
+
         # Create user
         user_id = str(uuid.uuid4().hex[:10]) # Generate a 10 char ID
         db.users.insert_one({
@@ -113,6 +116,8 @@ def register():
             "email": email,
             "password": password,
             "balance": 0.0,
+            "avatar": default_avatar,
+            "banner": default_banner,
             "registered_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
         
@@ -902,6 +907,7 @@ def upload_banner():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
