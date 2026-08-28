@@ -37,15 +37,15 @@
 
 <div class="flex justify-between items-center mb-4">
     <h3 class="text-sm font-bold text-white uppercase tracking-wider">POPULAR KEYS</h3>
-    <a href="#" class="text-[10px] text-blue-500 font-bold hover:text-blue-400 uppercase tracking-wider">VIEW ALL</a>
+    <a href="#" class="text-[10px] text-blue-500 theme-text font-bold hover:text-blue-400 uppercase tracking-wider">VIEW ALL</a>
 </div><!-- Products List -->
 <div class="space-y-4 mb-20" id="products-container">
     {% for p in products %}
     {% set outer_index = loop.index %}
-    <div class="product-card bg-[#0e1628] border border-blue-900/30 rounded-3xl overflow-hidden relative shadow-lg shadow-black/50" data-category="{{ p.category }}" data-name="{{ p.name | lower }}">
+    <div class="product-card bg-card border border-gray-800 theme-border rounded-3xl overflow-hidden relative shadow-lg shadow-black/50" data-category="{{ p.category }}" data-name="{{ p.name | lower }}">
         
         <!-- Image Section -->
-        <div class="relative w-full h-[180px] bg-[#050810] flex items-center justify-center overflow-hidden group">
+        <div class="relative w-full h-[180px] bg-gray-900 flex items-center justify-center overflow-hidden group">
             {% if p.media_url %}
                 {% if p.media_url.endswith('.mp4') %}
                     <video id="vid-{{ outer_index }}" src="{{ p.media_url }}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-500" loop muted playsinline></video>
@@ -91,36 +91,39 @@
         </div>
         
         <!-- Details Section -->
-        <div class="p-5 bg-[#0e1628]">
+        <div class="p-5 bg-card">
             <h3 class="text-white font-black text-[22px] uppercase tracking-wide mb-4">{{ p.name }}</h3>
             
-            <!-- Feedback and Update Buttons -->
-            <div class="grid grid-cols-2 gap-3 mb-5">
-                <a href="{{ global_settings.feedback_link | default('#') }}" target="_blank" class="flex justify-center items-center gap-2 bg-[#16223f] border border-[#1e2f5c] rounded-xl py-2.5 hover:bg-[#1e2f5c] transition shadow-md shadow-black/20">
-                    <i class="fa-regular fa-comment-dots text-blue-500 text-sm"></i>
-                    <span class="text-[11px] text-gray-300 font-bold">Check File Feedback</span>
+                                    <!-- Feedback and Update Buttons -->
+            <div class="grid grid-cols-2 gap-2 mb-5">
+                {% set product_feedback = p.plans[0].feedback_link | default(global_settings.feedback_link | default('#'), true) %}
+                <a href="{{ product_feedback }}" target="_blank" class="flex flex-col justify-center items-center gap-1.5 bg-gray-800 border border-gray-700 theme-border rounded-xl py-3 px-1 hover:bg-gray-700 transition shadow-md shadow-black/20 text-center">
+                    <i class="fa-regular fa-comment-dots text-blue-500 theme-text text-lg"></i>
+                    <span class="text-[10px] text-gray-300 font-bold leading-tight">Check File<br>Feedback</span>
                 </a>
-                <a href="{{ global_settings.updates_link | default('#') }}" target="_blank" class="flex justify-center items-center gap-2 bg-[#16223f] border border-[#1e2f5c] rounded-xl py-2.5 hover:bg-[#1e2f5c] transition shadow-md shadow-black/20">
-                    <i class="fa-solid fa-rotate text-blue-500 text-sm"></i>
-                    <span class="text-[11px] text-gray-300 font-bold">Check File Updates</span>
+                
+                {% set product_updates = p.plans[0].updates_link | default(global_settings.updates_link | default('#'), true) %}
+                <a href="{{ product_updates }}" target="_blank" class="flex flex-col justify-center items-center gap-1.5 bg-gray-800 border border-gray-700 theme-border rounded-xl py-3 px-1 hover:bg-gray-700 transition shadow-md shadow-black/20 text-center">
+                    <i class="fa-solid fa-rotate text-blue-500 theme-text text-lg"></i>
+                    <span class="text-[10px] text-gray-300 font-bold leading-tight">Check File<br>Updates</span>
                 </a>
             </div>
             
             <!-- Dropdown Toggle Button -->
-            <button onclick="togglePlanDropdown({{ outer_index }})" id="btn-{{ outer_index }}" class="w-full bg-[#16223f] text-white font-bold py-4 rounded-xl text-sm transition flex items-center justify-between px-5 uppercase tracking-wider border border-[#1e2f5c] hover:border-blue-900 shadow-md">
+            <button onclick="togglePlanDropdown({{ outer_index }})" id="btn-{{ outer_index }}" class="w-full bg-gray-800 text-white font-bold py-4 rounded-xl text-sm transition flex items-center justify-between px-5 uppercase tracking-wider border border-gray-700 theme-border  shadow-md">
                 <span>SELECT PLAN</span>
                 <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300" id="icon-{{ outer_index }}"></i>
             </button>
             
             <!-- Plans Dropdown -->
-            <div id="plans-{{ outer_index }}" class="plan-dropdown mt-3 bg-[#16223f] border border-[#1e2f5c] rounded-2xl overflow-hidden shadow-inner">
+            <div id="plans-{{ outer_index }}" class="plan-dropdown mt-3 bg-gray-800 border border-gray-700 theme-border rounded-2xl overflow-hidden shadow-inner">
                 <div class="p-3 space-y-1">
                     {% for plan in p.plans %}
                     {% set status = plan.status | default('SAFE') %}
-                    <label class="flex items-center gap-4 p-4 rounded-xl cursor-pointer transition hover:bg-[#1e2f5c] group {% if status != 'SAFE' and status != 'WORKING' %}opacity-50 cursor-not-allowed{% endif %}" onclick="selectPlan({{ outer_index }}, '{{ plan.id }}', '{{ plan.name | escape }} ({{ plan.plan_name | escape }})', '{{ plan.price }}', '{{ status }}')">
+                    <label class="flex items-center gap-4 p-4 rounded-xl cursor-pointer transition hover:bg-gray-700 group {% if status != 'SAFE' and status != 'WORKING' %}opacity-50 cursor-not-allowed{% endif %}" onclick="selectPlan({{ outer_index }}, '{{ plan.id }}', '{{ plan.name | escape }} ({{ plan.plan_name | escape }})', '{{ plan.price }}', '{{ status }}')">
                         <div class="relative flex items-center justify-center w-6 h-6 shrink-0">
                             <input type="radio" name="plan_{{ outer_index }}" class="peer sr-only" {% if status != 'SAFE' and status != 'WORKING' %}disabled{% endif %}>
-                            <div class="w-6 h-6 rounded-full border-2 border-gray-600 peer-checked:border-blue-500 peer-checked:bg-transparent transition-all shadow-inner"></div>
+                            <div class="w-6 h-6 rounded-full border-2 border-gray-600 peer-checked:border-blue-500 theme-border-peer peer-checked:bg-transparent transition-all shadow-inner"></div>
                             <div class="w-3 h-3 rounded-full bg-blue-500 absolute opacity-0 peer-checked:opacity-100 transition-all scale-0 peer-checked:scale-100 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
                         </div>
                         <div class="flex-1">
@@ -128,12 +131,12 @@
                             <p class="text-xs font-bold text-green-400 mt-1 tracking-wider">₹{{ plan.price }}</p>
                         </div>
                     </label>
-                    <div class="h-px bg-[#1e2f5c] w-full last:hidden mx-2"></div>
+                    <div class="h-px bg-gray-700 w-full last:hidden mx-2"></div>
                     {% endfor %}
                 </div>
                 
                 <div class="p-4 pt-2">
-                    <button id="buy-btn-{{ outer_index }}" onclick="submitPurchase({{ outer_index }})" disabled class="w-full bg-blue-600 disabled:bg-[#1e2f5c] hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-[15px] transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.4)] disabled:shadow-none disabled:text-gray-500 tracking-wider">
+                    <button id="buy-btn-{{ outer_index }}" onclick="submitPurchase({{ outer_index }})" disabled class="w-full bg-blue-600 disabled:bg-gray-800 hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-[15px] transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.4)] disabled:shadow-none disabled:text-gray-500 tracking-wider">
                         <i class="fa-solid fa-cart-shopping"></i> Buy Now
                     </button>
                 </div>
@@ -242,4 +245,6 @@ function buyProduct(productId, name, price) {
 }
 </script>
 {% endblock %}
+
+
 

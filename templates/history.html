@@ -2,32 +2,67 @@
 
 {% block content %}
 <div class="mb-6 flex items-center gap-3">
-    <a href="/dashboard" class="text-white hover:text-gray-300"><i class="fa-solid fa-chevron-left"></i></a>
-    <h2 class="text-lg font-bold text-white uppercase tracking-wide">My Keys</h2>
+    <a href="/dashboard" class="w-8 h-8 rounded-full bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition shadow-md">
+        <i class="fa-solid fa-arrow-left text-sm"></i>
+    </a>
+    <div>
+        <h2 class="text-xl font-bold text-white uppercase tracking-wide">My Keys</h2>
+        <p class="text-[10px] text-gray-400 mt-0.5">All your purchased keys</p>
+    </div>
 </div>
 
 <!-- Keys List -->
-<div class="space-y-4 mb-16">
+<div class="space-y-4 mb-20">
     {% if history and history|length > 0 %}
         {% for item in history %}
-        <div class="bg-card border border-gray-800 rounded-2xl p-4 flex gap-4">
+        <div class="bg-card border border-gray-800 rounded-2xl p-4 flex gap-4 theme-border shadow-lg">
             
-            <div class="w-16 h-16 rounded-xl bg-gray-800 overflow-hidden shrink-0 border border-gray-700">
-                <div class="w-full h-full flex items-center justify-center text-blue-500 text-xl"><i class="fa-solid fa-key"></i></div>
+            <div class="w-[100px] h-[120px] rounded-xl bg-[#0a0f1c] overflow-hidden shrink-0 border border-gray-700 relative theme-border">
+                {% if item.media_url %}
+                    {% if item.media_url.endswith('.mp4') %}
+                        <video src="{{ item.media_url }}" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <i class="fa-solid fa-play text-white text-3xl opacity-90 drop-shadow-lg"></i>
+                        </div>
+                    {% else %}
+                        <img src="{{ item.media_url }}" class="w-full h-full object-cover">
+                    {% endif %}
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-blue-500 text-3xl theme-text">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                {% endif %}
             </div>
             
-            <div class="flex-1 min-w-0">
-                <div class="flex justify-between items-start mb-1">
-                    <h3 class="font-bold text-white text-sm truncate uppercase">{{ item.product }}</h3>
-                    <span class="text-[10px] text-gray-400">{{ item.plan }}</span>
+            <div class="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                <div>
+                    <h3 class="font-bold text-white text-[14px] truncate uppercase tracking-wide">{{ item.product }}</h3>
+                    
+                    <div class="mt-2.5 space-y-2.5">
+                        <div class="flex gap-2.5 items-start">
+                            <i class="fa-regular fa-calendar-days text-blue-500 text-xs mt-0.5 opacity-80 theme-text"></i>
+                            <div>
+                                <p class="text-[10px] text-gray-400">Purchased:</p>
+                                <p class="text-[11px] text-gray-300 font-medium">{{ item.date }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2.5 items-start">
+                            <i class="fa-regular fa-clock text-blue-500 text-xs mt-0.5 opacity-80 theme-text"></i>
+                            <div class="flex-1 flex justify-between items-center gap-2">
+                                <div>
+                                    <p class="text-[10px] text-gray-400">Plan Duration:</p>
+                                    <p class="text-[11px] text-gray-300 font-medium">{{ item.plan }}</p>
+                                </div>
+                                <span class="text-[9px] bg-[#16223f] text-blue-400 px-2 py-1 rounded-md border border-[#1e2f5c] whitespace-nowrap">{{ item.plan }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <p class="text-[9px] text-gray-500 mb-0.5">Purchased: {{ item.date }}</p>
-                <p class="text-[9px] text-green-400 font-semibold mb-3">Status: Active</p>
-                
-                <div class="flex gap-2">
-                    <button class="flex-1 py-1.5 border border-gray-700 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-gray-800 transition">View Details</button>
-                    <button onclick="navigator.clipboard.writeText('{{ item.license_key }}'); Swal.fire({title:'Copied!', icon:'success', timer:1500, showConfirmButton:false, background:'#111827', color:'#fff'})" class="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-[10px] font-bold text-white transition flex items-center justify-center gap-1">
+                <div class="flex justify-between items-center mt-3 pt-1">
+                    <p class="text-[11px] text-gray-400">Status: <span class="text-green-400 font-semibold">Active</span></p>
+                    <button onclick="navigator.clipboard.writeText('{{ item.license_key }}'); Swal.fire({title:'Copied!', icon:'success', timer:1500, showConfirmButton:false, background:'#111827', color:'#fff'})" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-[12px] font-bold text-white transition flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(37,99,235,0.3)]">
                         <i class="fa-regular fa-copy"></i> Copy Key
                     </button>
                 </div>
@@ -36,13 +71,12 @@
         </div>
         {% endfor %}
     {% else %}
-        <div class="text-center py-10">
-            <div class="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-3 text-gray-500 text-2xl">
-                <i class="fa-solid fa-ghost"></i>
+        <div class="text-center py-20">
+            <div class="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-4 text-gray-500 text-3xl">
+                <i class="fa-solid fa-key"></i>
             </div>
-            <h3 class="text-white font-bold mb-1">No Keys Found</h3>
-            <p class="text-xs text-gray-500 mb-4">You haven't purchased any hacks yet.</p>
-            <a href="/store" class="inline-block bg-blue-600 text-white font-bold py-2 px-6 rounded-lg text-sm shadow-lg shadow-blue-900/30">Go to Store</a>
+            <h3 class="text-white font-bold mb-1 uppercase tracking-wider text-xl">No Keys Found</h3>
+            <p class="text-xs text-gray-500 font-medium">You haven't purchased any keys yet.</p>
         </div>
     {% endif %}
 </div>
