@@ -15,24 +15,7 @@
 <div class="space-y-4 mb-20">
     {% if history and history|length > 0 %}
         {% for item in history %}
-        <div class="bg-card border border-gray-800 rounded-2xl p-4 flex gap-4 theme-border shadow-lg">
-            
-            <div class="w-[100px] h-[120px] rounded-xl bg-[#0a0f1c] overflow-hidden shrink-0 border border-gray-700 relative theme-border">
-                {% if item.media_url %}
-                    {% if item.media_url.endswith('.mp4') %}
-                        <video src="{{ item.media_url }}" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
-                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <i class="fa-solid fa-play text-white text-3xl opacity-90 drop-shadow-lg"></i>
-                        </div>
-                    {% else %}
-                        <img src="{{ item.media_url }}" class="w-full h-full object-cover">
-                    {% endif %}
-                {% else %}
-                    <div class="w-full h-full flex items-center justify-center text-blue-500 text-3xl theme-text">
-                        <i class="fa-solid fa-key"></i>
-                    </div>
-                {% endif %}
-            </div>
+                <div class="bg-card border border-gray-800 rounded-2xl p-4 flex gap-4 theme-border shadow-lg">
             
             <div class="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                 <div>
@@ -81,3 +64,4 @@
     {% endif %}
 </div>
 {% endblock %}
+
