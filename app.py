@@ -348,9 +348,8 @@ def buy():
             payload = {'api_key': current_api_key, 'action': 'buy', 'product_id': str(plan.get("product_id", "")), 'duration': str(plan.get("plan_name", "")), 'android_id': android_id}
             headers = {'Content-Type': 'application/x-www-form-urlencoded', 'x-master-key': current_master_key}
             
-            import tls_client
-            tls_session = tls_client.Session(client_identifier="chrome_112")
-            api_res = tls_session.post(current_api_endpoint, data=payload, headers=headers, timeout_seconds=15)
+            import requests
+            api_res = requests.post(current_api_endpoint, data=payload, headers=headers, timeout=15)
             data = api_res.json()
             
             if data.get("status") == "success" or data.get("success") == True:
