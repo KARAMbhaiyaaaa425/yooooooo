@@ -167,6 +167,27 @@
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
         
+                let touchstartX = 0;
+        let touchendX = 0;
+        
+        function handleSwipe() {
+            if (touchendX < touchstartX - 50) {
+                // Swiped Left
+                if (sidebar.classList.contains('sidebar-open')) {
+                    toggleSidebar();
+                }
+            }
+        }
+        
+        document.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+        });
+        
+        document.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
         function toggleSidebar() {
             if (sidebar.classList.contains('sidebar-closed')) {
                 sidebar.classList.remove('sidebar-closed');
@@ -223,3 +244,4 @@
     </script>
 </body>
 </html>
+
