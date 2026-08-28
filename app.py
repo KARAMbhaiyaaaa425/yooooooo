@@ -409,7 +409,20 @@ def admin_panel():
     users = list(db.users.find({}))
     total_balance = sum(u.get("balance", 0) for u in users)
     orders = db.history.count_documents({})
-    return render_template("admin/panel.html", total_users=total_users, total_balance=total_balance, orders=orders)
+    
+    # 7 Days Sales Graph Data
+    from datetime import datetime, timedelta
+    sales_labels = []
+    sales_data = []
+    for i in range(6, -1, -1):
+        dt = datetime.now() - timedelta(days=i)
+        date_str = dt.strftime('%Y-%m-%d')
+        daily_sales = list(db.history.find({"date": {"$regex": f"^{date_str}"}}))
+        daily_total = sum(float(s.get("price", 0)) for s in daily_sales)
+        sales_labels.append(dt.strftime('%a'))
+        sales_data.append(daily_total)
+        
+    return render_template("admin/panel.html", total_users=total_users, total_balance=total_balance, orders=orders, sales_labels=sales_labels, sales_data=sales_data)
 
 @app.route("/admin/add_balance", methods=["GET", "POST"])
 def admin_add_balance():
@@ -691,6 +704,7 @@ def upload_avatar():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
