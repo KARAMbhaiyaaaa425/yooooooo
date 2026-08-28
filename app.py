@@ -6,12 +6,14 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, session, jsonify
 from pymongo import MongoClient
 import tls_client
+import hashlib
+import hmac
 
 app = Flask(__name__)
-app.secret_key = "karan_bhaiya_super_secret"
+app.secret_key = 'karan_bhaiya_super_secret'
 
 # MongoDB
-client = MongoClient("mongodb+srv://notchff644_db_user:n6ghmq4Cuz3ViMcf@cluster0.pqt6pea.mongodb.net/?appName=Cluster0", tlsAllowInvalidCertificates=True)
+client = MongoClient('mongodb+srv://notchff644_db_user:n6ghmq4Cuz3ViMcf@cluster0.pqt6pea.mongodb.net/?appName=Cluster0', tlsAllowInvalidCertificates=True)
 db = client["karanpay_bot"]
 
 # API Config
@@ -48,17 +50,60 @@ def login():
 
     if request.method == "POST":
         if maintenance:
-            return render_template("login.html", error="🛠 Store is currently under Maintenance. Please try again later.")
+            return render_template("login.html", error="Store is currently under Maintenance. Please try again later.")
             
-        user_id = request.form.get("user_id")
-        user = db.users.find_one({"user_id": user_id})
+        email = request.form.get("email")
+        password = request.form.get("password")
+        
+        user = db.users.find_one({"email": email, "password": password})
         if user:
-            session["user_id"] = user_id
+            session["user_id"] = user["user_id"]
             session["username"] = user.get("username", "User")
             return redirect("/dashboard")
         else:
-            return render_template("login.html", error="User ID not found! Pehle Telegram bot par /start karein.")
-    return render_template("login.html")
+            return render_template("login.html", error="Invalid Email or Password.")
+            
+    # Get error from query param if any
+    error = request.args.get('error')
+    return render_template("login.html", error=error)
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    settings = db.settings.find_one({"id": "global"})
+    maintenance = settings.get("maintenance_mode", False) if settings else False
+
+    if request.method == "POST":
+        if maintenance:
+            return render_template("register.html", error="Store is currently under Maintenance.")
+            
+        username = request.form.get("username")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        
+        if db.users.find_one({"email": email}):
+            return render_template("register.html", error="Email is already registered. Please Login.")
+        
+        if db.users.find_one({"username": username}):
+            return render_template("register.html", error="Username is taken. Choose another.")
+            
+        # Create user
+        user_id = str(uuid.uuid4().hex[:10]) # Generate a 10 char ID
+        db.users.insert_one({
+            "user_id": user_id,
+            "username": username,
+            "email": email,
+            "password": password,
+            "balance": 0.0,
+            "registered_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+        
+        # Auto login
+        session["user_id"] = user_id
+        session["username"] = username
+        return redirect("/dashboard")
+        
+    return render_template("register.html")
+
 
 @app.route("/dashboard")
 def dashboard():
@@ -114,7 +159,22 @@ def store():
         
     return render_template("store.html", user=user, balance=user.get("balance", 0.0), products=list(grouped_products.values()))
 
-@app.route("/profile")
+@app.route('/settings')
+def user_settings():
+    if 'user_id' not in session: return redirect('/')
+    return render_template('user_settings.html', balance=db.users.find_one({'user_id': session['user_id']}).get('balance', 0.0))
+
+@app.route('/settings/appearance')
+def appearance():
+    if 'user_id' not in session: return redirect('/')
+    return render_template('appearance.html', balance=db.users.find_one({'user_id': session['user_id']}).get('balance', 0.0))
+
+@app.route('/settings/about')
+def about():
+    if 'user_id' not in session: return redirect('/')
+    return render_template('about.html', settings=db.settings.find_one({'id': 'global'}) or {}, balance=db.users.find_one({'user_id': session['user_id']}).get('balance', 0.0))
+
+@app.route('/profile')
 def profile():
     if "user_id" not in session: return redirect("/")
     user = db.users.find_one({"user_id": session["user_id"]})
@@ -371,7 +431,18 @@ def admin_settings():
     if request.method == "POST":
         maintenance = request.form.get("maintenance_mode") == "on"
         hidden = request.form.get("hidden_categories", "")
-        db.settings.update_one({"id": "global"}, {"$set": {"maintenance_mode": maintenance, "hidden_categories": hidden}}, upsert=True)
+        app_name = request.form.get("app_name", "Karan Store")
+        app_logo = request.form.get("app_logo", "")
+        telegram = request.form.get("telegram", "Karan_store")
+        instagram = request.form.get("instagram", "Karan_store")
+        db.settings.update_one({"id": "global"}, {"$set": {
+            "maintenance_mode": maintenance, 
+            "hidden_categories": hidden,
+            "app_name": app_name,
+            "app_logo": app_logo,
+            "telegram": telegram,
+            "instagram": instagram
+        }}, upsert=True)
         return redirect("/admin/settings")
         
     return render_template("admin/settings.html", settings=settings)
@@ -410,29 +481,106 @@ def admin_orders_list():
 
 @app.route("/admin/transactions")
 def admin_transactions():
-    if not session.get("admin"): return redirect("/admin")
+    if session.get("admin") != "admin": return redirect("/admin")
     deposits = list(db.orders.find({}).sort("timestamp", -1))
     return render_template("admin/transactions.html", deposits=deposits)
 
 @app.route("/admin/transaction/<action>/<order_id>")
 def admin_transaction_action(action, order_id):
-    if not session.get("admin"): return redirect("/admin")
+    if session.get("admin") != "admin": return redirect("/admin")
     order = db.orders.find_one({"order_id": order_id})
     if not order or order["status"] != "pending": return redirect("/admin/transactions")
     
     if action == "approve":
         db.orders.update_one({"order_id": order_id}, {"$set": {"status": "completed", "utr": "MANUAL", "sender": "Admin Approved"}})
         db.users.update_one({"user_id": order["user_id"]}, {"$inc": {"balance": order["amount"]}})
+        from datetime import datetime
         db.deposit_history.insert_one({"user_id": order["user_id"], "order_id": order_id, "amount": order["amount"], "utr": "MANUAL", "sender": "Admin Approved", "status": "completed", "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
     elif action == "reject":
         db.orders.update_one({"order_id": order_id}, {"$set": {"status": "failed", "utr": "REJECTED", "sender": "Admin Rejected"}})
-        
     return redirect("/admin/transactions")
+
+@app.route("/admin/notifications", methods=["GET", "POST"])
+def admin_notifications():
+    if session.get("admin") != "admin": return redirect("/admin")
+    
+    if request.method == "POST":
+        title = request.form.get("title")
+        message = request.form.get("message")
+        import datetime
+        db.notifications.insert_one({
+            "title": title,
+            "message": message,
+            "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+        return redirect("/admin/notifications")
+        
+    notifications = list(db.notifications.find().sort("date", -1))
+    return render_template("admin/notifications.html", notifications=notifications)
+
+@app.route("/notifications")
+def user_notifications():
+    if "user_id" not in session: return redirect("/")
+    user = db.users.find_one({"user_id": session["user_id"]})
+    notifications = list(db.notifications.find().sort("date", -1))
+    return render_template("notifications.html", user=user, balance=user.get("balance", 0.0), notifications=notifications)
 
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
+@app.route('/telegram_login')
+def telegram_login():
+    data = request.args.to_dict()
+    if 'hash' not in data:
+        return redirect('/?error=Invalid+Login')
+
+    received_hash = data.pop('hash')
+    
+    # We need the bot token to verify.
+    bot_token = '8833898625:AAEW18HVT9CIzvTW0lP7U6nub8FuXjX2bUI' # Provided in the system context earlier, fallback
+    settings = db.settings.find_one({"id": "global"}) or {}
+    
+    # Verifying Telegram Login
+    data_check_string = '\n'.join([f"{k}={v}" for k, v in sorted(data.items())])
+    secret_key = hashlib.sha256(bot_token.encode()).digest()
+    hash_code = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+
+    if hash_code != received_hash:
+        return redirect('/?error=Authentication+Failed')
+
+    user_id = data.get('id')
+    first_name = data.get('first_name', '')
+    
+    # Check if user exists
+    user = db.users.find_one({'user_id': str(user_id)})
+    if not user:
+        # Create new user via Web Login
+        db.users.insert_one({
+            'user_id': str(user_id),
+            'first_name': first_name,
+            'balance': 0.0,
+            'registered_via': 'web'
+        })
+    
+    session['user_id'] = str(user_id)
+    session['first_name'] = first_name
+    
+    # Send success message to Telegram using Bot API
+    msg = f"✅ *Login Successful!*\n\nWelcome back to Karan Store Website, {first_name}!\nYou have securely logged in via Telegram."
+    try:
+        requests.post(f"https://api.telegram.org/bot{bot_token}/sendMessage", data={
+            'chat_id': user_id,
+            'text': msg,
+            'parse_mode': 'Markdown'
+        })
+    except:
+        pass
+
+    return redirect('/dashboard')
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
