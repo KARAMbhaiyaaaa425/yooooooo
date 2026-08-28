@@ -467,15 +467,18 @@ def admin_delete_product(pid):
 def admin_add_product():
     if not session.get("admin"): return redirect("/admin")
     if request.method == "POST":
+        p_type = request.form.get("type", "api")
         name = request.form.get("name")
         category = request.form.get("category")
         plan_name = request.form.get("plan_name")
         price = float(request.form.get("price"))
-        product_id = request.form.get("product_id")
+        product_id = request.form.get("product_id", "0")
+        if not product_id: product_id = "0"
         media_url = request.form.get("media_url", "")
         features = request.form.get("features", "")
         status = request.form.get("status", "SAFE")
         status_msg = request.form.get("status_msg", "")
+        add_another = request.form.get("add_another") == "on"
         
         new_id = 1
         last_product = db.products.find_one({}, sort=[("id", -1)])
@@ -483,6 +486,7 @@ def admin_add_product():
         
         db.products.insert_one({
             "id": new_id,
+            "type": p_type,
             "name": name,
             "category": category,
             "plan_name": plan_name,
@@ -494,7 +498,23 @@ def admin_add_product():
             "status_msg": status_msg,
             "order": new_id
         })
+        
+        if add_another:
+            import urllib.parse
+            query = urllib.parse.urlencode({
+                "type": p_type,
+                "name": name,
+                "category": category,
+                "media_url": media_url,
+                "features": features,
+                "status": status,
+                "status_msg": status_msg,
+                "product_id": product_id
+            })
+            return redirect(f"/admin/product/add?{query}")
+            
         return redirect("/admin/products")
+        
     return render_template("admin/add_product.html")
 
 @app.route("/admin/settings", methods=["GET", "POST"])
@@ -535,13 +555,50 @@ def admin_api_settings():
         
     return render_template("admin/api_settings.html", settings=settings)
 
+@app.route("/admin/keys", methods=["GET", "POST"])
+def admin_keys():
+    if not session.get("admin"): return redirect("/admin")
+    
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "add":
+            product_id = request.form.get("product_id")
+            keys_text = request.form.get("keys", "")
+            keys_list = [k.strip() for k in keys_text.split('\n') if k.strip()]
+            for k in keys_list:
+                db.keys.insert_one({
+                    "product_db_id": int(product_id),
+                    "key": k,
+                    "used": False,
+                    "used_by": None,
+                    "used_date": None,
+                    "added_date": datetime.now()
+                })
+        elif action == "delete":
+            key_id = request.form.get("key_id")
+            from bson.objectid import ObjectId
+            db.keys.delete_one({"_id": ObjectId(key_id)})
+            
+        return redirect("/admin/keys")
+        
+    manual_products = list(db.products.find({"type": "manual"}))
+    keys = list(db.keys.find().sort("added_date", -1))
+    
+    # Enrich keys with product info
+    for k in keys:
+        p = db.products.find_one({"id": k["product_db_id"]})
+        k["product_name"] = p["name"] + " - " + p["plan_name"] if p else "Unknown Product"
+        
+    return render_template("admin/keys.html", products=manual_products, keys=keys)
+
 @app.route("/admin/reorder", methods=["GET", "POST"])
 def admin_reorder():
     if not session.get("admin"): return redirect("/admin")
     if request.method == "POST":
-        for pid, order_val in request.form.items():
-            db.products.update_one({"id": int(pid)}, {"$set": {"order": int(order_val)}})
-        return redirect("/admin/products")
+        order_data = request.json.get("order", [])
+        for item in order_data:
+            db.products.update_one({"id": item["id"]}, {"$set": {"order": item["order"]}})
+        return jsonify({"success": True})
     products = list(db.products.find({}).sort("order", 1))
     return render_template("admin/reorder.html", products=products)
 
@@ -698,12 +755,26 @@ def upload_avatar():
     data = request.json
     avatar_b64 = data.get("avatar")
     if not avatar_b64: return jsonify({"success": False})
+
+@app.route("/upload_banner", methods=["POST"])
+def upload_banner():
+    if "user_id" not in session: return jsonify({"success": False})
+    data = request.json
+    banner_b64 = data.get("banner")
+    if banner_b64:
+        db.users.update_one({"user_id": session["user_id"]}, {"$set": {"banner": banner_b64}})
+        return jsonify({"success": True})
+    return jsonify({"success": False})
     
     db.users.update_one({"user_id": session["user_id"]}, {"$set": {"avatar": avatar_b64}})
     return jsonify({"success": True})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
+
+
 
 
 
