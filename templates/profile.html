@@ -174,7 +174,14 @@
 
         <!-- Image Backgrounds -->
         <div>
-            <p class="text-[10px] text-gray-400 font-bold mb-3">Background Preview</p>
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-[10px] text-gray-400 font-bold">Background Preview</p>
+                <button onclick="document.getElementById('bannerUpload').click()" class="text-[10px] text-blue-400 font-bold bg-blue-900/30 px-2 py-1 rounded border border-blue-800 hover:bg-blue-800 transition flex items-center gap-1">
+                    <i class="fa-solid fa-upload"></i> Upload from Phone
+                </button>
+                <input type="file" id="bannerUpload" accept="image/*" class="hidden" onchange="handleBannerUpload(event)">
+            </div>
+            
             <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
                 <div onclick="setBannerImage('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80')" class="w-16 h-24 shrink-0 rounded-xl bg-cover bg-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition relative img-btn" data-img="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80');"></div>
                 <div onclick="setBannerImage('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80')" class="w-16 h-24 shrink-0 rounded-xl bg-cover bg-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition relative img-btn" data-img="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80');"></div>
@@ -197,7 +204,8 @@
 
 <script>
     // State management
-    let currentBgStyle = localStorage.getItem('profileBgStyle') || "url('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80')";
+    const userBanner = "{{ user.banner if user.banner else '' }}";
+    let currentBgStyle = userBanner ? "url('" + userBanner + "')" : (localStorage.getItem('profileBgStyle') || "url('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80')");
     
     function initProfile() {
         applyBackground(currentBgStyle);
@@ -335,6 +343,53 @@
         };
     }
     
+        async function handleBannerUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        document.getElementById('avatarLoader').classList.remove('hidden');
+        document.getElementById('avatarLoader').classList.add('flex');
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function (e) {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = async function () {
+                const canvas = document.createElement('canvas');
+                // Banner needs different aspect ratio compression, wide screen
+                const MAX_WIDTH = 800;
+                let width = img.width, height = img.height;
+                if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+                else { if (height > MAX_WIDTH) { width *= MAX_WIDTH / height; height = MAX_WIDTH; } }
+                
+                canvas.width = width; canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                const base64String = canvas.toDataURL('image/jpeg', 0.6); // slight more compression for banners
+
+                try {
+                    const response = await fetch('/upload_banner', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ banner: base64String })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        setBannerImage(base64String);
+                        // Make sure to remove old local storage since DB is priority now
+                        localStorage.removeItem('profileBgStyle');
+                    }
+                } catch (error) {
+                    alert("Error uploading banner.");
+                } finally {
+                    document.getElementById('avatarLoader').classList.add('hidden');
+                    document.getElementById('avatarLoader').classList.remove('flex');
+                }
+            }
+        };
+    }
+    
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
         initProfile();
@@ -342,3 +397,5 @@
     });
 </script>
 {% endblock %}
+
+
