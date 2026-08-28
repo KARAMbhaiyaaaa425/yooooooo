@@ -32,13 +32,20 @@ def get_karanpay_key(order_id):
     return KARANPAY_KEY_1
 
 # ================= MIDDLEWARE =================
+@app.context_processor
+def inject_global_settings():
+    settings = db.settings.find_one({"id": "global"}) or {}
+    if not settings.get("app_name"): settings["app_name"] = "Karan Store"
+    if not settings.get("telegram"): settings["telegram"] = "Karan_store"
+    return dict(global_settings=settings)
+
 @app.before_request
 def check_maintenance():
     if request.path.startswith("/admin") or request.path.startswith("/static"):
         return None
     settings = db.settings.find_one({"id": "global"})
     if settings and settings.get("maintenance_mode", False) and request.path != "/":
-        return render_template("login.html", error="🛠 Store is currently under Maintenance. Please try again later.")
+        return render_template("login.html", error="Store is currently under Maintenance. Please try again later.")
     return None
 
 # ================= USER ROUTES =================
@@ -481,13 +488,13 @@ def admin_orders_list():
 
 @app.route("/admin/transactions")
 def admin_transactions():
-    if session.get("admin") != "admin": return redirect("/admin")
+    if not session.get("admin"): return redirect("/admin")
     deposits = list(db.orders.find({}).sort("timestamp", -1))
     return render_template("admin/transactions.html", deposits=deposits)
 
 @app.route("/admin/transaction/<action>/<order_id>")
 def admin_transaction_action(action, order_id):
-    if session.get("admin") != "admin": return redirect("/admin")
+    if not session.get("admin"): return redirect("/admin")
     order = db.orders.find_one({"order_id": order_id})
     if not order or order["status"] != "pending": return redirect("/admin/transactions")
     
@@ -502,7 +509,7 @@ def admin_transaction_action(action, order_id):
 
 @app.route("/admin/notifications", methods=["GET", "POST"])
 def admin_notifications():
-    if session.get("admin") != "admin": return redirect("/admin")
+    if not session.get("admin"): return redirect("/admin")
     
     if request.method == "POST":
         title = request.form.get("title")
@@ -580,7 +587,16 @@ def telegram_login():
 
     return redirect('/dashboard')
 
+@app.route("/tutorial")
+def tutorial():
+    if "user_id" not in session: return redirect("/")
+    user = db.users.find_one({"user_id": session["user_id"]})
+    return render_template("tutorial.html", user=user, balance=user.get("balance", 0.0))
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
+
 
 
