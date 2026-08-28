@@ -1,34 +1,55 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="mb-6">
-    <h2 class="text-2xl font-bold text-white">Order History</h2>
-    <p class="text-gray-400 text-sm">Your past purchases</p>
+<div class="mb-6 flex items-center gap-3">
+    <a href="/dashboard" class="text-white hover:text-gray-300"><i class="fa-solid fa-chevron-left"></i></a>
+    <h2 class="text-lg font-bold text-white">My Keys</h2>
 </div>
 
-{% if not orders %}
-<div class="text-center py-10 bg-gray-800 rounded-2xl border border-gray-700">
-    <i class="fa-solid fa-box-open text-4xl text-gray-600 mb-3"></i>
-    <p class="text-gray-400">No orders yet.</p>
+<!-- Tabs -->
+<div class="flex bg-gray-900 border border-gray-800 rounded-xl p-1 mb-6">
+    <button class="flex-1 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg shadow-sm">Active Keys</button>
+    <button class="flex-1 py-2 text-xs font-bold text-gray-500 hover:text-gray-300 rounded-lg transition">Expired Keys</button>
 </div>
-{% else %}
-<div class="space-y-4">
-    {% for o in orders %}
-    <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
-        <div class="flex justify-between items-start mb-2">
-            <span class="font-bold text-white">{{ o.product }}</span>
-            <span class="text-sm font-bold text-green-400">₹{{ o.price }}</span>
+
+<!-- Keys List -->
+<div class="space-y-4 mb-16">
+    {% if history and history|length > 0 %}
+        {% for item in history %}
+        <div class="bg-card border border-gray-800 rounded-2xl p-4 flex gap-4">
+            
+            <div class="w-16 h-16 rounded-xl bg-gray-800 overflow-hidden shrink-0 border border-gray-700">
+                <div class="w-full h-full flex items-center justify-center text-blue-500 text-xl"><i class="fa-solid fa-key"></i></div>
+            </div>
+            
+            <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-start mb-1">
+                    <h3 class="font-bold text-white text-sm truncate uppercase">{{ item.product }}</h3>
+                    <span class="text-[10px] text-gray-400">{{ item.plan }}</span>
+                </div>
+                
+                <p class="text-[9px] text-gray-500 mb-0.5">Purchased: {{ item.date }}</p>
+                <p class="text-[9px] text-green-400 font-semibold mb-3">Status: Active</p>
+                
+                <div class="flex gap-2">
+                    <button class="flex-1 py-1.5 border border-gray-700 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-gray-800 transition">View Details</button>
+                    <button onclick="navigator.clipboard.writeText('{{ item.license_key }}'); Swal.fire({title:'Copied!', icon:'success', timer:1500, showConfirmButton:false, background:'#111827', color:'#fff'})" class="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-[10px] font-bold text-white transition flex items-center justify-center gap-1">
+                        <i class="fa-regular fa-copy"></i> Copy Key
+                    </button>
+                </div>
+            </div>
+            
         </div>
-        <p class="text-xs text-gray-500 mb-3">{{ o.date }} • {{ o.plan }}</p>
-        
-        <div class="bg-gray-900 border border-gray-700 rounded-lg p-2 flex justify-between items-center">
-            <code class="text-blue-400 text-xs truncate max-w-[80%]">{{ o.license_key }}</code>
-            <button onclick="navigator.clipboard.writeText('{{ o.license_key }}'); Swal.fire({toast:true, position:'top-end', title:'Copied!', icon:'success', showConfirmButton:false, timer:1500, background:'#1f2937', color:'#fff'});" class="text-gray-400 hover:text-white p-1">
-                <i class="fa-regular fa-copy"></i>
-            </button>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-10">
+            <div class="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-3 text-gray-500 text-2xl">
+                <i class="fa-solid fa-ghost"></i>
+            </div>
+            <h3 class="text-white font-bold mb-1">No Keys Found</h3>
+            <p class="text-xs text-gray-500 mb-4">You haven't purchased any hacks yet.</p>
+            <a href="/store" class="inline-block bg-blue-600 text-white font-bold py-2 px-6 rounded-lg text-sm shadow-lg shadow-blue-900/30">Go to Store</a>
         </div>
-    </div>
-    {% endfor %}
+    {% endif %}
 </div>
-{% endif %}
 {% endblock %}

@@ -1,164 +1,142 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<style>
-    .hide-scroll::-webkit-scrollbar { display: none; }
-    .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-    .plan-dropdown { transition: max-height 0.3s ease-in-out; max-height: 0; overflow: hidden; }
-    .plan-dropdown.open { max-height: 1000px; }
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
-</style>
-
-<div class="mb-4">
-    <h2 class="text-2xl font-black text-white italic tracking-wider uppercase mb-1">PRODUCT <span class="text-blue-500">STORE</span></h2>
-    <p class="text-gray-400 text-xs">Select your hack below</p>
+<div class="mb-4 mt-2 flex items-center justify-between">
+    <button onclick="toggleSidebar()" class="text-white text-xl md:hidden block"><i class="fa-solid fa-bars"></i></button>
+    <div class="bg-card border border-gray-800 rounded-lg px-3 py-1 flex items-center gap-2">
+        <i class="fa-solid fa-wallet text-green-400 text-xs"></i>
+        <span class="text-white font-bold text-sm">₹{{ balance | default(0) }}</span>
+    </div>
 </div>
 
-<!-- Category Filter -->
-<div class="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="category-filters">
-    <button onclick="filterCategory('all', this)" class="cat-btn shrink-0 bg-blue-600 text-white px-5 py-2 rounded-full text-xs font-bold shadow-md shadow-blue-500/30 transition">ALL</button>
-    
+<!-- Search Bar -->
+<div class="relative mb-4">
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <i class="fa-solid fa-search text-gray-500"></i>
+    </div>
+    <input type="text" id="searchInput" onkeyup="searchProducts()" class="w-full bg-card border border-gray-800 text-white text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-blue-500 transition" placeholder="Search keys...">
+</div>
+
+<!-- Category Filters -->
+<div class="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+    <button onclick="filterCategory('all', this)" class="cat-btn shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-[11px] font-bold shadow-md transition">All</button>
     {% set categories = [] %}
     {% for p in products %}
         {% if p.category not in categories %}
             {% set _ = categories.append(p.category) %}
-            <button onclick="filterCategory('{{ p.category }}', this)" class="cat-btn shrink-0 bg-gray-800 text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 px-5 py-2 rounded-full text-xs font-bold transition">{{ p.category }}</button>
+            <button onclick="filterCategory('{{ p.category }}', this)" class="cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 hover:text-white px-4 py-1.5 rounded-full text-[11px] font-bold transition">{{ p.category }}</button>
         {% endif %}
     {% endfor %}
 </div>
 
+<div class="flex justify-between items-center mb-4">
+    <h3 class="text-sm font-bold text-white">Popular Keys</h3>
+    <a href="#" class="text-xs text-blue-500 font-semibold hover:text-blue-400">View All</a>
+</div>
+
 <!-- Products List -->
-<div class="space-y-6 mb-16" id="products-container">
+<div class="space-y-4 mb-20" id="products-container">
     {% for p in products %}
-    <div class="product-card bg-[#0b0c10] rounded-2xl border-2 border-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.5)] overflow-hidden relative" data-category="{{ p.category }}">
+    <div class="product-card bg-card border border-gray-800 rounded-2xl overflow-hidden relative" data-category="{{ p.category }}" data-name="{{ p.name | lower }}">
         
-        <!-- Top Tags -->
-        <div class="absolute top-3 left-3 z-10 flex gap-2">
-            <span class="text-[10px] font-bold px-2 py-1 bg-teal-900/80 text-teal-300 border border-teal-500/50 rounded uppercase tracking-widest backdrop-blur-sm shadow-lg">{{ p.category }}</span>
-        </div>
-        
-        <div class="absolute top-3 right-3 z-10 flex gap-1">
-            {% set s = p.status | default('SAFE') %}
-            {% if s == 'SAFE' %}
-                <span class="bg-green-500/90 text-white text-[10px] font-black px-3 py-1 rounded-md uppercase tracking-wider shadow-[0_0_10px_rgba(34,197,94,0.6)]">✅ SAFE</span>
-            {% elif s == 'UPDATING' %}
-                <span class="bg-yellow-500/90 text-black text-[10px] font-black px-3 py-1 rounded-md uppercase tracking-wider shadow-[0_0_10px_rgba(234,179,8,0.6)] animate-pulse">⚠️ UPDATING</span>
-            {% else %}
-                <span class="bg-red-600/90 text-white text-[10px] font-black px-3 py-1 rounded-md uppercase tracking-wider shadow-[0_0_10px_rgba(220,38,38,0.6)] animate-pulse">❌ PATCHED</span>
-            {% endif %}
-        </div>
-        
-        <!-- Media Section -->
-        <div class="relative w-full h-56 bg-black flex items-center justify-center border-b border-gray-800 overflow-hidden group">
+        <!-- Image Section -->
+        <div class="relative w-full h-36 bg-gray-900 overflow-hidden">
             {% if p.media_url %}
                 {% if p.media_url.endswith('.mp4') %}
-                    <video id="vid-{{ loop.index }}" src="{{ p.media_url }}" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition duration-500" loop muted playsinline></video>
-                    <!-- Custom Play Button Overlay -->
-                    <button onclick="let v = document.getElementById('vid-{{ loop.index }}'); if(v.paused){v.play(); this.style.display='none';}else{v.pause();}" class="absolute inset-0 flex items-center justify-center z-20">
-                        <div class="w-16 h-16 rounded-full border-2 border-cyan-400 flex items-center justify-center bg-black/40 backdrop-blur shadow-[0_0_15px_rgba(34,211,238,0.8)] hover:scale-110 transition cursor-pointer">
-                            <i class="fa-solid fa-play text-white text-2xl ml-1"></i>
+                    <video id="vid-{{ loop.index }}" src="{{ p.media_url }}" class="w-full h-full object-cover opacity-80" loop muted playsinline></video>
+                    <button onclick="let v = document.getElementById('vid-{{ loop.index }}'); if(v.paused){v.play(); this.style.display='none';}else{v.pause();}" class="absolute inset-0 flex items-center justify-center z-10">
+                        <div class="w-12 h-12 rounded-full border border-white/50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                            <i class="fa-solid fa-play text-white ml-1"></i>
                         </div>
                     </button>
                 {% else %}
-                    <img src="{{ p.media_url }}" class="w-full h-full object-cover opacity-80">
+                    <img src="{{ p.media_url }}" class="w-full h-full object-cover opacity-90">
                 {% endif %}
             {% else %}
-                <div class="text-center text-gray-600">
-                    <i class="fa-solid fa-gamepad text-5xl mb-2"></i>
-                    <p class="text-xs uppercase tracking-widest">No Media</p>
+                <div class="w-full h-full flex items-center justify-center text-gray-700">
+                    <i class="fa-solid fa-image text-4xl"></i>
                 </div>
             {% endif %}
-        </div>
-
-        <div class="p-5">
-            <!-- Title -->
-            <h4 class="text-xl font-black text-white text-center uppercase tracking-wider mb-4 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{{ p.name }}</h4>
             
-            <!-- Features List -->
-            <div class="space-y-2 mb-5">
-                {% if p.features %}
-                    {% for feature in p.features.split('\n') %}
-                        {% if feature.strip() %}
-                        <div class="bg-[#111827] rounded-lg p-2.5 border border-gray-800 flex items-center gap-3 shadow-inner">
-                            <i class="fa-solid fa-bolt text-cyan-400 text-sm drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]"></i>
-                            <span class="text-sm font-bold text-gray-200">{{ feature.strip() }}</span>
-                        </div>
-                        {% endif %}
-                    {% endfor %}
+            <div class="absolute top-2 left-2 z-10">
+                <span class="bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase">{{ p.category }}</span>
+            </div>
+            
+            <div class="absolute top-2 right-2 z-10">
+                <button class="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-gray-300 hover:text-pink-500 transition">
+                    <i class="fa-regular fa-heart text-sm"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Details Section -->
+        <div class="p-4">
+            <h3 class="text-white font-black text-lg uppercase tracking-wide">{{ p.name }}</h3>
+            <p class="text-[10px] text-gray-500 mb-3">{{ p.category }} Access</p>
+            
+            <div class="flex items-center gap-2 mb-4 text-[10px] text-gray-400">
+                <div class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> {{ p.plan_name }} Validity</div>
+            </div>
+            
+            <div class="flex justify-between items-center mt-2">
+                <div>
+                    <span class="text-xl font-bold text-green-400">₹{{ p.price }}</span>
+                </div>
+                
+                {% set s = p.status | default('SAFE') %}
+                {% if s == 'SAFE' %}
+                    <button onclick="buyProduct('{{ p.id }}', '{{ p.name }}', '{{ p.price }}')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-2 rounded-lg text-xs shadow-[0_0_10px_rgba(37,99,235,0.4)] transition">
+                        Buy Now
+                    </button>
                 {% else %}
-                    <div class="bg-[#111827] rounded-lg p-2.5 border border-gray-800 flex items-center gap-3 shadow-inner">
-                        <i class="fa-solid fa-bolt text-cyan-400 text-sm drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]"></i>
-                        <span class="text-sm font-bold text-gray-200">Standard Delivery</span>
-                    </div>
+                    <button onclick="Swal.fire({title:'Unavailable', text:'{{ p.status_msg | default('Product is patched or updating.') }}', icon:'error', background:'#111827', color:'#fff'})" class="bg-gray-700 text-gray-400 font-bold px-6 py-2 rounded-lg text-xs cursor-not-allowed">
+                        <i class="fa-solid fa-lock text-[10px] mr-1"></i> {{ s }}
+                    </button>
                 {% endif %}
             </div>
-
-            <!-- Two buttons: Check Update & Check Video -->
-            <div class="grid grid-cols-2 gap-3 mb-5">
-                <button class="bg-black/50 text-white border border-teal-500/50 rounded-lg flex flex-col items-center justify-center p-2.5 text-[10px] font-bold tracking-widest hover:bg-teal-900/40 hover:border-teal-400 transition shadow-[0_0_10px_rgba(20,184,166,0.1)] hover:shadow-[0_0_10px_rgba(20,184,166,0.4)]">
-                    <i class="fa-solid fa-download mb-1.5 text-teal-400"></i> CHECK UPDATE FILE
-                </button>
-                <button class="bg-black/50 text-white border border-red-500/50 rounded-lg flex flex-col items-center justify-center p-2.5 text-[10px] font-bold tracking-widest hover:bg-red-900/40 hover:border-red-400 transition shadow-[0_0_10px_rgba(239,68,68,0.1)] hover:shadow-[0_0_10px_rgba(239,68,68,0.4)]">
-                    <i class="fa-solid fa-play mb-1.5 text-red-400"></i> CHECK VIDEO/FEEDBACK
-                </button>
-            </div>
-            
-            <!-- Main Buy Reseller Key Button -->
-            <button onclick="togglePlans('plans-{{ loop.index }}')" class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white font-black py-3.5 rounded-lg shadow-[0_0_15px_rgba(99,102,241,0.4)] transition uppercase tracking-widest text-sm mb-2 border border-indigo-400/30 flex justify-center items-center gap-2">
-                BUY RESELLER KEY <i class="fa-solid fa-chevron-down text-xs opacity-70"></i>
-            </button>
-
-            <!-- Dropdown Plans -->
-            <div id="plans-{{ loop.index }}" class="plan-dropdown mt-2 space-y-2">
-                {% for plan in p.plans %}
-                <div class="bg-[#1a1b26] border border-gray-800 rounded-lg p-3 flex justify-between items-center">
-                    <div>
-                        <p class="text-gray-300 text-sm font-black">{{ plan.plan_name }}</p>
-                        <p class="text-white text-lg font-black">₹{{ plan.price | float }}</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <!-- Quantity Box (Mock for UI) -->
-                        <div class="bg-gray-900 border border-gray-700 text-white w-10 h-10 flex items-center justify-center rounded">1</div>
-                        <button onclick="buyProduct({{ plan.id }}, '{{ p.name }} ({{ plan.plan_name }})', {{ plan.price }})" class="bg-pink-500 hover:bg-pink-400 text-white font-black px-5 py-2 rounded h-10 tracking-wider shadow-[0_0_10px_rgba(236,72,153,0.5)]">
-                            BUY
-                        </button>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-
         </div>
+        
     </div>
     {% endfor %}
 </div>
 
 <script>
-function togglePlans(id) {
-    const el = document.getElementById(id);
-    el.classList.toggle('open');
+function filterCategory(category, btnElement) {
+    const buttons = document.querySelectorAll('.cat-btn');
+    buttons.forEach(btn => btn.className = 'cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 hover:text-white px-4 py-1.5 rounded-full text-[11px] font-bold transition');
+    btnElement.className = 'cat-btn shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-[11px] font-bold shadow-md transition';
+    
+    const cards = document.querySelectorAll('.product-card');
+    cards.forEach(card => {
+        if (category === 'all' || card.getAttribute('data-category') === category) card.style.display = 'block';
+        else card.style.display = 'none';
+    });
+}
+
+function searchProducts() {
+    const input = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.product-card');
+    cards.forEach(card => {
+        const name = card.getAttribute('data-name');
+        if (name.includes(input)) card.style.display = 'block';
+        else card.style.display = 'none';
+    });
 }
 
 function buyProduct(productId, name, price) {
     Swal.fire({
-        title: 'CONFIRM PURCHASE',
-        html: `<p class="text-gray-300">Buy <b>${name}</b> for <b class="text-green-400">₹${price}</b>?</p>`,
-        icon: 'warning',
+        title: 'Confirm Purchase',
+        html: `<p class="text-sm text-gray-300">Are you sure you want to buy <b>${name}</b> for <b class="text-green-400">₹${price}</b>?</p>`,
+        icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#ec4899', // pink color
-        cancelButtonColor: '#374151',
-        confirmButtonText: 'BUY NOW',
-        background: '#0b0c10',
-        color: '#fff'
+        confirmButtonColor: '#2563eb',
+        cancelButtonColor: '#1f2937',
+        confirmButtonText: 'Yes, Buy it!',
+        background: '#111827', color: '#fff'
     }).then((result) => {
         if (result.isConfirmed) {
-            Swal.fire({
-                title: 'GENERATING KEY...',
-                text: 'Please wait...',
-                allowOutsideClick: false,
-                background: '#0b0c10', color: '#fff',
-                didOpen: () => { Swal.showLoading() }
-            });
-
+            Swal.fire({ title: 'Processing...', allowOutsideClick: false, background: '#111827', color: '#fff', didOpen: () => { Swal.showLoading() } });
+            
             let formData = new FormData();
             formData.append('product_id', productId);
 
@@ -169,30 +147,20 @@ function buyProduct(productId, name, price) {
                     Swal.fire({
                         title: 'SUCCESS!',
                         html: `<p class="text-gray-400 mb-2 uppercase text-xs tracking-widest">Your License Key</p>
-                               <div class="bg-gray-900 text-green-400 p-4 rounded-lg border border-gray-700 text-lg font-mono font-bold select-all break-all shadow-[0_0_10px_rgba(74,222,128,0.2)]">${data.key}</div>`,
+                               <div class="bg-gray-900 text-green-400 p-4 rounded-lg border border-gray-700 text-sm font-mono font-bold select-all break-all shadow-inner">${data.key}</div>`,
                         icon: 'success',
                         confirmButtonText: 'COPY & CLOSE',
-                        background: '#0b0c10', color: '#fff'
+                        background: '#111827', color: '#fff'
                     }).then(() => {
                         navigator.clipboard.writeText(data.key);
                         location.reload();
                     });
                 } else {
-                    Swal.fire({title: 'FAILED', text: data.msg, icon: 'error', background: '#0b0c10', color: '#fff'});
+                    Swal.fire({title: 'FAILED', text: data.msg, icon: 'error', background: '#111827', color: '#fff'});
                 }
             });
         }
     });
 }
-    function filterCategory(category, btnElement) {
-        const buttons = document.querySelectorAll('.cat-btn');
-        buttons.forEach(btn => btn.className = 'cat-btn shrink-0 bg-gray-800 text-gray-400 border border-gray-700 hover:text-white hover:border-gray-500 px-5 py-2 rounded-full text-xs font-bold transition');
-        btnElement.className = 'cat-btn shrink-0 bg-blue-600 text-white px-5 py-2 rounded-full text-xs font-bold shadow-md shadow-blue-500/30 transition';
-        const cards = document.querySelectorAll('.product-card');
-        cards.forEach(card => {
-            if (category === 'all' || card.getAttribute('data-category') === category) card.style.display = 'block';
-            else card.style.display = 'none';
-        });
-    }
 </script>
 {% endblock %}

@@ -6,90 +6,161 @@
     <title>Karan Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        dark: '#0a0e17',
+                        card: '#111827',
+                        primary: '#2563eb',
+                        secondary: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { -webkit-tap-highlight-color: transparent; }
+        body { -webkit-tap-highlight-color: transparent; background-color: #0a0e17; color: #f8fafc; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
-        
-        /* Sidebar animations */
         #sidebar { transition: transform 0.3s ease-in-out; }
         .sidebar-open { transform: translateX(0); }
         .sidebar-closed { transform: translateX(-100%); }
+        .nav-active { background-color: rgba(37, 99, 235, 0.15); border-left: 3px solid #3b82f6; color: #60a5fa; }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200">
+<body class="pb-20">
 
-    <!-- Header -->
-    <nav class="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-40 shadow-md">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
+    <!-- Top App Bar -->
+    <nav class="bg-card border-b border-gray-800 p-4 sticky top-0 z-40">
+        <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="text-white text-2xl focus:outline-none hover:text-blue-400 active:scale-95 transition">
+                <button onclick="toggleSidebar()" class="text-gray-300 text-xl focus:outline-none hover:text-white transition">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <h1 class="text-xl font-black text-white tracking-widest uppercase">KARAN <span class="text-blue-500">STORE</span></h1>
+                <h1 class="text-lg font-bold text-white uppercase tracking-wide">KARAN <span class="text-blue-500">STORE</span></h1>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="/deposit" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-full flex items-center gap-2 border border-gray-600 transition active:scale-95">
-                    <i class="fa-solid fa-wallet text-green-400 text-sm"></i>
-                    <span class="font-bold text-white text-sm">₹{{ balance }}</span>
-                </a>
+            <div class="flex items-center gap-2 bg-dark px-3 py-1.5 rounded-lg border border-gray-800">
+                <i class="fa-solid fa-wallet text-green-400 text-xs"></i>
+                <span class="font-bold text-white text-sm">₹{{ balance | default(0) }}</span>
             </div>
         </div>
     </nav>
 
     <!-- Sidebar / Drawer -->
     <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-50 hidden backdrop-blur-sm transition-opacity"></div>
-    <div id="sidebar" class="sidebar-closed fixed top-0 left-0 h-full w-72 bg-gray-800 border-r border-gray-700 z-50 shadow-2xl flex flex-col">
-        <!-- Sidebar Header -->
-        <div class="p-6 border-b border-gray-700 bg-gray-900 flex justify-between items-center">
+    <div id="sidebar" class="sidebar-closed fixed top-0 left-0 h-full w-72 bg-card border-r border-gray-800 z-50 overflow-y-auto">
+        <div class="p-5 flex justify-between items-center border-b border-gray-800">
             <div>
-                <h2 class="text-xl font-black text-white">KARAN <span class="text-blue-500">STORE</span></h2>
-                <p class="text-xs text-gray-400 mt-1">User Panel</p>
+                <h2 class="text-lg font-bold text-white uppercase tracking-wide">KARAN <span class="text-blue-500">STORE</span></h2>
+                <p class="text-[10px] text-gray-500 mt-0.5">User Panel</p>
             </div>
-            <button onclick="toggleSidebar()" class="text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            <button onclick="toggleSidebar()" class="text-gray-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
         </div>
         
-        <!-- Sidebar Links -->
-        <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-            <a href="/store" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-blue-600/20 hover:text-blue-400 transition font-medium">
-                <i class="fa-solid fa-store w-5 text-center text-blue-500"></i> Product Store
-            </a>
-            <a href="/profile" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-blue-600/20 hover:text-blue-400 transition font-medium">
-                <i class="fa-solid fa-user w-5 text-center text-purple-400"></i> My Profile
-            </a>
-            <a href="/deposit" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-blue-600/20 hover:text-blue-400 transition font-medium">
-                <i class="fa-solid fa-money-bill-wave w-5 text-center text-green-500"></i> Add Balance
-            </a>
-            <a href="/history" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-blue-600/20 hover:text-blue-400 transition font-medium">
-                <i class="fa-solid fa-box-open w-5 text-center text-yellow-500"></i> Order History
-            </a>
-            <a href="/deposit_history" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-blue-600/20 hover:text-blue-400 transition font-medium">
-                <i class="fa-solid fa-clock-rotate-left w-5 text-center text-red-500"></i> Deposit History
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 cursor-not-allowed font-medium">
-                <i class="fa-solid fa-gift w-5 text-center text-gray-500"></i> Referral <span class="text-[10px] bg-gray-700 px-2 py-0.5 rounded ml-auto">Soon</span>
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-blue-600/20 hover:text-blue-400 transition font-medium">
-                <i class="fa-solid fa-book w-5 text-center text-teal-400"></i> Tutorial
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-blue-600/20 hover:text-blue-400 transition font-medium">
-                <i class="fa-solid fa-headset w-5 text-center text-orange-400"></i> Support
-            </a>
-            <a href="/transfer" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-blue-600/20 hover:text-blue-400 transition font-medium">
-                <i class="fa-solid fa-money-bill-transfer w-5 text-center text-cyan-400"></i> Transfer Balance
-            </a>
+        <div class="py-4 px-3 space-y-6">
+            
+            <!-- MAIN -->
+            <div>
+                <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-3">Main</h3>
+                <div class="space-y-1">
+                    <a href="/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/dashboard' %}nav-active{% endif %}">
+                        <i class="fa-solid fa-house w-5 text-center text-blue-400"></i> Dashboard
+                    </a>
+                    <a href="/store" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/store' %}nav-active{% endif %}">
+                        <i class="fa-solid fa-store w-5 text-center text-purple-400"></i> Store
+                    </a>
+                    <a href="/history" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/history' %}nav-active{% endif %}">
+                        <i class="fa-solid fa-key w-5 text-center text-green-400"></i> My Keys
+                    </a>
+                </div>
+            </div>
+
+            <!-- ACCOUNT -->
+            <div>
+                <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-3">Account</h3>
+                <div class="space-y-1">
+                    <a href="/profile" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/profile' %}nav-active{% endif %}">
+                        <i class="fa-solid fa-user w-5 text-center text-pink-400"></i> My Profile
+                    </a>
+                    <a href="/deposit" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/deposit' %}nav-active{% endif %}">
+                        <i class="fa-solid fa-money-bill-wave w-5 text-center text-emerald-400"></i> Add Balance
+                    </a>
+                    <a href="/deposit_history" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/deposit_history' %}nav-active{% endif %}">
+                        <i class="fa-solid fa-clock-rotate-left w-5 text-center text-orange-400"></i> Deposit History
+                    </a>
+                    <a href="/transfer" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/transfer' %}nav-active{% endif %}">
+                        <i class="fa-solid fa-money-bill-transfer w-5 text-center text-cyan-400"></i> Transfer Balance
+                    </a>
+                </div>
+            </div>
+
+            <!-- MORE -->
+            <div>
+                <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-3">More</h3>
+                <div class="space-y-1">
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium">
+                        <i class="fa-solid fa-gift w-5 text-center text-yellow-500"></i> Referral 
+                        <span class="text-[9px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded ml-auto">New</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium">
+                        <i class="fa-solid fa-bell w-5 text-center text-indigo-400"></i> Notifications
+                        <span class="text-[9px] bg-purple-500 text-white px-2 py-0.5 rounded-full ml-auto">3</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium">
+                        <i class="fa-solid fa-book w-5 text-center text-teal-400"></i> Tutorial
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium">
+                        <i class="fa-solid fa-headset w-5 text-center text-red-400"></i> Support
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium">
+                        <i class="fa-solid fa-gear w-5 text-center text-gray-400"></i> Settings
+                    </a>
+                </div>
+            </div>
+            
         </div>
         
-        <div class="p-4 border-t border-gray-700">
-            <a href="/logout" class="flex items-center justify-center gap-2 w-full bg-red-600/20 hover:bg-red-600/40 text-red-400 font-bold py-3 rounded-xl transition">
+        <div class="p-4 mt-auto mb-4">
+            <a href="/logout" class="flex items-center justify-center gap-2 w-full bg-red-900/20 border border-red-900/50 hover:bg-red-900/40 text-red-400 font-bold py-2.5 rounded-xl transition text-sm">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
             </a>
         </div>
     </div>
 
     <!-- Main Content Area -->
-    <div class="max-w-4xl mx-auto p-4 relative">
+    <div class="max-w-md mx-auto p-4 relative min-h-screen">
         {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="fixed bottom-0 w-full bg-card border-t border-gray-800 z-40 pb-safe">
+        <div class="max-w-md mx-auto flex justify-between items-center px-6 py-2">
+            
+            <a href="/dashboard" class="flex flex-col items-center p-2 text-gray-500 hover:text-blue-400 {% if request.path == '/dashboard' %}text-blue-500{% endif %} transition">
+                <i class="fa-solid fa-house text-lg mb-1"></i>
+                <span class="text-[10px] font-semibold">Home</span>
+            </a>
+            
+            <a href="/store" class="flex flex-col items-center p-2 text-gray-500 hover:text-blue-400 {% if request.path == '/store' %}text-blue-500{% endif %} transition">
+                <i class="fa-solid fa-store text-lg mb-1"></i>
+                <span class="text-[10px] font-semibold">Store</span>
+            </a>
+
+            <a href="/history" class="flex flex-col items-center p-2 text-gray-500 hover:text-blue-400 {% if request.path == '/history' %}text-blue-500{% endif %} transition">
+                <i class="fa-solid fa-key text-lg mb-1"></i>
+                <span class="text-[10px] font-semibold">My Keys</span>
+            </a>
+
+            <a href="/profile" class="flex flex-col items-center p-2 text-gray-500 hover:text-blue-400 {% if request.path == '/profile' %}text-blue-500{% endif %} transition">
+                <i class="fa-regular fa-user text-lg mb-1"></i>
+                <span class="text-[10px] font-semibold">Profile</span>
+            </a>
+
+        </div>
     </div>
 
     <script>
