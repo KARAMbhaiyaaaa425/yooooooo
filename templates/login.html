@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Karan Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white h-screen flex items-center justify-center">
+    <div class="bg-gray-800 p-8 rounded-xl shadow-lg w-96 text-center border border-gray-700">
+        <h1 class="text-3xl font-bold mb-2 text-blue-400">Karan Store</h1>
+        <p class="text-gray-400 mb-6 text-sm">Login using your Telegram User ID</p>
+        
+        {% if error %}
+        <div class="bg-red-500/20 text-red-400 p-3 rounded-lg mb-4 text-sm">{{ error }}</div>
+        {% endif %}
+        
+        <form method="POST">
+            {% if is_admin %}
+            <input type="text" name="username" placeholder="Admin Username" required class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 text-center text-lg">
+            <input type="password" name="password" placeholder="Admin Password" required class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 text-center text-lg">
+            <button type="submit" class="w-full bg-red-600 hover:bg-red-500 font-bold py-3 rounded-lg transition duration-200">ADMIN LOGIN</button>
+            {% else %}
+            <input type="text" name="user_id" placeholder="Enter Telegram User ID" required class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 text-center text-lg">
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 font-bold py-3 rounded-lg transition duration-200">LOGIN</button>
+            <p class="mt-4 text-xs text-gray-500">Go to Telegram Bot and check your Profile to find your User ID.</p>
+            <a href="/admin" class="mt-4 inline-block text-xs text-red-400 hover:text-red-300">Owner Login</a>
+            {% endif %}
+        </form>
+    </div>
+</body>
+</html>
