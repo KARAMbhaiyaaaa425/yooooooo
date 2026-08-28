@@ -17,10 +17,14 @@
 
 </div>
 
-<div class="text-center" id="status-container">
+<div class="text-center mt-6" id="status-container">
     <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-500 mb-3"></i>
     <p class="text-gray-300 font-bold" id="status-text">Waiting for payment...</p>
-    <p class="text-xs text-gray-500 mt-1">Please do not close this page.</p>
+    <p class="text-xs text-gray-500 mt-1 mb-6">Please do not close this page.</p>
+    
+    <a href="/deposit" class="inline-flex items-center gap-2 bg-transparent border border-red-900/50 hover:bg-red-900/20 text-red-500 font-bold text-sm px-6 py-2.5 rounded-xl transition shadow-sm">
+        <i class="fa-solid fa-xmark"></i> Cancel Payment
+    </a>
 </div>
 
 <script>
@@ -41,3 +45,4 @@
     }, 5000); // Check every 5 seconds
 </script>
 {% endblock %}
+
