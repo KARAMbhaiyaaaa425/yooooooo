@@ -206,6 +206,10 @@ def buy():
     if not plan:
         return jsonify({"success": False, "msg": "Product not found!"})
         
+    if plan.get("status") in ["PATCHED", "UPDATING"]:
+        msg = plan.get("status_msg") or "Product is currently unavailable (Patched/Updating)."
+        return jsonify({"success": False, "msg": msg})
+        
     price = plan["price"]
     user = db.users.find_one({"user_id": user_id})
     
@@ -282,7 +286,9 @@ def admin_edit_product(pid):
     if request.method == "POST":
         media_url = request.form.get("media_url", "")
         features = request.form.get("features", "")
-        db.products.update_one({"id": pid}, {"$set": {"media_url": media_url, "features": features}})
+        status = request.form.get("status", "SAFE")
+        status_msg = request.form.get("status_msg", "")
+        db.products.update_one({"id": pid}, {"$set": {"media_url": media_url, "features": features, "status": status, "status_msg": status_msg}})
         return redirect("/admin/products")
         
     return render_template("admin/edit_product.html", product=product)
@@ -304,6 +310,8 @@ def admin_add_product():
         product_id = request.form.get("product_id")
         media_url = request.form.get("media_url", "")
         features = request.form.get("features", "")
+        status = request.form.get("status", "SAFE")
+        status_msg = request.form.get("status_msg", "")
         
         new_id = 1
         last_product = db.products.find_one({}, sort=[("id", -1)])
@@ -318,6 +326,8 @@ def admin_add_product():
             "product_id": int(product_id),
             "media_url": media_url,
             "features": features,
+            "status": status,
+            "status_msg": status_msg,
             "order": new_id
         })
         return redirect("/admin/products")
