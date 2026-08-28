@@ -39,15 +39,48 @@
             <div class="bg-card border border-blue-900/40 rounded-xl p-2 relative shadow-lg shadow-blue-900/5 theme-border">
                 <div class="flex items-center">
                     <div class="w-12 h-12 bg-[#151f32] rounded-lg flex items-center justify-center text-gray-300 text-xl font-bold border border-gray-800">
-                        ₹
+                        ?
                     </div>
-                                        <input type="number" name="amount" id="amt" min="1" required class="flex-1 bg-transparent border-none text-white font-bold text-xl px-4 focus:outline-none focus:ring-0 w-full" placeholder="Enter amount">
-                </div>
+                    <input type="number" name="amount" id="amt" min="1" required class="flex-1 bg-transparent border-none text-white font-bold text-xl px-4 focus:outline-none focus:ring-0 w-full" placeholder="Enter amount">
                 </div>
             </div>
-            <p class="text-gray-500 text-[10px] mt-2 ml-1">Minimum amount is ₹1</p>
+            <p class="text-gray-500 text-[10px] mt-2 ml-1">Minimum amount is ?1</p>
         </div>
 
+        <!-- Payment Method Section -->
+        <div>
+            <label class="block text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 ml-1">Select Payment Method</label>
+            
+            <div class="space-y-3">
+                <!-- UPI 1 (Selected by default) -->
+                <label class="relative block cursor-pointer">
+                    <input type="radio" name="gateway" value="1" class="peer sr-only" checked>
+                    <div class="bg-card border border-gray-800 rounded-xl p-3 flex items-center gap-4 transition-all peer-checked:border-green-500 peer-checked:bg-green-900/10 theme-border-peer peer-checked:shadow-[0_0_15px_rgba(37,99,235,0.1)]">
+                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center p-2 shrink-0">
+                            <!-- Fake UPI Logo -->
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" class="w-full object-contain">
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-white font-bold text-sm">UPI 1</h3>
+                            <p class="text-[10px] text-gray-400 mt-0.5"><span class="text-green-400">Recommended</span>  Fast & Reliable</p>
+                        </div>
+                    </div>
+                </label>
+                
+                <!-- UPI 2 -->
+                <label class="relative block cursor-pointer">
+                    <input type="radio" name="gateway" value="2" class="peer sr-only">
+                    <div class="bg-card border border-gray-800 rounded-xl p-3 flex items-center gap-4 transition-all peer-checked:border-green-500 peer-checked:bg-green-900/10 theme-border-peer peer-checked:shadow-[0_0_15px_rgba(37,99,235,0.1)]">
+                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center p-2 shrink-0">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" class="w-full object-contain">
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-white font-bold text-sm">UPI 2</h3>
+                            <p class="text-[10px] text-gray-400 mt-0.5"><span class="text-orange-400">Backup</span>  Try if UPI 1 fails</p>
+                        </div>
+                    </div>
+                </label>
+            </div>
         </div>
 
         <!-- Submit Button -->
@@ -90,6 +123,8 @@
     // Remove the fake radio styling code, peer-checked handles it all purely via Tailwind CSS!
 </script>
 {% endblock %}
+
+
 
 
 
