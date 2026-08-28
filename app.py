@@ -229,6 +229,9 @@ def buy():
     product_db_id = request.form.get("product_id")
     android_id = request.form.get("android_id", "0b9b969bc2e7997b")
     
+    if not product_db_id:
+        return jsonify({"success": False, "msg": "Invalid product ID!"})
+        
     plan = db.products.find_one({"id": int(product_db_id)})
     if not plan:
         return jsonify({"success": False, "msg": "Product not found!"})
