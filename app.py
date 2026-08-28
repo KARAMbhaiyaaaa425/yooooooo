@@ -253,7 +253,7 @@ def admin_panel():
     total_users = db.users.count_documents({})
     users = list(db.users.find({}))
     total_balance = sum(u.get("balance", 0) for u in users)
-    orders = db.orders.count_documents({"status": "completed"})
+    orders = db.history.count_documents({})
     return render_template("admin/panel.html", total_users=total_users, total_balance=total_balance, orders=orders)
 
 @app.route("/admin/add_balance", methods=["GET", "POST"])
@@ -345,6 +345,49 @@ def admin_reorder():
         return redirect("/admin/products")
     products = list(db.products.find({}).sort("order", 1))
     return render_template("admin/reorder.html", products=products)
+
+@app.route("/admin/product/delete_all")
+def admin_delete_all_products():
+    if not session.get("admin"): return redirect("/admin")
+    db.products.delete_many({})
+    return redirect("/admin/products")
+
+@app.route("/admin/users")
+def admin_users():
+    if not session.get("admin"): return redirect("/admin")
+    sort_by = request.args.get("sort", "_id")
+    if sort_by == "balance":
+        users = list(db.users.find({}).sort("balance", -1))
+    else:
+        users = list(db.users.find({}).sort("_id", -1))
+    return render_template("admin/users.html", users=users)
+
+@app.route("/admin/orders")
+def admin_orders_list():
+    if not session.get("admin"): return redirect("/admin")
+    orders = list(db.history.find({}).sort("date", -1))
+    return render_template("admin/orders.html", orders=orders)
+
+@app.route("/admin/transactions")
+def admin_transactions():
+    if not session.get("admin"): return redirect("/admin")
+    deposits = list(db.orders.find({}).sort("timestamp", -1))
+    return render_template("admin/transactions.html", deposits=deposits)
+
+@app.route("/admin/transaction/<action>/<order_id>")
+def admin_transaction_action(action, order_id):
+    if not session.get("admin"): return redirect("/admin")
+    order = db.orders.find_one({"order_id": order_id})
+    if not order or order["status"] != "pending": return redirect("/admin/transactions")
+    
+    if action == "approve":
+        db.orders.update_one({"order_id": order_id}, {"$set": {"status": "completed", "utr": "MANUAL", "sender": "Admin Approved"}})
+        db.users.update_one({"user_id": order["user_id"]}, {"$inc": {"balance": order["amount"]}})
+        db.deposit_history.insert_one({"user_id": order["user_id"], "order_id": order_id, "amount": order["amount"], "utr": "MANUAL", "sender": "Admin Approved", "status": "completed", "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    elif action == "reject":
+        db.orders.update_one({"order_id": order_id}, {"$set": {"status": "failed", "utr": "REJECTED", "sender": "Admin Rejected"}})
+        
+    return redirect("/admin/transactions")
 
 @app.route("/logout")
 def logout():
