@@ -17,6 +17,21 @@
                 <p class="text-xs text-gray-500 mt-2">Paste a direct link to an image (.jpg/.png) or video (.mp4). This will show at the top of the product card.</p>
             </div>
             
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="mb-4">
+                    <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Status</label>
+                    <select name="status" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                        <option value="SAFE" class="text-green-500" {% if product.status == 'SAFE' %}selected{% endif %}>✅ SAFE</option>
+                        <option value="UPDATING" class="text-yellow-500" {% if product.status == 'UPDATING' %}selected{% endif %}>⚠️ UPDATING</option>
+                        <option value="PATCHED" class="text-red-500" {% if product.status == 'PATCHED' %}selected{% endif %}>❌ PATCHED</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Status Message (Pop-up alert)</label>
+                    <input type="text" name="status_msg" value="{{ product.status_msg | default('') }}" placeholder="Bhai ye product patch ho gaya hai..." class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                </div>
+            </div>
+            
             <div class="mb-6">
                 <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Features (One per line)</label>
                 <textarea name="features" rows="5" placeholder="✅ NON ROOT&#10;✅ Aimbot&#10;✅ ESP" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">{{ product.features | default('') }}</textarea>

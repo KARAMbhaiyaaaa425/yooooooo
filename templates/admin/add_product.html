@@ -48,6 +48,21 @@
                 <input type="url" name="media_url" placeholder="https://example.com/video.mp4" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
             </div>
             
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="mb-4">
+                    <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Status</label>
+                    <select name="status" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                        <option value="SAFE" class="text-green-500">✅ SAFE</option>
+                        <option value="UPDATING" class="text-yellow-500">⚠️ UPDATING</option>
+                        <option value="PATCHED" class="text-red-500">❌ PATCHED</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Status Message (Pop-up alert)</label>
+                    <input type="text" name="status_msg" placeholder="Bhai ye product patch ho gaya hai..." class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                </div>
+            </div>
+            
             <div class="mb-6">
                 <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Features (One per line)</label>
                 <textarea name="features" rows="4" placeholder="✅ NON ROOT&#10;✅ Aimbot" class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500"></textarea>
