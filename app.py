@@ -648,7 +648,9 @@ def admin_settings():
             "hidden_categories": request.form.get("hidden_categories", ""),
             "popup_message": request.form.get("popup_message", ""),
             "app_name": request.form.get("app_name", "Karan Store"),
-            "app_logo": request.form.get("app_logo", ""),
+                        "app_logo": request.form.get("app_logo", ""),
+            "default_avatar": request.form.get("default_avatar", ""),
+            "default_banner": request.form.get("default_banner", ""),
             "telegram": request.form.get("telegram", "Karan_store"),
             "instagram": request.form.get("instagram", "Karan_store"),
             "video_deposit": request.form.get("video_deposit", ""),
@@ -900,6 +902,7 @@ def upload_banner():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
