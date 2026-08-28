@@ -105,7 +105,7 @@ def register():
         if db.users.find_one({"username": username}):
             return render_template("register.html", error="Username is taken. Choose another.")
             
-                default_avatar = settings.get("default_avatar", "") if settings else ""
+        default_avatar = settings.get("default_avatar", "") if settings else ""
         default_banner = settings.get("default_banner", "") if settings else ""
 
         # Create user
@@ -907,6 +907,7 @@ def upload_banner():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
