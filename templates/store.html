@@ -1,10 +1,11 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<!-- Hide horizontal scrollbar if categories overflow -->
 <style>
     .hide-scroll::-webkit-scrollbar { display: none; }
     .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    .plan-dropdown { transition: max-height 0.3s ease-in-out; max-height: 0; overflow: hidden; }
+    .plan-dropdown.open { max-height: 1000px; }
 </style>
 
 <div class="mb-4">
@@ -18,7 +19,6 @@
         <!-- Top Tags -->
         <div class="absolute top-3 left-3 z-10 flex gap-2">
             <span class="text-[10px] font-bold px-2 py-1 bg-teal-900/80 text-teal-300 border border-teal-500/50 rounded uppercase tracking-widest backdrop-blur-sm shadow-lg">{{ p.category }}</span>
-            <span class="text-[10px] font-bold px-2 py-1 bg-purple-900/80 text-purple-300 border border-purple-500/50 rounded uppercase tracking-widest backdrop-blur-sm shadow-lg">{{ p.plan_name }}</span>
         </div>
         
         <!-- Media Section -->
@@ -42,7 +42,7 @@
             <h4 class="text-xl font-black text-white text-center uppercase tracking-wider mb-4 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{{ p.name }}</h4>
             
             <!-- Features List -->
-            <div class="space-y-2 mb-6">
+            <div class="space-y-2 mb-4">
                 {% if p.features %}
                     {% for feature in p.features.split('\n') %}
                         {% if feature.strip() %}
@@ -60,27 +60,58 @@
                 {% endif %}
             </div>
 
-            <div class="text-center mb-3">
-                <i class="fa-solid fa-chevron-down text-gray-600 text-sm"></i>
+            <!-- Two buttons: Check Update & Check Video -->
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <button class="bg-[#0b0c10] text-white border border-teal-500 rounded flex flex-col items-center justify-center p-2 text-[10px] font-bold tracking-widest hover:bg-teal-900/30">
+                    <i class="fa-solid fa-download mb-1"></i> CHECK UPDATE FILE
+                </button>
+                <button class="bg-[#0b0c10] text-white border border-red-500 rounded flex flex-col items-center justify-center p-2 text-[10px] font-bold tracking-widest hover:bg-red-900/30">
+                    <i class="fa-solid fa-play mb-1"></i> CHECK VIDEO/FEEDBACK
+                </button>
             </div>
             
-            <!-- Buy Button -->
-            <button onclick="buyProduct({{ p.id }}, '{{ p.name }}', {{ p.price }})" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-4 rounded-xl shadow-[0_0_15px_rgba(99,102,241,0.5)] transition flex justify-center items-center gap-2 active:scale-95 uppercase tracking-widest text-sm border border-indigo-400/50">
-                BUY RESELLER KEY — ₹{{ p.price }}
+            <!-- Main Buy Reseller Key Button -->
+            <button onclick="togglePlans('plans-{{ loop.index }}')" class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white font-black py-3 rounded-lg shadow-[0_0_15px_rgba(99,102,241,0.4)] transition uppercase tracking-widest text-sm mb-2">
+                BUY RESELLER KEY <i class="fa-solid fa-chevron-down ml-2"></i>
             </button>
+
+            <!-- Dropdown Plans -->
+            <div id="plans-{{ loop.index }}" class="plan-dropdown mt-2 space-y-2">
+                {% for plan in p.plans %}
+                <div class="bg-[#1a1b26] border border-gray-800 rounded-lg p-3 flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-300 text-sm font-black">{{ plan.plan_name }}</p>
+                        <p class="text-white text-lg font-black">₹{{ plan.price | float }}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <!-- Quantity Box (Mock for UI) -->
+                        <div class="bg-gray-900 border border-gray-700 text-white w-10 h-10 flex items-center justify-center rounded">1</div>
+                        <button onclick="buyProduct({{ plan.id }}, '{{ p.name }} ({{ plan.plan_name }})', {{ plan.price }})" class="bg-pink-500 hover:bg-pink-400 text-white font-black px-5 py-2 rounded h-10 tracking-wider shadow-[0_0_10px_rgba(236,72,153,0.5)]">
+                            BUY
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
         </div>
     </div>
     {% endfor %}
 </div>
 
 <script>
+function togglePlans(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('open');
+}
+
 function buyProduct(productId, name, price) {
     Swal.fire({
         title: 'CONFIRM PURCHASE',
         html: `<p class="text-gray-300">Buy <b>${name}</b> for <b class="text-green-400">₹${price}</b>?</p>`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#4f46e5',
+        confirmButtonColor: '#ec4899', // pink color
         cancelButtonColor: '#374151',
         confirmButtonText: 'BUY NOW',
         background: '#0b0c10',
