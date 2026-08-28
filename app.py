@@ -281,6 +281,176 @@ def transfer():
                 db.users.update_one({"user_id": session["user_id"]}, {"$inc": {"balance": -amount}})
                 db.users.update_one({"user_id": target}, {"$inc": {"balance": amount}})
                 msg = f"Success! Transferred ₹{amount} to {target}"
+
+
+@app.route("/dashboard")
+def dashboard():
+    if "user_id" not in session: return redirect("/")
+    user = db.users.find_one({"user_id": session["user_id"]})
+    
+    # Calculate stats
+    orders = list(db.history.find({"user_id": session["user_id"]}).sort("date", -1))
+    total_orders = len(orders)
+    total_spent = sum(float(o.get("price", 0)) for o in orders)
+    active_keys_count = len(orders) # In a real app we'd check validity
+    
+    # Fake recent transactions for UI
+    transactions = []
+    
+    # Add real deposits
+    deposits = list(db.deposit_history.find({"user_id": session["user_id"]}).sort("timestamp", -1).limit(3))
+    for d in deposits:
+        transactions.append({
+            "type": "deposit",
+            "id": d.get("order_id"),
+            "desc": "UPI Deposit",
+            "amount": d.get("amount", 0),
+            "date": d.get("timestamp", "").split(" ")[0]
+        })
+        
+    return render_template("dashboard.html", user=user, balance=user.get("balance", 0.0), total_orders=total_orders, total_spent=total_spent, active_keys_count=active_keys_count, transactions=transactions)
+
+@app.route("/store")
+def store():
+    if "user_id" not in session: return redirect("/")
+    user = db.users.find_one({"user_id": session["user_id"]})
+    raw_products = list(db.products.find({}).sort("order", 1))
+    
+    settings = db.settings.find_one({"id": "global"}) or {}
+    hidden_cats = [c.strip().upper() for c in settings.get("hidden_categories", "").split(",")]
+    
+    # Group by category and name
+    grouped_products = {}
+    for p in raw_products:
+        if p['category'].upper() in hidden_cats: continue
+        
+        key = f"{p['category']}_{p['name']}"
+        if key not in grouped_products:
+            grouped_products[key] = {
+                "name": p["name"],
+                "category": p["category"],
+                "media_url": p.get("media_url", ""),
+                "features": p.get("features", ""),
+                "plans": []
+            }
+        grouped_products[key]["plans"].append(p)
+        
+    return render_template("store.html", user=user, balance=user.get("balance", 0.0), products=list(grouped_products.values()))
+
+@app.route('/settings')
+def user_settings():
+    if 'user_id' not in session: return redirect('/')
+    return render_template('user_settings.html', balance=db.users.find_one({'user_id': session['user_id']}).get('balance', 0.0))
+
+@app.route('/settings/appearance')
+def appearance():
+    if 'user_id' not in session: return redirect('/')
+    return render_template('appearance.html', balance=db.users.find_one({'user_id': session['user_id']}).get('balance', 0.0))
+
+@app.route('/settings/about')
+def about():
+    if 'user_id' not in session: return redirect('/')
+    return render_template('about.html', settings=db.settings.find_one({'id': 'global'}) or {}, balance=db.users.find_one({'user_id': session['user_id']}).get('balance', 0.0))
+
+@app.route('/profile')
+def profile():
+    if "user_id" not in session: return redirect("/")
+    user = db.users.find_one({"user_id": session["user_id"]})
+    return render_template("profile.html", user=user, balance=user.get("balance", 0.0))
+
+@app.route("/history")
+def history():
+    if "user_id" not in session: return redirect("/")
+    user_id = session["user_id"]
+    orders = list(db.history.find({"user_id": user_id}).sort("date", -1))
+    return render_template("history.html", orders=orders)
+
+@app.route("/deposit_history")
+def deposit_history():
+    if "user_id" not in session: return redirect("/")
+    user_id = session["user_id"]
+    deposits = list(db.deposit_history.find({"user_id": user_id}).sort("timestamp", -1))
+    return render_template("deposit_history.html", deposits=deposits)
+
+@app.route("/deposit", methods=["GET", "POST"])
+def deposit():
+    if "user_id" not in session: return redirect("/")
+    user_id = session["user_id"]
+    user = db.users.find_one({"user_id": user_id})
+    
+    if request.method == "POST":
+        amount = float(request.form.get("amount", 0))
+        gateway = request.form.get("gateway", "1")
+        if amount < 1:
+            return render_template("deposit.html", user=user, balance=user.get("balance", 0.0), error="Minimum amount is ₹1")
+            
+        order_prefix = "ADD1_" if gateway == "1" else "ADD2_"
+        order_id = f"{order_prefix}{datetime.now().strftime('%Y%m%d%H%M%S')}{uuid.uuid4().hex[:4].upper()}"
+        customer_name = session.get("username", "WebUser")
+        
+        payload = {"amount": f"{amount:.2f}", "order_id": order_id, "customer_name": customer_name}
+        headers = {"X-Guru-Key": get_karanpay_key(order_id), "Content-Type": "application/json"}
+        
+        try:
+            resp = requests.post(KARANPAY_CREATE_URL, json=payload, headers=headers, timeout=20).json()
+            if resp.get("status") == "success":
+                payment_url = resp.get("data", {}).get("payment_url") or resp.get("payment_url")
+                upi_url = payment_url
+                try:
+                    html_resp = requests.get(payment_url, timeout=10).text
+                    matches = re.findall(r'upi://pay\?[^\"\'<>]+', html_resp)
+                    if matches: upi_url = matches[0].replace("&amp;", "&")
+                except: pass
+                
+                db.orders.insert_one({"order_id": order_id, "user_id": user_id, "amount": amount, "status": "pending", "utr": "", "sender": "", "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+                
+                return render_template("deposit_pay.html", order_id=order_id, amount=amount, upi_url=upi_url, payment_url=payment_url)
+        except Exception as e:
+            return render_template("deposit.html", user=user, balance=user.get("balance", 0.0), error="Gateway Error: " + str(e))
+            
+    return render_template("deposit.html", user=user, balance=user.get("balance", 0.0))
+
+@app.route("/check_payment/<order_id>")
+def check_payment(order_id):
+    if "user_id" not in session: return jsonify({"success": False})
+    order = db.orders.find_one({"order_id": order_id})
+    if not order: return jsonify({"success": False})
+    if order["status"] == "completed": return jsonify({"success": True})
+    
+    headers = {"X-Guru-Key": get_karanpay_key(order_id), "Content-Type": "application/json"}
+    try:
+        resp = requests.post(KARANPAY_STATUS_URL, json={"order_id": order_id}, headers=headers, timeout=10).json()
+        if resp.get("status") == "success" and resp.get("data", {}).get("payment_status") == "success":
+            d = resp["data"]
+            user_id = order["user_id"]
+            amount = d.get("amount", order["amount"])
+            utr = d.get("utr", "N/A")
+            sender = d.get("customer_name", "Unknown")
+            
+            res = db.orders.update_one({"order_id": order_id, "status": "pending"}, {"$set": {"status": "completed", "utr": utr, "sender": sender}})
+            if res.modified_count > 0:
+                db.users.update_one({"user_id": user_id}, {"$inc": {"balance": amount}})
+                db.deposit_history.insert_one({"user_id": user_id, "order_id": order_id, "amount": amount, "utr": utr, "sender": sender, "status": "completed", "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+                return jsonify({"success": True})
+    except:
+        pass
+    return jsonify({"success": False})
+
+
+@app.route("/transfer", methods=["GET", "POST"])
+def transfer():
+    if "user_id" not in session: return redirect("/")
+    user = db.users.find_one({"user_id": session["user_id"]})
+    msg = ""
+    if request.method == "POST":
+        target = request.form.get("target_id")
+        amount = float(request.form.get("amount", 0))
+        if amount >= 1 and user["balance"] >= amount:
+            target_user = db.users.find_one({"user_id": target})
+            if target_user and target != session["user_id"]:
+                db.users.update_one({"user_id": session["user_id"]}, {"$inc": {"balance": -amount}})
+                db.users.update_one({"user_id": target}, {"$inc": {"balance": amount}})
+                msg = f"Success! Transferred ₹{amount} to {target}"
                 user["balance"] -= amount
             else:
                 msg = "Invalid Target User ID"
@@ -290,55 +460,97 @@ def transfer():
 
 @app.route("/buy", methods=["POST"])
 def buy():
-    if "user_id" not in session:
-        return jsonify({"success": False, "msg": "Not logged in"})
-        
-    user_id = session["user_id"]
-    product_db_id = request.form.get("product_id")
-    android_id = request.form.get("android_id", "0b9b969bc2e7997b")
-    
-    if not product_db_id:
-        return jsonify({"success": False, "msg": "Invalid product ID!"})
-        
-    plan = db.products.find_one({"id": int(product_db_id)})
-    if not plan:
-        return jsonify({"success": False, "msg": "Product not found!"})
-        
-    if plan.get("status") in ["PATCHED", "UPDATING"]:
-        msg = plan.get("status_msg") or "Product is currently unavailable (Patched/Updating)."
-        return jsonify({"success": False, "msg": msg})
-        
-    price = plan["price"]
-    user = db.users.find_one({"user_id": user_id})
-    
-    if user["balance"] < price:
-        return jsonify({"success": False, "msg": f"Insufficient Balance! You need ₹{price}"})
-        
-    db.users.update_one({"user_id": user_id, "balance": {"$gte": price}}, {"$inc": {"balance": -price}})
-    
-    settings = db.settings.find_one({"id": "global"}) or {}
-    current_api_key = settings.get("api_key", API_KEY)
-    current_master_key = settings.get("master_key", MASTER_KEY)
-    current_api_endpoint = settings.get("api_endpoint", API_ENDPOINT)
-    
-    payload = {'api_key': current_api_key, 'action': 'buy', 'product_id': str(plan["product_id"]), 'duration': str(plan["plan_name"]), 'android_id': android_id}
-    headers = {'Content-Type': 'application/x-www-form-urlencoded', 'x-master-key': current_master_key}
-    
     try:
-        tls_session = tls_client.Session(client_identifier="chrome_112")
-        res = tls_session.post(current_api_endpoint, data=payload, headers=headers, timeout_seconds=15)
-        data = res.json()
-        key = data.get("key") or data.get("license") or "Error fetching key"
+        if "user_id" not in session:
+            return jsonify({"success": False, "msg": "Not logged in"})
+            
+        user_id = session["user_id"]
+        product_db_id = request.form.get("product_id")
+        android_id = request.form.get("android_id", "0b9b969bc2e7997b")
         
-        if "Error" not in key:
-            db.history.insert_one({"user_id": user_id, "product": plan["name"], "plan": plan["plan_name"], "price": price, "license_key": key, "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
-            return jsonify({"success": True, "key": key})
+        if not product_db_id:
+            return jsonify({"success": False, "msg": "Invalid product ID!"})
+            
+        plan = db.products.find_one({"id": int(product_db_id)})
+        if not plan:
+            return jsonify({"success": False, "msg": "Product not found!"})
+            
+        if plan.get("status") in ["PATCHED", "UPDATING"]:
+            msg = plan.get("status_msg") or "Product is currently unavailable (Patched/Updating)."
+            return jsonify({"success": False, "msg": msg})
+            
+        price = float(plan.get("price", 0))
+        user = db.users.find_one({"user_id": user_id})
+        
+        if float(user.get("balance", 0)) < price:
+            return jsonify({"success": False, "msg": f"Insufficient Balance! You need ₹{price}"})
+            
+        # Deduct balance temporarily
+        res = db.users.update_one({"user_id": user_id, "balance": {"$gte": price}}, {"$inc": {"balance": -price}})
+        if res.modified_count == 0:
+            return jsonify({"success": False, "msg": "Balance deduction failed!"})
+        
+        # Check Product Type
+        if plan.get("type") == "manual":
+            # Handle Manual Product Key System
+            key_doc = db.keys.find_one_and_update(
+                {"product_db_id": plan["id"], "used": False},
+                {"$set": {"used": True, "used_by": user_id, "used_date": datetime.now()}}
+            )
+            if not key_doc:
+                # Refund user
+                db.users.update_one({"user_id": user_id}, {"$inc": {"balance": price}})
+                return jsonify({"success": False, "msg": "Out of Stock! No keys available for this plan."})
+                
+            key_data = key_doc["key"]
+            
+            # Save to history
+            db.history.insert_one({
+                "user_id": user_id,
+                "product": plan["name"],
+                "plan": plan["plan_name"],
+                "price": price,
+                "license_key": key_data,
+                "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+            return jsonify({"success": True, "key": key_data})
         else:
-            db.users.update_one({"user_id": user_id}, {"$inc": {"balance": price}})
-            return jsonify({"success": False, "msg": "API Error: " + key})
+            # Handle API Product
+            settings = db.settings.find_one({"id": "global"}) or {}
+            current_api_key = settings.get("api_key", API_KEY)
+            current_master_key = settings.get("master_key", MASTER_KEY)
+            current_api_endpoint = settings.get("api_endpoint", API_ENDPOINT)
+            
+            payload = {'api_key': current_api_key, 'action': 'buy', 'product_id': str(plan.get("product_id", "")), 'duration': str(plan.get("plan_name", "")), 'android_id': android_id}
+            headers = {'Content-Type': 'application/x-www-form-urlencoded', 'x-master-key': current_master_key}
+            
+            import tls_client
+            tls_session = tls_client.Session(client_identifier="chrome_112")
+            api_res = tls_session.post(current_api_endpoint, data=payload, headers=headers, timeout_seconds=15)
+            data = api_res.json()
+            
+            key_data = data.get("key") or data.get("license") or "Error"
+            
+            if "Error" not in key_data:
+                db.history.insert_one({
+                    "user_id": user_id,
+                    "product": plan["name"],
+                    "plan": plan["plan_name"],
+                    "price": price,
+                    "license_key": key_data,
+                    "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+                return jsonify({"success": True, "key": key_data})
+            else:
+                db.users.update_one({"user_id": user_id}, {"$inc": {"balance": price}})
+                return jsonify({"success": False, "msg": data.get("message", "API Error: Invalid response from Reseller")})
     except Exception as e:
-        db.users.update_one({"user_id": user_id}, {"$inc": {"balance": price}})
-        return jsonify({"success": False, "msg": "Failed to connect to API"})
+        import traceback
+        traceback.print_exc()
+        # Refund in case of critical failure
+        if 'price' in locals():
+            db.users.update_one({"user_id": user_id}, {"$inc": {"balance": price}})
+        return jsonify({"success": False, "msg": f"Server Error: {str(e)}"})
 
 # ================= ADMIN ROUTES =================
 
@@ -755,6 +967,8 @@ def upload_avatar():
     data = request.json
     avatar_b64 = data.get("avatar")
     if not avatar_b64: return jsonify({"success": False})
+    db.users.update_one({"user_id": session["user_id"]}, {"$set": {"avatar": avatar_b64}})
+    return jsonify({"success": True})
 
 @app.route("/upload_banner", methods=["POST"])
 def upload_banner():
@@ -771,6 +985,7 @@ def upload_banner():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
