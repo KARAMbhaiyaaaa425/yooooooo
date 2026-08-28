@@ -17,14 +17,16 @@
 
     <!-- Full Bleed Banner -->
     <div class="-mx-4 -mt-4 relative mb-16">
-        <div id="mainBanner" class="w-full h-56 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80');"></div>
+        {% set banner_url = user.banner | default(global_settings.default_banner, true) | default('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80', true) %}
+        <div id="mainBanner" class="w-full h-56 bg-cover bg-center" style="background-image: url('{{ banner_url }}');"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-[#0a0e17] via-transparent to-transparent"></div>
         
         <!-- Avatar -->
         <div class="absolute -bottom-12 left-1/2 -translate-x-1/2">
             <div class="relative group cursor-pointer" onclick="toggleEditMode()">
-                {% if user.avatar %}
-                    <img id="mainAvatar" src="{{ user.avatar }}" class="w-24 h-24 rounded-full border-[3px] border-blue-500 object-cover shadow-[0_0_20px_rgba(37,99,235,0.6)]" alt="Profile">
+                {% set avatar_url = user.avatar | default(global_settings.default_avatar, true) %}
+                {% if avatar_url %}
+                    <img id="mainAvatar" src="{{ avatar_url }}" class="w-24 h-24 rounded-full border-[3px] border-blue-500 object-cover shadow-[0_0_20px_rgba(37,99,235,0.6)]" alt="Profile">
                 {% else %}
                     <div id="mainAvatar" class="w-24 h-24 rounded-full bg-blue-900 border-[3px] border-blue-500 flex items-center justify-center text-blue-400 text-4xl shadow-[0_0_20px_rgba(37,99,235,0.6)]">
                         <i class="fa-solid fa-user"></i>
@@ -120,17 +122,17 @@
 
     <p class="text-[10px] text-gray-500 font-bold mb-2">Profile Preview</p>
     
-          <!-- Mini Preview Banner -->
+                    <!-- Mini Preview Banner -->
       <div class="relative w-full mb-10 mt-4">
           <div class="relative w-full h-32 rounded-2xl overflow-hidden border border-gray-800">
-              <div id="previewBanner" class="w-full h-full bg-cover bg-center" style="background-image: url('{{ user.banner if user.banner else 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80' }}');"></div>
+              <div id="previewBanner" class="w-full h-full bg-cover bg-center" style="background-image: url('{{ banner_url }}');"></div>
               <div class="absolute inset-0 bg-gradient-to-t from-[#0a0e17] via-transparent to-transparent"></div>
           </div>
           
           <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 z-20">
               <div class="relative cursor-pointer group" onclick="document.getElementById('avatarUpload').click()">
-                  {% if user.avatar %}
-                      <img id="editAvatar" src="{{ user.avatar }}" class="w-20 h-20 rounded-full border-[3px] border-blue-500 object-cover shadow-[0_0_15px_rgba(37,99,235,0.6)]">
+                  {% if avatar_url %}
+                      <img id="editAvatar" src="{{ avatar_url }}" class="w-20 h-20 rounded-full border-[3px] border-blue-500 object-cover shadow-[0_0_15px_rgba(37,99,235,0.6)]">
                   {% else %}
                       <div id="editAvatar" class="w-20 h-20 rounded-full bg-blue-900 border-[3px] border-blue-500 flex items-center justify-center text-blue-400 text-3xl shadow-[0_0_15px_rgba(37,99,235,0.6)]">
                           <i class="fa-solid fa-user"></i>
@@ -405,6 +407,7 @@
     });
 </script>
 {% endblock %}
+
 
 
 
