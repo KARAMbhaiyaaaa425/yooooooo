@@ -38,8 +38,14 @@
                 <label class="block text-xs font-bold text-gray-400 uppercase mb-2">App Name</label>
                 <input type="text" name="app_name" value="{{ settings.app_name | default('Karan Store') }}" class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-4">
                 
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">App Logo URL</label>
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">App Logo URL</label>
                 <input type="text" name="app_logo" value="{{ settings.app_logo | default('') }}" placeholder="https://..." class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-4">
+                
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Default User Avatar URL</label>
+                <input type="text" name="default_avatar" value="{{ settings.default_avatar | default('') }}" placeholder="https://..." class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-4">
+                
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Default User Banner URL</label>
+                <input type="text" name="default_banner" value="{{ settings.default_banner | default('') }}" placeholder="https://..." class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-4">
                 
                 <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Telegram Username</label>
                 <input type="text" name="telegram" value="{{ settings.telegram | default('Karan_store') }}" class="w-full bg-gray-800 border border-gray-600 text-white px-4 py-3 rounded-lg mb-4">
@@ -77,4 +83,5 @@
     </div>
 </div>
 {% endblock %}
+
 
