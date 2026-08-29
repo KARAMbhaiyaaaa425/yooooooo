@@ -178,7 +178,8 @@ def dashboard():
 def download_app():
     if "user_id" not in session: return redirect("/")
     user = db.users.find_one({"user_id": session["user_id"]})
-    return render_template("download.html", user=user)
+    settings = db.settings.find_one({"id": "global"}) or {}
+    return render_template("download.html", user=user, global_settings=settings)
 
 @app.route("/store")
 def store():
