@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.secret_key = 'karan_bhaiya_super_secret'
 
 # MongoDB
-client = MongoClient('mongodb+srv://notchff644_db_user:n6ghmq4Cuz3ViMcf@cluster0.pqt6pea.mongodb.net/?appName=Cluster0', tlsAllowInvalidCertificates=True)
+client = MongoClient('mongodb+srv://karanbhaiya699_db_user:<YOUR_PASSWORD_HERE>@cluster0.1fqrbjv.mongodb.net/?appName=Cluster0', tlsAllowInvalidCertificates=True)
 db = client["karanpay_bot"]
 
 # API Config
