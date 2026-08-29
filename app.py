@@ -840,6 +840,18 @@ def user_notifications():
     notifications = list(db.notifications.find().sort("date", -1))
     return render_template("notifications.html", user=user, balance=user.get("balance", 0.0), notifications=notifications)
 
+
+@app.route("/api/change_password", methods=["POST"])
+def api_change_password():
+    if "user_id" not in session: return jsonify({"success": False, "error": "Not logged in"})
+    data = request.json
+    new_pw = data.get("password")
+    if not new_pw or len(new_pw) < 8:
+        return jsonify({"success": False, "error": "Invalid password"})
+    
+    db.users.update_one({"user_id": session["user_id"]}, {"$set": {"password": new_pw}})
+    return jsonify({"success": True})
+
 @app.route("/logout")
 def logout():
     session.clear()
@@ -925,6 +937,7 @@ def upload_banner():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
