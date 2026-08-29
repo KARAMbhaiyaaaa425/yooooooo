@@ -1,12 +1,10 @@
 {% extends "layout.html" %}
-
 {% block content %}
 <style>
     /* Hide scrollbar for horizontal lists */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
-
 <!-- MAIN PROFILE VIEW -->
 <div id="profileView" class="block">
     <!-- Header with Back Button (Overlapping banner) -->
@@ -14,7 +12,6 @@
         <a href="/dashboard" class="text-white hover:text-gray-300 drop-shadow-md"><i class="fa-solid fa-arrow-left text-lg"></i></a>
         <h2 class="text-lg font-bold text-white drop-shadow-md">My Profile</h2>
     </div>
-
     <!-- Full Bleed Banner -->
     <div class="-mx-4 -mt-4 relative mb-16">
         {% set banner_url = user.banner | default(global_settings.default_banner, true) | default('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80', true) %}
@@ -39,7 +36,6 @@
             </div>
         </div>
     </div>
-
     <!-- User Info -->
     <div class="text-center mb-6">
         <h3 class="text-2xl font-bold text-white mb-1" id="mainUsername">{{ user.username | default('admin') }}</h3>
@@ -50,7 +46,6 @@
             <span class="text-[10px] font-bold text-green-500 tracking-wider">ACTIVE MEMBER</span>
         </div>
     </div>
-
     <!-- Action Cards -->
     <div class="space-y-3 mb-24">
         <!-- Edit Profile -->
@@ -66,7 +61,6 @@
             </div>
             <i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
         </div>
-
         <!-- Wallet Balance -->
         <div class="bg-card border border-gray-800 rounded-2xl p-4 flex justify-between items-center">
             <div class="flex items-center gap-4">
@@ -82,7 +76,6 @@
                 Add
             </a>
         </div>
-
         <!-- My Keys -->
         <a href="/history" class="bg-card border border-gray-800 rounded-2xl p-4 flex justify-between items-center hover:bg-gray-800/50 transition block">
             <div class="flex items-center gap-4">
@@ -93,9 +86,21 @@
             </div>
             <i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
         </a>
-
         <!-- Support -->
-        <a href="/support" class="bg-card border border-gray-800 rounded-2xl p-4 flex justify-between items-center hover:bg-gray-800/50 transition block">
+        
+        <div onclick="promptChangePassword()" class="bg-card border border-gray-800 rounded-2xl p-4 flex justify-between items-center hover:bg-gray-800/50 transition cursor-pointer mb-3">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl bg-gray-800/80 flex items-center justify-center text-red-400">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold text-sm">Change Password</h4>
+                    <p class="text-[10px] text-gray-500 mt-0.5">Update your account password</p>
+                </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
+        </div>
+<a href="/support" class="bg-card border border-gray-800 rounded-2xl p-4 flex justify-between items-center hover:bg-gray-800/50 transition block">
             <div class="flex items-center gap-4">
                 <div class="w-10 h-10 rounded-xl bg-gray-800/80 flex items-center justify-center text-gray-400">
                     <i class="fa-solid fa-headset"></i>
@@ -106,7 +111,6 @@
         </a>
     </div>
 </div>
-
 <!-- EDIT PROFILE MODE -->
 <div id="profileEdit" class="hidden">
     <!-- Header -->
@@ -119,7 +123,6 @@
             Save
         </button>
     </div>
-
     <p class="text-[10px] text-gray-500 font-bold mb-2">Profile Preview</p>
     
                     <!-- Mini Preview Banner -->
@@ -155,7 +158,6 @@
     <div id="avatarLoader" class="hidden fixed inset-0 bg-black/80 z-50 items-center justify-center">
         <i class="fa-solid fa-spinner fa-spin text-white text-4xl"></i>
     </div>
-
     <!-- Inputs & Selectors -->
     <div class="space-y-5 mb-20">
         <!-- Display Name -->
@@ -164,7 +166,6 @@
             <p class="text-[10px] text-gray-500 mb-2">Change your display name</p>
             <input type="text" id="usernameInput" value="{{ user.username | default('admin') }}" class="w-full bg-card border border-gray-800 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition">
         </div>
-
         <!-- Solid Colors -->
         <div>
             <h4 class="text-white font-bold text-sm mb-1">Profile Background</h4>
@@ -181,69 +182,16 @@
                 <div onclick="setBannerColor('linear-gradient(to right, #8b5cf6, #3b82f6)')" class="w-8 h-8 shrink-0 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 cursor-pointer border-2 border-transparent hover:border-white transition flex items-center justify-center color-btn" data-color="linear-gradient(to right, #8b5cf6, #3b82f6)"></div>
             </div>
         </div>
-
         <!-- Image Backgrounds -->
 </div>
         
 <script>
-
-    async function changePassword() {
-        const pw = document.getElementById('newPassword').value;
-        if(!pw || pw.length < 8) {
-            Swal.fire({icon: 'error', title: 'Error', text: 'Password must be at least 8 characters.', background: '#111827', color: '#fff'});
-            return;
-        }
-        
-        Swal.fire({ title: 'Updating...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, background: '#111827', color: '#fff' });
-        
-        try {
-            const response = await fetch('/api/change_password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: pw })
-            });
-            const result = await response.json();
-            if(result.success) {
-                Swal.fire({icon: 'success', title: 'Success', text: 'Password updated!', background: '#111827', color: '#fff'});
-                document.getElementById('newPassword').value = '';
-            } else {
-                Swal.fire({icon: 'error', title: 'Error', text: result.error || 'Failed to update.', background: '#111827', color: '#fff'});
-            }
-        } catch (e) {
-            Swal.fire({icon: 'error', title: 'Error', text: 'Something went wrong.', background: '#111827', color: '#fff'});
-        }
-    }
-
+    
+    
         
 <script>
-
-    async function changePassword() {
-        const pw = document.getElementById('newPassword').value;
-        if(!pw || pw.length < 8) {
-            Swal.fire({icon: 'error', title: 'Error', text: 'Password must be at least 8 characters.', background: '#111827', color: '#fff'});
-            return;
-        }
-        
-        Swal.fire({ title: 'Updating...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, background: '#111827', color: '#fff' });
-        
-        try {
-            const response = await fetch('/api/change_password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: pw })
-            });
-            const result = await response.json();
-            if(result.success) {
-                Swal.fire({icon: 'success', title: 'Success', text: 'Password updated!', background: '#111827', color: '#fff'});
-                document.getElementById('newPassword').value = '';
-            } else {
-                Swal.fire({icon: 'error', title: 'Error', text: result.error || 'Failed to update.', background: '#111827', color: '#fff'});
-            }
-        } catch (e) {
-            Swal.fire({icon: 'error', title: 'Error', text: 'Something went wrong.', background: '#111827', color: '#fff'});
-        }
-    }
-
+    
+    
     // State management
     const userBanner = "{{ user.banner if user.banner else '' }}";
     let currentBgStyle = userBanner ? "url('" + userBanner + "')" : (localStorage.getItem('profileBgStyle') || "url('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80')");
@@ -332,10 +280,8 @@
     async function handleAvatarUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
-
         document.getElementById('avatarLoader').classList.remove('hidden');
         document.getElementById('avatarLoader').classList.add('flex');
-
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = function (e) {
@@ -352,7 +298,6 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
                 const base64String = canvas.toDataURL('image/jpeg', 0.7);
-
                 try {
                     const response = await fetch('/upload_avatar', {
                         method: 'POST',
@@ -387,10 +332,8 @@
         async function handleBannerUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
-
         document.getElementById('avatarLoader').classList.remove('hidden');
         document.getElementById('avatarLoader').classList.add('flex');
-
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = function (e) {
@@ -408,7 +351,6 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
                 const base64String = canvas.toDataURL('image/jpeg', 0.6); // slight more compression for banners
-
                 try {
                     const response = await fetch('/upload_banner', {
                         method: 'POST',
@@ -436,11 +378,46 @@
         initProfile();
         updateSelectionUI();
     });
+
+    function promptChangePassword() {
+        Swal.fire({
+            title: 'Change Password',
+            html: '<input type="password" id="swal-input-pw" class="w-full bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 transition" placeholder="New Password (Min 8 chars)">',
+            background: '#111827',
+            color: '#fff',
+            showCancelButton: true,
+            confirmButtonText: 'Update',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#374151',
+            preConfirm: () => {
+                const pw = document.getElementById('swal-input-pw').value;
+                if (!pw || pw.length < 8) {
+                    Swal.showValidationMessage('Password must be at least 8 characters');
+                    return false;
+                }
+                return pw;
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Updating...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, background: '#111827', color: '#fff' });
+                try {
+                    const response = await fetch('/api/change_password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: result.value })
+                    });
+                    const resData = await response.json();
+                    if(resData.success) {
+                        Swal.fire({icon: 'success', title: 'Success', text: 'Password updated!', background: '#111827', color: '#fff'});
+                    } else {
+                        Swal.fire({icon: 'error', title: 'Error', text: resData.error || 'Failed to update.', background: '#111827', color: '#fff'});
+                    }
+                } catch (e) {
+                    Swal.fire({icon: 'error', title: 'Error', text: 'Something went wrong.', background: '#111827', color: '#fff'});
+                }
+            }
+        });
+    }
+
 </script>
 {% endblock %}
-
-
-
-
-
-
