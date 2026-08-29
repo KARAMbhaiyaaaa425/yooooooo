@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="max-w-md mx-auto pt-6 px-4 pb-24">
+    <!-- Header -->
+    <div class="flex items-center mb-10">
+        <a href="javascript:history.back()" class="text-white hover:text-gray-300 transition mr-4">
+            <i class="fa-solid fa-arrow-left text-xl"></i>
+        </a>
+        <h1 class="text-white text-xl font-bold mx-auto pr-8">Install <span class="text-blue-500">App</span></h1>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-[#111827] border border-gray-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center text-center">
+        
+        <!-- Icon Circle -->
+        <div class="w-24 h-24 rounded-full border-2 border-blue-900/50 bg-[#0a0f1c] flex items-center justify-center mb-6 shadow-inner">
+            <i class="fa-solid fa-desktop text-3xl text-blue-500"></i>
+        </div>
+
+        <!-- Text -->
+        <h2 class="text-white text-2xl font-black mb-3">Install Our App</h2>
+        <p class="text-gray-400 text-sm mb-8 px-4 leading-relaxed">
+            Get a better and faster experience.<br>Install instantly to your home screen!
+        </p>
+
+        <!-- Big Install Button (PWA) -->
+        <button onclick="window.installPWA()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 transition shadow-[0_0_20px_rgba(37,99,235,0.4)] mb-8">
+            <i class="fa-solid fa-download text-lg"></i>
+            <span class="text-lg tracking-wide">Install App Instantly</span>
+        </button>
+
+        <!-- Divider -->
+        <div class="flex items-center w-full mb-8">
+            <div class="flex-1 border-t border-gray-800"></div>
+            <span class="px-4 text-gray-500 text-sm font-medium">or manual download</span>
+            <div class="flex-1 border-t border-gray-800"></div>
+        </div>
+
+        <!-- Android APK Card -->
+        <a href="/static/app.apk" download="app.apk" class="w-full bg-transparent border border-gray-800 rounded-2xl p-4 flex items-center gap-4 hover:border-gray-600 transition group cursor-pointer text-left">
+            <i class="fa-brands fa-android text-4xl text-green-500 group-hover:scale-110 transition-transform"></i>
+            <div>
+                <h3 class="text-white font-bold text-base mb-1">Download APK File</h3>
+                <p class="text-gray-500 text-xs font-medium tracking-wide">Standard Installation &nbsp;|&nbsp; Size: 15 MB</p>
+            </div>
+        </a>
+
+    </div>
+</div>
+{% endblock %}
