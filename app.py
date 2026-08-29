@@ -55,14 +55,19 @@ def check_maintenance():
 
 
 @app.context_processor
-def inject_unread():
+def inject_global_data():
+    data = {
+        "unread_count": 0,
+        "balance": 0.0,
+        "global_settings": db.settings.find_one({"id": "global"}) or {}
+    }
     if "user_id" in session:
         user = db.users.find_one({"user_id": session["user_id"]})
         if user:
             last_seen = user.get("last_seen_notification", "")
-            count = db.notifications.count_documents({"date": {"$gt": last_seen}})
-            return {"unread_count": count}
-    return {"unread_count": 0}
+            data["unread_count"] = db.notifications.count_documents({"date": {"": last_seen}})
+            data["balance"] = user.get("balance", 0.0)
+    return data
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -183,30 +188,45 @@ def download_app():
 
 @app.route("/store")
 def store():
-    if "user_id" not in session: return redirect("/")
-    user = db.users.find_one({"user_id": session["user_id"]})
-    raw_products = list(db.products.find({}).sort("order", 1))
-    
-    settings = db.settings.find_one({"id": "global"}) or {}
-    hidden_cats = [c.strip().upper() for c in settings.get("hidden_categories", "").split(",")]
-    
-    # Group by category and name
-    grouped_products = {}
-    for p in raw_products:
-        if p['category'].upper() in hidden_cats: continue
+    try:
+        if "user_id" not in session: return redirect("/")
+        user = db.users.find_one({"user_id": session["user_id"]})
+        raw_products = list(db.products.find({}).sort("order", 1))
         
-        key = f"{p['category']}_{p['name']}"
-        if key not in grouped_products:
-            grouped_products[key] = {
-                "name": p["name"],
-                "category": p["category"],
-                "media_url": p.get("media_url", ""),
-                "features": p.get("features", ""),
-                "plans": []
-            }
-        grouped_products[key]["plans"].append(p)
+        settings = db.settings.find_one({"id": "global"}) or {}
+        hidden_cats = [c.strip().upper() for c in settings.get("hidden_categories", "").split(",")]
         
-    return render_template("store.html", user=user, balance=user.get("balance", 0.0), products=list(grouped_products.values()), global_settings=settings)
+        grouped_products = {}
+        for p in raw_products:
+            cat = p.get("category", "Uncategorized").upper()
+            if cat in hidden_cats: continue
+            if cat not in grouped_products:
+                grouped_products[cat] = {}
+            
+            name = p.get("name", "Unknown")
+            if name not in grouped_products[cat]:
+                grouped_products[cat][name] = []
+            
+            grouped_products[cat][name].append(p)
+            
+        final_products = {}
+        for cat, names in grouped_products.items():
+            final_products[cat] = []
+            for name, plans in names.items():
+                if not plans: continue
+                final_products[cat].append({
+                    "name": name,
+                    "plans": sorted(plans, key=lambda x: x.get("order", 0)),
+                    "media_url": plans[0].get("media_url", "")
+                })
+                
+        categories = list(final_products.keys())
+        categories.sort()
+        
+        return render_template("store.html", user=user, balance=user.get("balance", 0.0) if user else 0.0, products=final_products, categories=categories, global_settings=settings)
+    except Exception as e:
+        import traceback
+        return "<pre>" + traceback.format_exc() + "</pre>"
 
 @app.route('/settings')
 def user_settings():
