@@ -1,6 +1,27 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<style>
+    /* Force the layout's main wrapper to be a flex column taking exactly the visible screen space */
+    .min-h-screen {
+        display: flex !important;
+        flex-direction: column !important;
+        height: calc(100dvh - 140px) !important; /* 100dvh - (60px top nav) - (80px body pb-20) */
+        min-height: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    
+    #chatContainer {
+        flex-grow: 1;
+        flex-shrink: 1;
+        height: auto !important;
+        min-height: 0; 
+        margin-bottom: -1px; /* To prevent 1px borders from causing gaps */
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-bottom: none !important;
+    }
+</style>
 <div class="mb-4 flex items-center gap-3 mt-2">
     <a href="/dashboard" class="w-8 h-8 rounded-full bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition shadow-md">
         <i class="fa-solid fa-chevron-left text-sm"></i>
@@ -39,7 +60,7 @@
     <div class="flex-grow border-t border-gray-800"></div>
 </div>
 
-<div id="chatContainer" class="bg-[#0a0f1c] border border-gray-800 rounded-2xl flex flex-col shadow-lg relative overflow-hidden" style="height: calc(100dvh - 270px);">
+<div id="chatContainer" class="bg-[#0a0f1c] border border-gray-800 rounded-2xl flex flex-col shadow-lg relative overflow-hidden" >
     
     <div class="flex justify-center mt-3">
         <span class="bg-[#121b2d] border border-gray-800 text-gray-400 text-[10px] px-3 py-1 rounded-full">Today</span>
@@ -232,6 +253,9 @@
     }
 </script>
 {% endblock %}
+
+
+
 
 
 
