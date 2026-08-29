@@ -643,6 +643,7 @@ def admin_add_product():
     return render_template("admin/add_product.html")
 
 
+
 @app.route("/admin/user_profile", methods=["GET", "POST"])
 def admin_user_profile():
     if not session.get("admin"): return redirect("/admin")
@@ -655,6 +656,8 @@ def admin_user_profile():
                 db.settings.update_one({"id": "global"}, {"$set": {"default_avatar": data["default_avatar"]}}, upsert=True)
             if "default_banner" in data:
                 db.settings.update_one({"id": "global"}, {"$set": {"default_banner": data["default_banner"]}}, upsert=True)
+            if "app_logo" in data:
+                db.settings.update_one({"id": "global"}, {"$set": {"app_logo": data["app_logo"]}}, upsert=True)
             return jsonify({"success": True})
         return jsonify({"success": False})
         
@@ -937,6 +940,7 @@ def upload_banner():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
