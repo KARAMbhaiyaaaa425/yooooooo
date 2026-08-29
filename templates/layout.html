@@ -93,7 +93,12 @@
             <div>
                 <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-3">Account</h3>
                 <div class="space-y-1">
-                    <a href="/profile" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/profile' %}nav-active{% endif %}">
+                    
+            <a href="/download" class="flex flex-col items-center p-2 text-gray-500 hover:text-blue-400 {% if request.path == '/download' %}text-blue-500{% endif %} transition">
+                <i class="fa-brands fa-android text-lg mb-1"></i>
+                <span class="text-[10px] font-semibold">App</span>
+            </a>
+            <a href="/profile" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/profile' %}nav-active{% endif %}">
                         <i class="fa-solid fa-user w-5 text-center text-pink-400"></i> My Profile
                     </a>
                     <a href="/deposit" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/deposit' %}nav-active{% endif %}">
@@ -117,6 +122,9 @@
                         {% if unread_count > 0 %}
                             <span class="text-[9px] bg-red-600 text-white px-2 py-0.5 rounded-full ml-auto font-bold">{{ unread_count }}</span>
                         {% endif %}
+                    </a>
+                    <a href="/download" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium">
+                        <i class="fa-solid fa-download w-5 text-center text-blue-500"></i> Download App
                     </a>
                     <a href="/tutorial" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/tutorial' %}nav-active{% endif %}">
                         <i class="fa-solid fa-book w-5 text-center text-teal-400"></i> Tutorial
@@ -163,6 +171,11 @@
                 <span class="text-[10px] font-semibold">My Keys</span>
             </a>
 
+            
+            <a href="/download" class="flex flex-col items-center p-2 text-gray-500 hover:text-blue-400 {% if request.path == '/download' %}text-blue-500{% endif %} transition">
+                <i class="fa-brands fa-android text-lg mb-1"></i>
+                <span class="text-[10px] font-semibold">App</span>
+            </a>
             <a href="/profile" class="flex flex-col items-center p-2 text-gray-500 hover:text-blue-400 {% if request.path == '/profile' %}text-blue-500{% endif %} transition">
                 <i class="fa-regular fa-user text-lg mb-1"></i>
                 <span class="text-[10px] font-semibold">Profile</span>
@@ -250,9 +263,38 @@
             });
         }
     </script>
+
+
+
+
+
+
+
+    <script>
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+      });
+      
+      window.installPWA = async function() {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            deferredPrompt = null;
+          }
+        } else {
+          Swal.fire({
+            icon: 'info',
+            title: 'Not Supported or Already Installed',
+            text: 'Your browser does not support instant install, or the app is already installed on your home screen!',
+            background: '#111827', color: '#fff'
+          });
+        }
+      };
+    </script>
 </body>
 </html>
-
-
 
 
