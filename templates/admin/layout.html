@@ -11,21 +11,17 @@
     <style>
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         html { scroll-behavior: smooth; }
-        body { background-color: #0a0e17; color: #f8fafc; transition: all 0.3s ease; }
-        #sidebar { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .sidebar-open { transform: translateX(0); }
-        .sidebar-closed { transform: translateX(-100%); }
-        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        body { background-color: #0a0e17; color: #f8fafc; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        button, a, input, select { transition: all 0.2s ease-in-out; }
     </style>
 </head>
 <body class="bg-[#0a0e17] text-gray-200">
 
-    <div class="flex h-screen overflow-hidden">
+    <div class="flex h-screen overflow-hidden relative">
         
         <!-- Sidebar -->
-        <aside id="sidebar" class="w-64 bg-[#111827] border-r border-gray-800 flex flex-col fixed md:relative z-50 h-full sidebar-closed md:sidebar-open shadow-2xl">
+        <aside id="sidebar" class="w-64 bg-[#111827] border-r border-gray-800 flex flex-col fixed inset-y-0 left-0 z-50 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
             <div class="p-6 border-b border-gray-800 flex justify-between items-center">
                 <h1 class="text-xl font-black text-white uppercase tracking-wider">{{ global_settings.app_name | default('KARAN STORE') }}</h1>
                 <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -33,43 +29,43 @@
             
             <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1 no-scrollbar">
                 <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-2">Main</p>
-                <a href="/admin/panel" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                <a href="/admin/panel" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-chart-pie w-5 text-center"></i> Dashboard
                 </a>
                 
                 <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6">Store Management</p>
-                <a href="/admin/products" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                <a href="/admin/products" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-box-open w-5 text-center"></i> Products
                 </a>
-                <a href="/admin/keys" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                <a href="/admin/keys" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-key w-5 text-center"></i> Manual Keys
                 </a>
-                <a href="/admin/orders" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                <a href="/admin/orders" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-cart-shopping w-5 text-center"></i> All Orders
                 </a>
-                <a href="/admin/sales" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                <a href="/admin/sales" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-chart-line w-5 text-center"></i> Sales Report
                 </a>
                 
                 <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6">Users & Finance</p>
-                <a href="/admin/users" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                <a href="/admin/users" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-users w-5 text-center"></i> Users List
                 </a>
-                <a href="/admin/transactions" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                <a href="/admin/transactions" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-money-bill-transfer w-5 text-center"></i> Fund Requests
                 </a>
                 
                 <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6">Settings</p>
-                <a href="/admin/user_profile" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                <a href="/admin/user_profile" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-image w-5 text-center"></i> Appearance
                 </a>
-                <a href="/admin/api_settings" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                <a href="/admin/api_settings" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-plug w-5 text-center"></i> API & Gateway
                 </a>
-                <a href="/admin/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                <a href="/admin/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-gear w-5 text-center"></i> Store Config
                 </a>
-                <a href="/admin/notifications" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                <a href="/admin/notifications" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
                     <i class="fa-solid fa-bell w-5 text-center"></i> Notifications
                 </a>
             </nav>
@@ -102,18 +98,17 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('overlay');
-            if (sidebar.classList.contains('sidebar-closed')) {
-                sidebar.classList.remove('sidebar-closed');
-                sidebar.classList.add('sidebar-open');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                sidebar.classList.add('translate-x-0');
                 overlay.classList.remove('hidden');
             } else {
-                sidebar.classList.add('sidebar-closed');
-                sidebar.classList.remove('sidebar-open');
+                sidebar.classList.add('-translate-x-full');
+                sidebar.classList.remove('translate-x-0');
                 overlay.classList.add('hidden');
             }
         }
 
-        // Highlight active link smoothly
         document.addEventListener('DOMContentLoaded', () => {
             const currentPath = window.location.pathname;
             document.querySelectorAll('#sidebar a').forEach(link => {
