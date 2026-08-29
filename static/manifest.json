@@ -1,6 +1,6 @@
 {
-  "name": "Karan Store",
-  "short_name": "Store",
+  "name": "Ffpanelstore",
+  "short_name": "Ffpanelstore",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0e17",
