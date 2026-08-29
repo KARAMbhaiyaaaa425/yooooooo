@@ -182,7 +182,24 @@
                 <div onclick="setBannerColor('linear-gradient(to right, #8b5cf6, #3b82f6)')" class="w-8 h-8 shrink-0 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 cursor-pointer border-2 border-transparent hover:border-white transition flex items-center justify-center color-btn" data-color="linear-gradient(to right, #8b5cf6, #3b82f6)"></div>
             </div>
         </div>
-        <!-- Image Backgrounds -->
+                <!-- Image Backgrounds -->
+        <div>
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-[10px] text-gray-400 font-bold">Background Preview</p>
+                <button onclick="document.getElementById('bannerUpload').click()" class="text-[10px] text-blue-400 font-bold bg-blue-900/30 px-2 py-1 rounded border border-blue-800 hover:bg-blue-800 transition flex items-center gap-1">
+                    <i class="fa-solid fa-upload"></i> Upload from Phone
+                </button>
+                <input type="file" id="bannerUpload" accept="image/*" class="hidden" onchange="handleBannerUpload(event)">
+            </div>
+            
+            <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                <div onclick="setBannerImage('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80')" class="w-16 h-24 shrink-0 rounded-xl bg-cover bg-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition relative img-btn" data-img="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80');"></div>
+                <div onclick="setBannerImage('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80')" class="w-16 h-24 shrink-0 rounded-xl bg-cover bg-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition relative img-btn" data-img="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80');"></div>
+                <div onclick="setBannerImage('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80')" class="w-16 h-24 shrink-0 rounded-xl bg-cover bg-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition relative img-btn" data-img="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80');"></div>
+                <div onclick="setBannerImage('https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=800&q=80')" class="w-16 h-24 shrink-0 rounded-xl bg-cover bg-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition relative img-btn" data-img="https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=800&q=80');"></div>
+                <div onclick="setBannerImage('https://images.unsplash.com/photo-1531366936337-77cf5e08ce51?w=800&q=80')" class="w-16 h-24 shrink-0 rounded-xl bg-cover bg-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition relative img-btn" data-img="https://images.unsplash.com/photo-1531366936337-77cf5e08ce51?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1531366936337-77cf5e08ce51?w=800&q=80');"></div>
+            </div>
+        </div>
 </div>
         
 <script>
