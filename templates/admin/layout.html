@@ -4,113 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Admin Panel - Karan Store</title>
-        <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         ::-webkit-scrollbar { width: 0px; background: transparent; }
-        #sidebar { transition: transform 0.3s ease-in-out; }
+        html { scroll-behavior: smooth; }
+        body { background-color: #0a0e17; color: #f8fafc; transition: all 0.3s ease; }
+        #sidebar { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .sidebar-open { transform: translateX(0); }
         .sidebar-closed { transform: translateX(-100%); }
+        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        button, a, input, select { transition: all 0.2s ease-in-out; }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200">
+<body class="bg-[#0a0e17] text-gray-200">
 
     <div class="flex h-screen overflow-hidden">
         
-        <!-- Sidebar (Desktop & Mobile) -->
-        <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
-        <aside id="sidebar" class="sidebar-closed md:translate-x-0 fixed md:relative top-0 left-0 h-full w-64 bg-gray-800 border-r border-gray-700 z-50 flex flex-col shadow-2xl md:shadow-none">
-            <div class="h-16 flex items-center justify-between px-6 border-b border-gray-700 bg-gray-900">
-                <h1 class="text-xl font-black text-white tracking-widest uppercase">ADMIN <span class="text-red-500">PANEL</span></h1>
-                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#111827] border-r border-gray-800 flex flex-col fixed md:relative z-50 h-full sidebar-closed md:sidebar-open shadow-2xl">
+            <div class="p-6 border-b border-gray-800 flex justify-between items-center">
+                <h1 class="text-xl font-black text-white uppercase tracking-wider">{{ global_settings.app_name | default('KARAN STORE') }}</h1>
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
-            <div class="flex-1 overflow-y-auto py-4">
-                <nav class="space-y-1 px-3">
-                    <a href="/admin/panel" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-chart-line text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Dashboard
-                    </a>
-                    <a href="/admin/sales" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-dollar-sign text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Sales Tracker
-                    </a>
-                    <a href="/admin/support" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-headset text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Support Tickets
-                    </a>
-                    <a href="/admin/add_balance" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-money-bill text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Manage Balance
-                    </a>
-                    <a href="/admin/products" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-box text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Manage Products
-                    </a>
-                    <a href="/admin/keys" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-key text-yellow-400 group-hover:text-yellow-300 mr-3 text-lg"></i> Key System
-                    </a>
-                    <a href="/admin/reorder" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-sort text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Reorder Store
-                    </a>
-                    <a href="/admin/transactions" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-building-columns text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Transactions
-                    </a>
-                    <a href="/admin/notifications" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-bell text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Push Notifications
-                    </a>
-                                        <a href="/admin/settings" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-gear text-gray-400 group-hover:text-gray-300 mr-3 text-lg"></i> Store Settings
-                    </a>
-                    <a href="/admin/user_profile" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-user-gear text-blue-400 group-hover:text-blue-300 mr-3 text-lg"></i> User Profiles
-                    </a>
-                    <a href="/admin/api_settings" class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-3 py-3 text-sm font-medium rounded-md">
-                        <i class="fa-solid fa-code text-green-400 group-hover:text-green-300 mr-3 text-lg"></i> API Settings
-                    </a>
-                </nav>
-            </div>
+            <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1 no-scrollbar">
+                <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-2">Main</p>
+                <a href="/admin/panel" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i> Dashboard
+                </a>
+                
+                <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6">Store Management</p>
+                <a href="/admin/products" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i class="fa-solid fa-box-open w-5 text-center"></i> Products
+                </a>
+                <a href="/admin/keys" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i class="fa-solid fa-key w-5 text-center"></i> Manual Keys
+                </a>
+                <a href="/admin/orders" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i class="fa-solid fa-cart-shopping w-5 text-center"></i> All Orders
+                </a>
+                <a href="/admin/sales" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i class="fa-solid fa-chart-line w-5 text-center"></i> Sales Report
+                </a>
+                
+                <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6">Users & Finance</p>
+                <a href="/admin/users" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i class="fa-solid fa-users w-5 text-center"></i> Users List
+                </a>
+                <a href="/admin/transactions" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i class="fa-solid fa-money-bill-transfer w-5 text-center"></i> Fund Requests
+                </a>
+                
+                <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6">Settings</p>
+                <a href="/admin/user_profile" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i class="fa-solid fa-image w-5 text-center"></i> Appearance
+                </a>
+                <a href="/admin/api_settings" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i class="fa-solid fa-plug w-5 text-center"></i> API & Gateway
+                </a>
+                <a href="/admin/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i class="fa-solid fa-gear w-5 text-center"></i> Store Config
+                </a>
+                <a href="/admin/notifications" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i class="fa-solid fa-bell w-5 text-center"></i> Notifications
+                </a>
+            </nav>
             
-            <div class="p-4 border-t border-gray-700 bg-gray-900">
-                <a href="/logout" class="flex items-center text-red-400 hover:text-red-300 font-bold px-3 py-2 bg-red-900/20 rounded-lg">
-                    <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Logout
+            <div class="p-4 border-t border-gray-800">
+                <a href="/" class="flex items-center justify-center gap-2 w-full py-2.5 bg-red-900/30 text-red-400 rounded-xl text-sm font-bold border border-red-900/50 hover:bg-red-900/50 transition">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </a>
             </div>
         </aside>
 
-        <!-- Main Content Wrapper -->
-        <div class="flex-1 flex flex-col h-screen overflow-hidden bg-gray-900">
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden bg-[#0a0e17] relative">
             <!-- Mobile Header -->
-            <header class="md:hidden h-16 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-4 z-30 shrink-0">
-                <div class="flex items-center gap-3">
-                    <button onclick="toggleSidebar()" class="text-white text-2xl focus:outline-none hover:text-blue-400"><i class="fa-solid fa-bars"></i></button>
-                    <h1 class="text-lg font-black text-white tracking-widest uppercase">ADMIN <span class="text-red-500">PANEL</span></h1>
-                </div>
+            <header class="md:hidden flex items-center justify-between p-4 border-b border-gray-800 bg-[#111827]">
+                <button onclick="toggleSidebar()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-bars text-xl"></i></button>
+                <h1 class="text-sm font-black text-white uppercase tracking-wider">{{ global_settings.app_name | default('KARAN STORE') }}</h1>
+                <div class="w-6"></div>
             </header>
-
-            <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto p-4 md:p-8">
+            
+            <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+            
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar fade-in">
                 {% block content %}{% endblock %}
-            </main>
-        </div>
+            </div>
+        </main>
     </div>
 
     <script>
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-        
         function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
             if (sidebar.classList.contains('sidebar-closed')) {
                 sidebar.classList.remove('sidebar-closed');
                 sidebar.classList.add('sidebar-open');
                 overlay.classList.remove('hidden');
             } else {
-                sidebar.classList.remove('sidebar-open');
                 sidebar.classList.add('sidebar-closed');
+                sidebar.classList.remove('sidebar-open');
                 overlay.classList.add('hidden');
             }
         }
+
+        // Highlight active link smoothly
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('#sidebar a').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('bg-blue-600/10', 'text-blue-400', 'border', 'border-blue-500/20');
+                    link.classList.remove('text-gray-400');
+                }
+            });
+        });
     </script>
 </body>
 </html>
-
-
-
-
