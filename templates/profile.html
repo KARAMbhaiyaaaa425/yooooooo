@@ -239,6 +239,31 @@
         updateSelectionUI();
     }
     
+    
+    function updateAvatarColor(colorStr) {
+        let baseColor = '#2563eb'; // default blue
+        if (colorStr && !colorStr.includes('url(')) {
+            if (colorStr.includes('#8b5cf6')) {
+                baseColor = '#8b5cf6'; 
+            } else {
+                baseColor = colorStr;
+            }
+        }
+        
+        ['mainAvatar', 'editAvatar'].forEach(id => {
+            const avatar = document.getElementById(id);
+            if (avatar) {
+                avatar.style.borderColor = baseColor;
+                avatar.style.boxShadow = '0 0 20px ' + baseColor + '99'; 
+                
+                if (avatar.tagName === 'DIV') {
+                    avatar.style.color = baseColor;
+                    avatar.style.backgroundColor = baseColor + '33'; 
+                }
+            }
+        });
+    }
+
     function applyBackground(style) {
         document.getElementById('mainBanner').style.background = style;
         document.getElementById('mainBanner').style.backgroundSize = 'cover';
