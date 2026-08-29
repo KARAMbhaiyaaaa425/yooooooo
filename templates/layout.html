@@ -41,7 +41,7 @@
                 <button onclick="toggleSidebar()" class="text-gray-300 text-xl focus:outline-none hover:text-white transition">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <h1 class="text-lg font-bold text-white uppercase tracking-wide">KARAN <span class="text-blue-500">STORE</span></h1>
+                <h1 class="text-lg font-bold text-white uppercase tracking-wide">{{ global_settings.app_name | default("Karan Store") }}</h1>
             </div>
             <div class="flex items-center gap-2 bg-dark px-3 py-1.5 rounded-lg border border-gray-800">
                 <i class="fa-solid fa-wallet text-green-400 text-xs"></i>
@@ -55,7 +55,7 @@
     <div id="sidebar" class="sidebar-closed fixed top-0 left-0 h-full w-72 bg-card border-r border-gray-800 z-50 overflow-y-auto">
         <div class="p-5 flex justify-between items-center border-b border-gray-800">
             <div>
-                <h2 class="text-lg font-bold text-white uppercase tracking-wide">KARAN <span class="text-blue-500">STORE</span></h2>
+                <h2 class="text-lg font-bold text-white uppercase tracking-wide">{{ global_settings.app_name | default("Karan Store") }}</h2>
                 <p class="text-[10px] text-gray-500 mt-0.5">User Panel</p>
             </div>
             <button onclick="toggleSidebar()" class="text-gray-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
@@ -242,6 +242,7 @@
     </script>
 </body>
 </html>
+
 
 
 
