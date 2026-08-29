@@ -251,29 +251,30 @@
         }
     </script>
 
-<!-- Manual Install Button -->
-<button id="manualInstallBtn" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2563eb; color: white; padding: 12px 24px; border-radius: 50px; font-weight: bold; z-index: 9999; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); border: 2px solid #60a5fa; cursor: pointer;">
-  <i class="fas fa-download mr-2"></i> Install App
-</button>
+
+
+
+<!-- APK Download Button -->
+<div id="apkDownloadWrapper" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; align-items: center; background: #2563eb; padding: 4px; border-radius: 50px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.5); border: 2px solid #60a5fa;">
+  <a href="/static/app.apk" download="app.apk" style="color: white; padding: 8px 16px; font-weight: bold; text-decoration: none; display: flex; align-items: center;">
+    <i class="fas fa-download mr-2"></i> Download App
+  </a>
+  <button id="closeApkBtn" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-left: 4px; margin-right: 4px;">
+    <i class="fas fa-times"></i>
+  </button>
+</div>
 
 <script>
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  document.getElementById('manualInstallBtn').style.display = 'block';
-});
-
-document.getElementById('manualInstallBtn').addEventListener('click', async () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      document.getElementById('manualInstallBtn').style.display = 'none';
-    }
-    deferredPrompt = null;
+  if (!sessionStorage.getItem('hideApkBtn')) {
+    document.getElementById('apkDownloadWrapper').style.display = 'flex';
+  } else {
+    document.getElementById('apkDownloadWrapper').style.display = 'none';
   }
-});
+
+  document.getElementById('closeApkBtn').addEventListener('click', () => {
+    document.getElementById('apkDownloadWrapper').style.display = 'none';
+    sessionStorage.setItem('hideApkBtn', 'true');
+  });
 </script>
 
 </body>
