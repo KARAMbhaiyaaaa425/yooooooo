@@ -273,16 +273,17 @@
     }
     
     // Avatar Upload Logic (same as before)
+    
+    
     async function handleAvatarUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
         document.getElementById('avatarLoader').classList.remove('hidden');
         document.getElementById('avatarLoader').classList.add('flex');
+        
         const reader = new FileReader();
-        reader.readAsDataURL(file);
         reader.onload = function (e) {
             const img = new Image();
-            img.src = e.target.result;
             img.onload = async function () {
                 const canvas = document.createElement('canvas');
                 const MAX_WIDTH = 250;
@@ -293,7 +294,8 @@
                 canvas.width = width; canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                const base64String = canvas.toDataURL('image/jpeg', 0.7);
+                const base64String = canvas.toDataURL('image/jpeg', 0.8);
+                
                 try {
                     const response = await fetch('/upload_avatar', {
                         method: 'POST',
@@ -302,18 +304,19 @@
                     });
                     const result = await response.json();
                     if (result.success) {
-                        // Create image element if it was a generic icon
                         ['mainAvatar', 'editAvatar'].forEach(id => {
                             const el = document.getElementById(id);
                             if(el.tagName === 'DIV') {
-                                const newImg = document.createElement('img');
-                                newImg.id = id;
-                                newImg.className = el.className.replace('flex items-center justify-center bg-blue-900', 'object-cover');
-                                el.parentNode.replaceChild(newImg, el);
+                                const imgEl = document.createElement('img');
+                                imgEl.id = id;
+                                imgEl.className = el.className.replace('bg-blue-900', '').replace('flex', 'hidden') + ' object-cover';
+                                imgEl.src = base64String;
+                                el.parentNode.replaceChild(imgEl, el);
+                                imgEl.classList.remove('hidden');
+                            } else {
+                                el.src = base64String;
                             }
                         });
-                        document.getElementById('mainAvatar').src = base64String;
-                        document.getElementById('editAvatar').src = base64String;
                     }
                 } catch (error) {
                     alert("Error uploading avatar.");
@@ -321,23 +324,24 @@
                     document.getElementById('avatarLoader').classList.add('hidden');
                     document.getElementById('avatarLoader').classList.remove('flex');
                 }
-            }
+            };
+            img.src = e.target.result;
         };
+        reader.readAsDataURL(file);
     }
-    
-        async function handleBannerUpload(event) {
+
+    async function handleBannerUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
+        
         document.getElementById('avatarLoader').classList.remove('hidden');
         document.getElementById('avatarLoader').classList.add('flex');
+        
         const reader = new FileReader();
-        reader.readAsDataURL(file);
         reader.onload = function (e) {
             const img = new Image();
-            img.src = e.target.result;
             img.onload = async function () {
                 const canvas = document.createElement('canvas');
-                // Banner needs different aspect ratio compression, wide screen
                 const MAX_WIDTH = 800;
                 let width = img.width, height = img.height;
                 if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
@@ -346,7 +350,8 @@
                 canvas.width = width; canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                const base64String = canvas.toDataURL('image/jpeg', 0.6); // slight more compression for banners
+                const base64String = canvas.toDataURL('image/jpeg', 0.6);
+                
                 try {
                     const response = await fetch('/upload_banner', {
                         method: 'POST',
@@ -356,7 +361,6 @@
                     const result = await response.json();
                     if (result.success) {
                         setBannerImage(base64String);
-                        // Make sure to remove old local storage since DB is priority now
                         localStorage.removeItem('profileBgStyle');
                     }
                 } catch (error) {
@@ -365,11 +369,12 @@
                     document.getElementById('avatarLoader').classList.add('hidden');
                     document.getElementById('avatarLoader').classList.remove('flex');
                 }
-            }
+            };
+            img.src = e.target.result;
         };
+        reader.readAsDataURL(file);
     }
-    
-    // Initialize
+
     document.addEventListener('DOMContentLoaded', () => {
         initProfile();
         updateSelectionUI();
@@ -414,7 +419,5 @@
             }
         });
     }
-
 </script>
 {% endblock %}
-
