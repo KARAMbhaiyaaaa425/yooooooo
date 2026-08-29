@@ -517,7 +517,7 @@ def admin_add_balance():
     if not session.get("admin"): return redirect("/")
     uid = request.form.get("user_id")
     amt = float(request.form.get("amount", 0))
-    db.users.update_one({"user_id": uid}, {"": {"balance": amt}})
+    db.users.update_one({"user_id": uid}, {"$inc": {"balance": amt}})
     from datetime import datetime
     db.deposit_history.insert_one({
         "user_id": uid,
