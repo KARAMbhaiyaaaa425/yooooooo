@@ -385,8 +385,8 @@ def buy():
             # Save to history
             db.history.insert_one({
                 "user_id": user_id,
-                "product": plan["name"],
-                "plan": plan["plan_name"],
+                "product": plan.get("name", "N/A"),
+                "plan": plan.get("plan_name", "N/A"),
                 "price": price,
                 "license_key": key_data,
                 "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -410,8 +410,8 @@ def buy():
                 key_data = data.get("key") or data.get("license") or "N/A"
                 db.history.insert_one({
                     "user_id": user_id,
-                    "product": plan["name"],
-                    "plan": plan["plan_name"],
+                    "product": plan.get("name", "N/A"),
+                    "plan": plan.get("plan_name", "N/A"),
                     "price": price,
                     "license_key": key_data,
                     "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -509,28 +509,24 @@ def admin_panel():
         
     return render_template("admin/panel.html", total_users=total_users, total_balance=total_balance, orders=orders, sales_labels=sales_labels, sales_data=sales_data)
 
-@app.route("/admin/add_balance", methods=["GET", "POST"])
+
+@app.route("/admin/add_balance", methods=["POST"])
 def admin_add_balance():
-    if not session.get("admin"): return redirect("/admin")
-    msg = ""
-    if request.method == "POST":
-        uid = request.form.get("user_id")
-        amt = float(request.form.get("amount", 0))
-        db.users.update_one({"user_id": uid}, {"$inc": {"balance": amt}})
-        
-        # Add to deposit history
-        db.deposit_history.insert_one({
-            "user_id": uid,
-            "order_id": f"OWNER_{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            "amount": amt,
-            "utr": "ADDED BY OWNER",
-            "sender": "OWNER",
-            "status": "completed",
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        })
-        
-        msg = f"Added ?{amt} to {uid}"
-    return render_template("admin/add_balance.html", msg=msg)
+    if not session.get("admin"): return redirect("/")
+    uid = request.form.get("user_id")
+    amt = float(request.form.get("amount", 0))
+    db.users.update_one({"user_id": uid}, {"": {"balance": amt}})
+    from datetime import datetime
+    db.deposit_history.insert_one({
+        "user_id": uid,
+        "amount": amt,
+        "utr": "ADMIN_ADD",
+        "sender": "Admin",
+        "status": "completed",
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+    return redirect("/admin/users")
+
 
 @app.route("/admin/products", methods=["GET"])
 def admin_products():
