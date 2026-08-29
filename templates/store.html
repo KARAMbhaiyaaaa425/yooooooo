@@ -252,21 +252,6 @@ function buyProduct(productId, name, price) {
             });
         }
     });
-} else {
-                    Swal.fire({
-                        title: 'ERROR!',
-                        text: data.msg,
-                        icon: 'error',
-                        background: '#111827', color: '#fff',
-                        confirmButtonColor: '#ef4444'
-                    });
-                }
-            })
-            .catch(err => {
-                Swal.fire('Error', 'Network error occurred.', 'error');
-            });
-        }
-    });
 }
 </script>
 {% endblock %}
