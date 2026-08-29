@@ -764,10 +764,31 @@ def admin_reorder():
     if request.method == "POST":
         order_data = request.json.get("order", [])
         for item in order_data:
-            db.products.update_one({"id": item["id"]}, {"$set": {"order": item["order"]}})
+            db.products.update_one({"id": item["id"]}, {"": {"order": item["order"]}})
         return jsonify({"success": True})
-    products = list(db.products.find({}).sort("order", 1))
-    return render_template("admin/reorder.html", products=products)
+        
+    raw_products = list(db.products.find({}).sort("order", 1))
+    
+    # Group them by name for the UI
+    groups = {}
+    for p in raw_products:
+        key = p["name"]
+        if key not in groups:
+            groups[key] = {
+                "name": p["name"],
+                "category": p["category"],
+                "count": 0,
+                "ids": []
+            }
+        groups[key]["count"] += 1
+        groups[key]["ids"].append(str(p["id"]))
+        
+    for k in groups:
+        groups[k]["ids"] = ",".join(groups[k]["ids"])
+        
+    grouped_products = list(groups.values())
+    
+    return render_template("admin/reorder.html", grouped_products=grouped_products)
 
 @app.route("/admin/product/delete_all")
 def admin_delete_all_products():
