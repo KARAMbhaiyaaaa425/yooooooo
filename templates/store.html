@@ -41,20 +41,17 @@
 <!-- Category Filters -->
 <div class="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
     <button onclick="filterCategory('all', this)" class="cat-btn shrink-0 bg-blue-600 text-white px-5 py-2 rounded-full text-[11px] font-bold shadow-md transition uppercase tracking-wider">ALL</button>
-    {% set categories = [] %}
-    {% for p in products %}
-        {% if p.category not in categories %}
-            {% set _ = categories.append(p.category) %}
-            <button onclick="filterCategory('{{ p.category }}', this)" class="cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 theme-border hover:text-white px-5 py-2 rounded-full text-[11px] font-bold transition uppercase tracking-wider">{{ p.category }}</button>
-        {% endif %}
+    {% for category in categories %}
+        <button onclick="filterCategory('{{ category }}', this)" class="cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 theme-border hover:text-white px-5 py-2 rounded-full text-[11px] font-bold transition uppercase tracking-wider">{{ category }}</button>
     {% endfor %}
 </div>
 
 <!-- Products List -->
 <div class="space-y-6 mb-20" id="products-container">
-    {% for p in products %}
-    {% set outer_index = loop.index %}
-    <div class="product-card bg-gray-900 border border-gray-800 theme-border rounded-[1.5rem] overflow-hidden relative shadow-2xl" data-category="{{ p.category }}" data-name="{{ p.name | lower }}">
+    {% for category in categories %}
+        {% for p in products[category] %}
+        {% set outer_index = loop.index0 ~ '-' ~ category %}
+        <div class="product-card bg-gray-900 border border-gray-800 theme-border rounded-[1.5rem] overflow-hidden relative shadow-2xl" data-category="{{ category }}" data-name="{{ p.name | lower }}">
         
         <!-- Image Section (Full Top) -->
         <div class="relative w-full h-[220px] bg-black flex items-center justify-center overflow-hidden group">
@@ -154,6 +151,7 @@
             
         </div>
     </div>
+        {% endfor %}
     {% endfor %}
 </div>
 
