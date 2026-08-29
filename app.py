@@ -173,6 +173,13 @@ def dashboard():
         
     return render_template("dashboard.html", user=user, balance=user.get("balance", 0.0), total_orders=total_orders, total_spent=total_spent, active_keys_count=active_keys_count, transactions=transactions)
 
+
+@app.route("/download")
+def download_app():
+    if "user_id" not in session: return redirect("/")
+    user = db.users.find_one({"user_id": session["user_id"]})
+    return render_template("download.html", user=user)
+
 @app.route("/store")
 def store():
     if "user_id" not in session: return redirect("/")
