@@ -183,36 +183,67 @@
         </div>
 
         <!-- Image Backgrounds -->
-        <div>
-            <div class="flex items-center justify-between mb-3">
-                <p class="text-[10px] text-gray-400 font-bold">Background Preview</p>
-                <button onclick="document.getElementById('bannerUpload').click()" class="text-[10px] text-blue-400 font-bold bg-blue-900/30 px-2 py-1 rounded border border-blue-800 hover:bg-blue-800 transition flex items-center gap-1">
-                    <i class="fa-solid fa-upload"></i> Upload from Phone
-                </button>
-                <input type="file" id="bannerUpload" accept="image/*" class="hidden" onchange="handleBannerUpload(event)">
-            </div>
-            
-            <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                <div onclick="setBannerImage('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80')" class="w-16 h-24 shrink-0 rounded-xl bg-cover bg-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition relative img-btn" data-img="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80');"></div>
-                <div onclick="setBannerImage('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80')" class="w-16 h-24 shrink-0 rounded-xl bg-cover bg-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition relative img-btn" data-img="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80');"></div>
-                <div onclick="setBannerImage('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80')" class="w-16 h-24 shrink-0 rounded-xl bg-cover bg-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition relative img-btn" data-img="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80');"></div>
-                <div onclick="setBannerImage('https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=800&q=80')" class="w-16 h-24 shrink-0 rounded-xl bg-cover bg-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition relative img-btn" data-img="https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=800&q=80');"></div>
-                <div onclick="setBannerImage('https://images.unsplash.com/photo-1531366936337-77cf5e08ce51?w=800&q=80')" class="w-16 h-24 shrink-0 rounded-xl bg-cover bg-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition relative img-btn" data-img="https://images.unsplash.com/photo-1531366936337-77cf5e08ce51?w=800&q=80" style="background-image: url('https://images.unsplash.com/photo-1531366936337-77cf5e08ce51?w=800&q=80');"></div>
-            </div>
-        </div>
-
-        <!-- Tip -->
-        <div class="bg-[#0e1628] border border-blue-900/30 rounded-xl p-4 flex items-start gap-3 mt-4">
-            <i class="fa-regular fa-lightbulb text-blue-500 mt-1"></i>
-            <div>
-                <h4 class="text-white text-xs font-bold mb-1">Customize your profile</h4>
-                <p class="text-[9px] text-gray-400">Show your style. You can change your photo, name and background anytime.</p>
-            </div>
-        </div>
-    </div>
 </div>
-
+        
 <script>
+
+    async function changePassword() {
+        const pw = document.getElementById('newPassword').value;
+        if(!pw || pw.length < 8) {
+            Swal.fire({icon: 'error', title: 'Error', text: 'Password must be at least 8 characters.', background: '#111827', color: '#fff'});
+            return;
+        }
+        
+        Swal.fire({ title: 'Updating...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, background: '#111827', color: '#fff' });
+        
+        try {
+            const response = await fetch('/api/change_password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pw })
+            });
+            const result = await response.json();
+            if(result.success) {
+                Swal.fire({icon: 'success', title: 'Success', text: 'Password updated!', background: '#111827', color: '#fff'});
+                document.getElementById('newPassword').value = '';
+            } else {
+                Swal.fire({icon: 'error', title: 'Error', text: result.error || 'Failed to update.', background: '#111827', color: '#fff'});
+            }
+        } catch (e) {
+            Swal.fire({icon: 'error', title: 'Error', text: 'Something went wrong.', background: '#111827', color: '#fff'});
+        }
+    }
+
+        
+<script>
+
+    async function changePassword() {
+        const pw = document.getElementById('newPassword').value;
+        if(!pw || pw.length < 8) {
+            Swal.fire({icon: 'error', title: 'Error', text: 'Password must be at least 8 characters.', background: '#111827', color: '#fff'});
+            return;
+        }
+        
+        Swal.fire({ title: 'Updating...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, background: '#111827', color: '#fff' });
+        
+        try {
+            const response = await fetch('/api/change_password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pw })
+            });
+            const result = await response.json();
+            if(result.success) {
+                Swal.fire({icon: 'success', title: 'Success', text: 'Password updated!', background: '#111827', color: '#fff'});
+                document.getElementById('newPassword').value = '';
+            } else {
+                Swal.fire({icon: 'error', title: 'Error', text: result.error || 'Failed to update.', background: '#111827', color: '#fff'});
+            }
+        } catch (e) {
+            Swal.fire({icon: 'error', title: 'Error', text: 'Something went wrong.', background: '#111827', color: '#fff'});
+        }
+    }
+
     // State management
     const userBanner = "{{ user.banner if user.banner else '' }}";
     let currentBgStyle = userBanner ? "url('" + userBanner + "')" : (localStorage.getItem('profileBgStyle') || "url('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80')");
@@ -407,6 +438,8 @@
     });
 </script>
 {% endblock %}
+
+
 
 
 
