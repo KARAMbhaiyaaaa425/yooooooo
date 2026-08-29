@@ -15,11 +15,7 @@ app.secret_key = 'karan_bhaiya_super_secret'
 # MongoDB
 import urllib.parse
 # ----------------------------------------------------
-# BHAIA YAHAN APNA PASSWORD DAALIYE (Invertd commas " " ke andar)
-# BHAIA YAHAN APNA PASSWORD DAALIYE
-DB_PASSWORD = "karanbhaiya445160" 
-encoded_password = urllib.parse.quote_plus(DB_PASSWORD)
-client = MongoClient(f"mongodb+srv://karanbhaiya_bot:{encoded_password}@cluster0.1fqrbjv.mongodb.net/?appName=Cluster0", tlsAllowInvalidCertificates=True)
+client = MongoClient('mongodb+srv://karanbhaiyagithub_db_user:6XlEePVBUcU7KH1q@webdatabasae.jgeewtr.mongodb.net/?appName=webdatabasae', tlsAllowInvalidCertificates=True)
 db = client["karanpay_bot"]
 
 # API Config
