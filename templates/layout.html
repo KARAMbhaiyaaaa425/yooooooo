@@ -31,6 +31,16 @@
         .sidebar-closed { transform: translateX(-100%); }
         .nav-active { background-color: rgba(37, 99, 235, 0.15); border-left: 3px solid #3b82f6; color: #60a5fa; }
     </style>
+
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/static/sw.js');
+        });
+      }
+    </script>
 </head>
 <body class="pb-20">
 
