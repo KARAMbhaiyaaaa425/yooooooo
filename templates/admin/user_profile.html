@@ -56,7 +56,29 @@
     <input type="file" id="avatarUpload" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'avatar')">
     <input type="file" id="bannerUpload" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'banner')">
 
+
+
+<div class="bg-gray-900 border border-gray-700 rounded-2xl p-4 shadow-xl mt-6">
+    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-shield-halved text-purple-400 mr-2"></i> App Logo</h3>
+    <p class="text-[10px] text-gray-400 mb-6">This logo appears on the Login and Register screens. (Click the circle below to change)</p>
+
+    <div class="flex items-center justify-center py-6 border-2 border-dashed border-gray-700 rounded-xl mb-2 bg-[#0a0f1c] cursor-pointer group hover:border-blue-500 transition" onclick="document.getElementById('logoUpload').click()">
+        <div class="text-center relative">
+            <div id="previewLogo" class="w-24 h-24 mx-auto rounded-full shadow-[0_0_20px_rgba(37,99,235,0.4)] overflow-hidden border-4 border-blue-600 mb-3 flex items-center justify-center bg-blue-900/30 text-blue-500 text-4xl">
+                {% if settings.app_logo %}
+                    <img src="{{ settings.app_logo }}" class="w-full h-full object-cover">
+                {% else %}
+                    <i class="fa-solid fa-shield-halved"></i>
+                {% endif %}
+            </div>
+            <p class="text-[11px] font-bold text-gray-400 group-hover:text-blue-400 transition"><i class="fa-solid fa-upload mr-1"></i> Tap to Upload</p>
+        </div>
+    </div>
+    <input type="file" id="logoUpload" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'logo')">
 </div>
+
+</div>
+
 
 <script>
 async function handleImageUpload(event, type) {
@@ -107,6 +129,8 @@ async function handleImageUpload(event, type) {
                 } else {
                     preview.src = base64String;
                 }
+            } else if (type === 'logo') {
+                document.getElementById('previewLogo').innerHTML = '<img src="' + base64String + '" class="w-full h-full object-cover">';
             } else {
                 document.getElementById('previewBanner').style.backgroundImage = 'url(' + base64String + ')';
             }
@@ -114,7 +138,9 @@ async function handleImageUpload(event, type) {
             // Save to server
             try {
                 const payload = {};
-                payload[type === 'avatar' ? 'default_avatar' : 'default_banner'] = base64String;
+                if (type === 'avatar') payload['default_avatar'] = base64String;
+                else if (type === 'logo') payload['app_logo'] = base64String;
+                else payload['default_banner'] = base64String;
                 
                 const response = await fetch('/admin/user_profile', {
                     method: 'POST',
@@ -127,7 +153,7 @@ async function handleImageUpload(event, type) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Saved!',
-                        text: (type === 'avatar' ? 'Avatar' : 'Banner') + ' has been updated.',
+                        text: 'Image has been updated successfully.',
                         background: '#111827',
                         color: '#fff',
                         showConfirmButton: false,
@@ -145,5 +171,6 @@ async function handleImageUpload(event, type) {
     reader.readAsDataURL(file);
 }
 </script>
+
 {% endblock %}
 
