@@ -1,0 +1,148 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+    <div>
+        <h2 class="text-2xl font-black text-white tracking-wide">User Profile <span class="text-blue-500">Settings</span></h2>
+        <p class="text-xs text-gray-400 mt-1">Manage default avatars and banners for new users.</p>
+    </div>
+    <a href="/admin/panel" class="w-10 h-10 rounded-xl bg-gray-900 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white transition shadow-lg">
+        <i class="fa-solid fa-house"></i>
+    </a>
+</div>
+
+<div class="bg-gray-900 border border-gray-700 rounded-2xl p-4 shadow-xl">
+    <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-users text-blue-400 mr-2"></i> Default Profile</h3>
+    <p class="text-[10px] text-gray-400 mb-6">This photo and banner will be assigned to all newly registered users automatically.</p>
+
+    <!-- Live Preview Block -->
+    <div class="relative w-full mb-10 border border-gray-700 rounded-2xl overflow-visible bg-[#0a0f1c] shadow-lg">
+        <!-- Banner -->
+        <div class="relative w-full h-32 rounded-t-2xl overflow-hidden cursor-pointer group" onclick="document.getElementById('bannerUpload').click()">
+            <div id="previewBanner" class="w-full h-full bg-cover bg-center transition" style="background-image: url('{{ settings.default_banner if settings.default_banner else 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80' }}');"></div>
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition">
+                <i class="fa-solid fa-camera text-white text-2xl mb-1"></i>
+                <span class="text-white text-[10px] font-bold">Change Banner</span>
+            </div>
+        </div>
+        
+        <!-- Avatar -->
+        <div class="absolute -bottom-8 left-6 z-20">
+            <div class="relative cursor-pointer group" onclick="document.getElementById('avatarUpload').click()">
+                {% if settings.default_avatar %}
+                    <img id="previewAvatar" src="{{ settings.default_avatar }}" class="w-20 h-20 rounded-full border-[4px] border-[#0a0f1c] object-cover shadow-lg">
+                {% else %}
+                    <div id="previewAvatar" class="w-20 h-20 rounded-full bg-blue-900 border-[4px] border-[#0a0f1c] flex items-center justify-center text-blue-400 text-3xl shadow-lg">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                {% endif %}
+                
+                <div class="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                    <i class="fa-solid fa-camera text-white"></i>
+                </div>
+                
+                <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-600 rounded-full border-2 border-[#0a0f1c] flex items-center justify-center text-white text-[10px] shadow-md z-30">
+                    <i class="fa-solid fa-pen"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="h-12 w-full flex justify-end items-center px-4">
+            <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Preview Mode</p>
+        </div>
+    </div>
+
+    <!-- File Inputs -->
+    <input type="file" id="avatarUpload" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'avatar')">
+    <input type="file" id="bannerUpload" accept="image/*" class="hidden" onchange="handleImageUpload(event, 'banner')">
+
+</div>
+
+<script>
+async function handleImageUpload(event, type) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    Swal.fire({ title: 'Uploading...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, background: '#111827', color: '#fff' });
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = async function() {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            const MAX_WIDTH = type === 'banner' ? 800 : 400;
+            const MAX_HEIGHT = type === 'banner' ? 400 : 400;
+            
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height = Math.round((height * MAX_WIDTH) / width);
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width = Math.round((width * MAX_HEIGHT) / height);
+                    height = MAX_HEIGHT;
+                }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const base64String = canvas.toDataURL('image/jpeg', 0.8);
+            
+            // Update preview
+            if (type === 'avatar') {
+                const preview = document.getElementById('previewAvatar');
+                if (preview.tagName === 'DIV') {
+                    const imgEl = document.createElement('img');
+                    imgEl.id = 'previewAvatar';
+                    imgEl.className = 'w-20 h-20 rounded-full border-[4px] border-[#0a0f1c] object-cover shadow-lg';
+                    imgEl.src = base64String;
+                    preview.parentNode.replaceChild(imgEl, preview);
+                } else {
+                    preview.src = base64String;
+                }
+            } else {
+                document.getElementById('previewBanner').style.backgroundImage = 'url(' + base64String + ')';
+            }
+            
+            // Save to server
+            try {
+                const payload = {};
+                payload[type === 'avatar' ? 'default_avatar' : 'default_banner'] = base64String;
+                
+                const response = await fetch('/admin/user_profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                if(result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Saved!',
+                        text: (type === 'avatar' ? 'Avatar' : 'Banner') + ' has been updated.',
+                        background: '#111827',
+                        color: '#fff',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                } else {
+                    throw new Error('Server returned false');
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to upload.', background: '#111827', color: '#fff' });
+            }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+</script>
+{% endblock %}
