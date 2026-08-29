@@ -188,10 +188,6 @@
 <script>
     
     
-        
-<script>
-    
-    
     // State management
     const userBanner = "{{ user.banner if user.banner else '' }}";
     let currentBgStyle = userBanner ? "url('" + userBanner + "')" : (localStorage.getItem('profileBgStyle') || "url('https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80')");
@@ -421,3 +417,4 @@
 
 </script>
 {% endblock %}
+
