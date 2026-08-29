@@ -764,7 +764,7 @@ def admin_reorder():
     if request.method == "POST":
         order_data = request.json.get("order", [])
         for item in order_data:
-            db.products.update_one({"id": item["id"]}, {"": {"order": item["order"]}})
+            db.products.update_one({"id": item["id"]}, {"$set": {"order": item["order"]}})
         return jsonify({"success": True})
         
     raw_products = list(db.products.find({}).sort("order", 1))
