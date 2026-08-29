@@ -36,7 +36,42 @@
     </a>
 </div>
 
+<!-- Coupon Box -->
+<div class="flex gap-2 bg-card border border-gray-800 theme-border rounded-2xl p-2.5 mb-8 shadow-lg">
+    <input type="text" placeholder="Enter coupon code" class="flex-1 bg-transparent border-none text-white text-sm px-3 focus:outline-none focus:ring-0">
+    <button class="bg-gray-800 border border-gray-700 theme-border text-blue-400 theme-text text-sm font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 transition hover:bg-gray-700">
+        <i class="fa-solid fa-tag text-xs"></i> Apply
+    </button>
+</div>
 
+<!-- Category Filters -->
+<div class="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+    <button onclick="filterCategory('all', this)" class="cat-btn shrink-0 bg-blue-600 text-white px-5 py-2 rounded-full text-[11px] font-bold shadow-md transition uppercase tracking-wider">ALL</button>
+    {% set categories = [] %}
+    {% for p in products %}
+        {% if p.category not in categories %}
+            {% set _ = categories.append(p.category) %}
+            <button onclick="filterCategory('{{ p.category }}', this)" class="cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 theme-border hover:text-white px-5 py-2 rounded-full text-[11px] font-bold transition uppercase tracking-wider">{{ p.category }}</button>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<!-- Products List -->
+<div class="space-y-6 mb-20" id="products-container">
+    {% for p in products %}
+    {% set outer_index = loop.index %}
+    <div class="product-card bg-gray-900 border border-gray-800 theme-border rounded-[1.5rem] overflow-hidden relative shadow-2xl" data-category="{{ p.category }}" data-name="{{ p.name | lower }}">
+        
+        <!-- Image Section (Full Top) -->
+        <div class="relative w-full h-[220px] bg-black flex items-center justify-center overflow-hidden group">
+            {% if p.media_url %}
+                {% if p.media_url.endswith('.mp4') %}
+                    <video src="{{ p.media_url }}" class="w-full h-full object-cover opacity-90" autoplay loop muted playsinline></video>
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div class="w-16 h-16 rounded-full border-2 border-white/30 flex items-center justify-center bg-black/40 backdrop-blur-sm shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+                            <i class="fa-solid fa-volume-xmark text-white text-lg"></i>
+                        </div>
+                    </div>
                 {% else %}
                     <img src="{{ p.media_url }}" class="w-full h-full object-cover opacity-90">
                 {% endif %}
