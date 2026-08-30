@@ -1067,7 +1067,7 @@ def developer_api():
     grouped = {}
     for p in raw_products:
         name = p.get("name", "Unknown")
-        if name not in grouped: grouped[name] = {"plans": [], "pid": p.get("product_id")}
+        if name not in grouped: grouped[name] = {"plans": [], "pid": p.get("id")}
         grouped[name]["plans"].append(p)
     
     return render_template("api.html", user=user, master_key=master_key, grouped_products=grouped, url_root=request.url_root)
@@ -1100,7 +1100,7 @@ def reseller_api():
         services = []
         for p in raw_products:
             services.append({
-                "service_id": p.get("product_id"),
+                "service_id": p.get("id"),
                 "name": p.get("name"),
                 "category": p.get("category"),
                 "plan_name": p.get("plan_name"),
@@ -1118,7 +1118,7 @@ def reseller_api():
             return jsonify({"status": "error", "message": "Missing product_id or duration!"})
             
         # Find exact product in DB
-        plan = db.products.find_one({"product_id": int(product_pid) if product_pid.isdigit() else product_pid, "plan_name": duration})
+        plan = db.products.find_one({"id": int(product_pid) if product_pid.isdigit() else product_pid, "plan_name": duration})
         if not plan:
             return jsonify({"status": "error", "message": "Service not found. Check PID and Duration."})
             
