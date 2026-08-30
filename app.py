@@ -727,6 +727,46 @@ def admin_settings():
     return render_template("admin/settings.html", settings=settings)
 
 @app.route("/admin/api_settings", methods=["GET", "POST"])
+
+@app.route("/admin/api_analytics")
+def admin_api_analytics():
+    if not session.get("admin"): return redirect("/admin")
+    
+    # Get all API orders (they have ' (API)' in the product name)
+    api_orders = list(db.history.find({"product": {"$regex": " \(API\)$"}}))
+    
+    total_api_revenue = sum(float(o.get("price", 0)) for o in api_orders)
+    total_api_keys = len(api_orders)
+    
+    # Group by reseller
+    reseller_stats = {}
+    for o in api_orders:
+        uid = o.get("user_id")
+        if uid not in reseller_stats:
+            user_doc = db.users.find_one({"user_id": uid})
+            username = user_doc.get("username", "Unknown") if user_doc else "Unknown"
+            reseller_stats[uid] = {"username": username, "spent": 0, "keys": 0}
+            
+        reseller_stats[uid]["spent"] += float(o.get("price", 0))
+        reseller_stats[uid]["keys"] += 1
+        
+    sorted_resellers = sorted(reseller_stats.items(), key=lambda x: x[1]["spent"], reverse=True)
+    
+    # Get today's API revenue
+    from datetime import datetime
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    today_orders = [o for o in api_orders if str(o.get("date", "")).startswith(today_str)]
+    today_api_revenue = sum(float(o.get("price", 0)) for o in today_orders)
+    
+    return render_template("admin/api_analytics.html", 
+        total_api_revenue=total_api_revenue,
+        total_api_keys=total_api_keys,
+        today_api_revenue=today_api_revenue,
+        resellers=sorted_resellers,
+        recent_orders=sorted(api_orders, key=lambda x: x.get("date", ""), reverse=True)[:50]
+    )
+
+
 def admin_api_settings():
     if not session.get("admin"): return redirect("/admin")
     settings = db.settings.find_one({"id": "global"}) or {}
