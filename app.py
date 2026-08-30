@@ -1037,3 +1037,152 @@ if __name__ == "__main__":
 
 
 
+
+
+import secrets
+
+@app.route("/api/generate_key", methods=["POST"])
+def generate_api_key():
+    if "user_id" not in session: return jsonify({"success": False})
+    new_key = secrets.token_hex(16)
+    db.users.update_one({"user_id": session["user_id"]}, {"$set": {"api_key": new_key}})
+    return jsonify({"success": True, "api_key": new_key})
+
+@app.route("/developer_api")
+def developer_api():
+    if "user_id" not in session: return redirect("/")
+    user = db.users.find_one({"user_id": session["user_id"]})
+    settings = db.settings.find_one({"id": "global"}) or {}
+    
+    # Ensure user has api_key
+    if "api_key" not in user:
+        new_key = secrets.token_hex(16)
+        db.users.update_one({"user_id": session["user_id"]}, {"$set": {"api_key": new_key}})
+        user["api_key"] = new_key
+        
+    master_key = settings.get("reseller_master_key", "c054bf5dc7a486e4c05147a11e4c7039")
+    raw_products = list(db.products.find({}).sort("order", 1))
+    
+    # Group products by name for the API documentation table
+    grouped = {}
+    for p in raw_products:
+        name = p.get("name", "Unknown")
+        if name not in grouped: grouped[name] = {"plans": [], "pid": p.get("product_id")}
+        grouped[name]["plans"].append(p)
+    
+    return render_template("api.html", user=user, master_key=master_key, grouped_products=grouped, url_root=request.url_root)
+
+@app.route("/api/reseller_v1.php", methods=["POST", "GET"])
+@app.route("/api/reseller_v1", methods=["POST", "GET"])
+def reseller_api():
+    if request.method == "GET":
+        return jsonify({"status": "error", "message": "Method Not Allowed. Use POST."})
+        
+    settings = db.settings.find_one({"id": "global"}) or {}
+    expected_master_key = settings.get("reseller_master_key", "c054bf5dc7a486e4c05147a11e4c7039")
+    provided_master_key = request.headers.get("x-master-key") or request.headers.get("X-Master-Key")
+    
+    if provided_master_key != expected_master_key:
+        return jsonify({"status": "error", "message": "Invalid Master Key!"})
+        
+    api_key = request.form.get("api_key")
+    if not api_key:
+        return jsonify({"status": "error", "message": "Missing api_key parameter!"})
+        
+    user = db.users.find_one({"api_key": api_key})
+    if not user:
+        return jsonify({"status": "error", "message": "Invalid API Key!"})
+        
+    action = request.form.get("action")
+    if action == "services":
+        # Return list of services
+        raw_products = list(db.products.find({}).sort("order", 1))
+        services = []
+        for p in raw_products:
+            services.append({
+                "service_id": p.get("product_id"),
+                "name": p.get("name"),
+                "category": p.get("category"),
+                "plan_name": p.get("plan_name"),
+                "price": p.get("price"),
+                "status": p.get("status")
+            })
+        return jsonify({"status": "success", "services": services})
+        
+    elif action == "buy":
+        product_pid = request.form.get("product_id")
+        duration = request.form.get("duration")
+        android_id = request.form.get("android_id", "")
+        
+        if not product_pid or not duration:
+            return jsonify({"status": "error", "message": "Missing product_id or duration!"})
+            
+        # Find exact product in DB
+        plan = db.products.find_one({"product_id": int(product_pid) if product_pid.isdigit() else product_pid, "plan_name": duration})
+        if not plan:
+            return jsonify({"status": "error", "message": "Service not found. Check PID and Duration."})
+            
+        if plan.get("status") in ["PATCHED", "UPDATING"]:
+            return jsonify({"status": "error", "message": "Product is currently unavailable."})
+            
+        price = float(plan.get("price", 0))
+        if float(user.get("balance", 0)) < price:
+            return jsonify({"status": "error", "message": "Insufficient Balance!"})
+            
+        # Deduct Balance
+        res = db.users.update_one({"_id": user["_id"], "balance": {"$gte": price}}, {"$inc": {"balance": -price}})
+        if res.modified_count == 0:
+            return jsonify({"status": "error", "message": "Balance deduction failed!"})
+            
+        # Fetch Key
+        key_data = ""
+        if plan.get("type") == "manual":
+            key_doc = db.keys.find_one_and_update(
+                {"product_db_id": plan["id"], "used": False},
+                {"$set": {"used": True, "used_by": user["user_id"], "used_date": datetime.now()}}
+            )
+            if not key_doc:
+                db.users.update_one({"_id": user["_id"]}, {"$inc": {"balance": price}}) # refund
+                return jsonify({"status": "error", "message": "Out of Stock!"})
+            key_data = key_doc["key"]
+        else:
+            # External API purchase
+            current_api_key = settings.get("api_key", "")
+            current_master_key = settings.get("master_key", "")
+            current_api_endpoint = settings.get("api_endpoint", "")
+            
+            payload = {'api_key': current_api_key, 'action': 'buy', 'product_id': str(plan.get("product_id", "")), 'duration': str(plan.get("plan_name", "")), 'android_id': android_id}
+            headers = {'Content-Type': 'application/x-www-form-urlencoded', 'x-master-key': current_master_key}
+            
+            try:
+                import requests
+                api_res = requests.post(current_api_endpoint, data=payload, headers=headers, timeout=15)
+                data = api_res.json()
+                if data.get("status") == "success" or data.get("success") == True:
+                    key_data = data.get("key") or data.get("license") or "N/A"
+                else:
+                    db.users.update_one({"_id": user["_id"]}, {"$inc": {"balance": price}}) # refund
+                    error_msg = data.get("msg") or data.get("message") or "Provider API Error"
+                    return jsonify({"status": "error", "message": error_msg})
+            except Exception as e:
+                db.users.update_one({"_id": user["_id"]}, {"$inc": {"balance": price}}) # refund
+                return jsonify({"status": "error", "message": "Provider API connection failed!"})
+                
+        # Insert History
+        db.history.insert_one({
+            "user_id": user["user_id"],
+            "product": plan.get("name", "N/A") + " (API)",
+            "plan": plan.get("plan_name", "N/A"),
+            "price": price,
+            "license_key": key_data,
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+        
+        return jsonify({
+            "status": "success",
+            "key": key_data,
+            "balance": float(user.get("balance", 0)) - price,
+            "message": "Purchased successfully via API"
+        })
+    else:
+        return jsonify({"status": "error", "message": "Invalid action!"})
