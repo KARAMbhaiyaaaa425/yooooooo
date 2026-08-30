@@ -1,3 +1,10 @@
+{% extends "admin/layout.html" %}
+
+{% block content %}
+<div class="mb-8 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+        <a href="/admin/panel" class="text-gray-400 hover:text-white"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+        <h2 class="text-2xl font-bold text-white">Current Products</h2>
     </div>
     <div class="flex gap-3">
         <a href="/admin/product/delete_all" onclick="return confirm('Are you sure you want to delete ALL products? This cannot be undone!');" class="bg-red-600 hover:bg-red-500 text-white px-3 md:px-4 py-2 rounded-lg font-bold shadow-md transition flex items-center gap-2 text-sm">
