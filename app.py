@@ -1147,9 +1147,9 @@ def reseller_api():
             key_data = key_doc["key"]
         else:
             # External API purchase
-            current_api_key = settings.get("api_key", "")
-            current_master_key = settings.get("master_key", "")
-            current_api_endpoint = settings.get("api_endpoint", "")
+            current_api_key = settings.get("api_key", API_KEY)
+            current_master_key = settings.get("master_key", MASTER_KEY)
+            current_api_endpoint = settings.get("api_endpoint", API_ENDPOINT)
             
             payload = {'api_key': current_api_key, 'action': 'buy', 'product_id': str(plan.get("product_id", "")), 'duration': str(plan.get("plan_name", "")), 'android_id': android_id}
             headers = {'Content-Type': 'application/x-www-form-urlencoded', 'x-master-key': current_master_key}
