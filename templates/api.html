@@ -1,0 +1,166 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-2xl font-black text-white uppercase tracking-wider flex items-center gap-3">
+        <i class="fa-solid fa-code text-blue-500"></i> Developer API
+    </h2>
+    <p class="text-gray-400 text-sm mt-1">Integrate our services into your own panel</p>
+</div>
+
+<!-- API Key Section -->
+<div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6 shadow-lg">
+    <h3 class="text-white font-bold tracking-widest uppercase mb-4 text-sm flex items-center gap-2">
+        <i class="fa-solid fa-key text-yellow-500"></i> Reseller API Authentication
+    </h3>
+    <div class="mb-4">
+        <p class="text-gray-400 text-[11px] font-bold uppercase tracking-widest mb-1">Active API Access Token</p>
+        <div class="flex gap-2">
+            <input type="text" id="api_key_input" value="{{ user.api_key }}" readonly class="w-full bg-[#0a0f1c] border border-gray-700 text-green-400 font-mono text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+            <button onclick="copyApi()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 rounded-xl font-bold transition shadow-md">COPY</button>
+            <button onclick="generateApi()" class="bg-gray-800 border border-gray-700 hover:bg-gray-700 text-white px-5 rounded-xl font-bold transition shadow-md whitespace-nowrap"><i class="fa-solid fa-rotate text-xs"></i></button>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Integration Guide -->
+<div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6 shadow-lg">
+    <h3 class="text-white font-bold tracking-widest uppercase mb-4 text-sm flex items-center gap-2">
+        <i class="fa-solid fa-book text-blue-400"></i> Quick Integration Guide
+    </h3>
+    
+    <div class="bg-[#0a0f1c] p-4 rounded-xl border border-gray-800 mb-4">
+        <p class="text-gray-400 text-xs font-bold tracking-widest uppercase mb-2">Endpoint URL</p>
+        <code class="text-blue-400 text-sm break-all font-mono">{{ url_root }}api/reseller_v1.php</code>
+    </div>
+
+    <div class="bg-[#1a1506] border border-yellow-900/50 p-4 rounded-xl mb-4">
+        <p class="text-yellow-500 text-xs font-bold">Send POST request with: <code class="bg-black/30 px-1 py-0.5 rounded text-white">api_key</code>, <code class="bg-black/30 px-1 py-0.5 rounded text-white">action</code>, <code class="bg-black/30 px-1 py-0.5 rounded text-white">product_id</code>, <code class="bg-black/30 px-1 py-0.5 rounded text-white">duration</code>.</p>
+        <p class="text-yellow-500/80 text-[11px] mt-2">BALA MOD XYZ V1 ke liye android_id bhejna zaroori hai, jabki V2 ke liye android_id ki zaroorat nahi hai.</p>
+    </div>
+
+    <p class="text-gray-400 text-[11px] font-bold uppercase tracking-widest mb-2 mt-6">RESELLER API CODE (PHP)</p>
+    <div class="bg-[#0a0f1c] rounded-xl border border-gray-800 overflow-hidden">
+        <pre class="text-[12px] font-mono text-gray-300 p-4 overflow-x-auto"><code>$data = [
+    'api_key'    => '{{ user.api_key }}',
+    'action'     => 'buy',
+    'product_id' => 'PRODUCT_PID_ID',             // Exact Product PID
+    'duration'   => '1 DaYs',                       // Duration (e.g. 1 Hours, 1 DaYs, 7 DaYs)
+    'android_id' => '0b9b969bc2e7997b'             // MANDATORY for Device Bound Products
+];
+
+$headers = [
+    'Content-Type: application/x-www-form-urlencoded',
+    'x-master-key: {{ master_key }}'
+];
+
+$ch = curl_init('{{ url_root }}api/reseller_v1.php');
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST           => true,
+    CURLOPT_POSTFIELDS     => http_build_query($data),
+    CURLOPT_HTTPHEADER     => $headers,
+    CURLOPT_TIMEOUT        => 20,
+    CURLOPT_SSL_VERIFYPEER => false,
+    CURLOPT_SSL_VERIFYHOST => false
+]);
+$response = curl_exec($ch);
+curl_close($ch);
+echo $response;</code></pre>
+    </div>
+</div>
+
+<!-- Configuration Checklist -->
+<div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6 shadow-lg">
+    <h3 class="text-white font-bold tracking-widest uppercase mb-4 text-sm flex items-center gap-2">
+        <i class="fa-solid fa-clipboard-check text-green-500"></i> Important Configuration Checklist
+    </h3>
+    <ul class="space-y-3 text-sm text-gray-300">
+        <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-1"></i> <span><b>PID Verification:</b> Apne reseller panel me Product ka PID (Product ID) Sahi rakhein.</span></li>
+        <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-1"></i> <span><b>Duration Name:</b> Duration exact Hours ya Day paas karein jaisa table me likha hai.</span></li>
+        <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-1"></i> <span><b>Android ID System:</b> V1 products ke liye ndroid_id bhejye. V2 me bina ndroid_id ke key auto-generate ho jaati hai.</span></li>
+    </ul>
+</div>
+
+<!-- Product Reference Table -->
+<div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-lg mb-6">
+    <div class="p-6 border-b border-gray-800">
+        <h3 class="text-white font-bold tracking-widest uppercase text-sm flex items-center gap-2">
+            <i class="fa-solid fa-table-list text-purple-500"></i> Product Reference Table (PIDs & Live Stock)
+        </h3>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-300">
+            <thead class="bg-[#0a0f1c] text-gray-400 text-xs uppercase font-bold tracking-wider">
+                <tr>
+                    <th scope="col" class="px-6 py-4">Product Name</th>
+                    <th scope="col" class="px-6 py-4">PID</th>
+                    <th scope="col" class="px-6 py-4">API Mode / Available Stock</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800">
+                {% for name, details in grouped_products.items() %}
+                <tr class="hover:bg-gray-800/50 transition">
+                    <td class="px-6 py-4 font-bold text-white whitespace-nowrap">{{ name }}</td>
+                    <td class="px-6 py-4 font-mono text-blue-400">{{ details.pid }}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-col gap-1 text-[11px] font-medium tracking-wide">
+                        {% for plan in details.plans %}
+                            <span>{{ plan.plan_name }} <span class="text-gray-500">[API Mode: {{ plan.status | default('SAFE') }}]</span></span>
+                        {% endfor %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function copyApi() {
+    const apiInput = document.getElementById('api_key_input');
+    navigator.clipboard.writeText(apiInput.value);
+    Swal.fire({
+        title: 'Copied!',
+        text: 'API Key copied to clipboard',
+        icon: 'success',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2000,
+        background: '#111827', color: '#fff'
+    });
+}
+
+function generateApi() {
+    Swal.fire({
+        title: 'Generate New API Key?',
+        text: "Your old API key will stop working immediately!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#2563eb',
+        cancelButtonColor: '#1f2937',
+        confirmButtonText: 'Yes, generate it',
+        background: '#111827', color: '#fff'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({title: 'Generating...', allowOutsideClick: false, background: '#111827', color: '#fff', didOpen: () => {Swal.showLoading()}});
+            fetch('/api/generate_key', {method: 'POST'})
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    document.getElementById('api_key_input').value = data.api_key;
+                    Swal.fire({title: 'Generated!', text: 'New API Key generated.', icon: 'success', background: '#111827', color: '#fff'});
+                    // Update the PHP code snippet dynamically
+                    location.reload();
+                } else {
+                    Swal.fire('Error', 'Could not generate key', 'error');
+                }
+            })
+        }
+    })
+}
+</script>
+{% endblock %}
