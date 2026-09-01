@@ -1103,12 +1103,14 @@ def developer_api():
     master_key = settings.get("reseller_master_key", "c054bf5dc7a486e4c05147a11e4c7039")
     raw_products = list(db.products.find({}).sort("order", 1))
     
-    # Group products by name for the API documentation table
+    # Group products by name and category for the API documentation table
     grouped = {}
     for p in raw_products:
         name = p.get("name", "Unknown")
-        if name not in grouped: grouped[name] = {"plans": [], "pid": p.get("id")}
-        grouped[name]["plans"].append(p)
+        cat = p.get("category", "Uncategorized")
+        key = f"{cat}___{name}"
+        if key not in grouped: grouped[key] = {"name": name, "category": cat, "plans": [], "pid": p.get("id")}
+        grouped[key]["plans"].append(p)
     
     return render_template("api.html", user=user, master_key=master_key, grouped_products=grouped, url_root=request.url_root)
 
