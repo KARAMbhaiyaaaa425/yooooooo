@@ -132,7 +132,7 @@
                     <a href="/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/settings' %}nav-active{% endif %}">
                         <i class="fa-solid fa-gear w-5 text-center text-gray-400"></i> Settings
                     </a>
-                    <a href="/my_store" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/my_store' or request.path == '/my_store/pricing' %}nav-active{% endif %}">
+                    <a href="/my_store/panel" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path.startswith('/my_store') %}nav-active{% endif %}">
                         <i class="fa-solid fa-store w-5 text-center text-purple-400"></i> My Store
                     </a>
                     <a href="/developer_api" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 transition text-sm font-medium {% if request.path == '/developer_api' %}nav-active{% endif %}">
