@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reseller Panel - {{ store.store_name if store else 'Store Setup' }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        body { background-color: #0a0e17; color: #f8fafc; }
+        .nav-active { background-color: #1f2937; color: white; border-left: 3px solid #8b5cf6; }
+    </style>
+</head>
+<body class="bg-[#0a0e17] text-gray-200">
+    <div class="flex h-screen overflow-hidden relative">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#111827] border-r border-gray-800 flex flex-col fixed inset-y-0 left-0 z-50 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 shadow-2xl">
+            <div class="p-6 border-b border-gray-800 flex justify-between items-center">
+                <h1 class="text-xl font-black text-purple-400 uppercase tracking-wider text-center w-full">Reseller Panel</h1>
+            </div>
+            
+                        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+                <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-2">MAIN</p>
+                <a href="/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-house w-5 text-center text-green-500"></i> Dashboard
+                </a>
+                <a href="/store" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-store w-5 text-center text-purple-400"></i> Store
+                </a>
+                <a href="/history" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-key w-5 text-center text-green-400"></i> My Keys
+                </a>
+
+                <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6">ACCOUNT</p>
+                <a href="/profile" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-user w-5 text-center text-pink-400"></i> My Profile
+                </a>
+                <a href="/deposit" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-money-bill-wave w-5 text-center text-green-400"></i> Add Balance
+                </a>
+                <a href="/deposit_history" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-clock-rotate-left w-5 text-center text-orange-400"></i> Deposit History
+                </a>
+                <a href="/transfer" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-money-bill-transfer w-5 text-center text-cyan-400"></i> Transfer Balance
+                </a>
+
+                <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6">STORE (RESELLER)</p>
+                {% if store %}
+                <a href="/my_store/panel" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition {% if request.path == '/my_store/panel' %}nav-active{% endif %}">
+                    <i class="fa-solid fa-chart-pie w-5 text-center text-purple-400"></i> Store Dashboard
+                </a>
+                <a href="/my_store/orders" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition {% if request.path == '/my_store/orders' %}nav-active{% endif %}">
+                    <i class="fa-solid fa-cart-shopping w-5 text-center text-green-400"></i> Store Orders
+                </a>
+                <a href="/my_store/products" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition {% if request.path == '/my_store/products' %}nav-active{% endif %}">
+                    <i class="fa-solid fa-box-open w-5 text-center text-yellow-400"></i> Products & Pricing
+                </a>
+                {% endif %}
+                <a href="/my_store/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition {% if request.path == '/my_store/settings' or request.path == '/my_store' %}nav-active{% endif %}">
+                    <i class="fa-solid fa-gear w-5 text-center text-blue-400"></i> Store Settings
+                </a>
+                
+                <p class="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-6">OTHER</p>
+                <a href="/developer_api" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-code w-5 text-center text-gray-300"></i> Developer API
+                </a>
+                <a href="/logout" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold text-red-400 hover:bg-red-900/40 border border-red-900/30 transition mt-2">
+                    <i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden bg-[#0a0e17]">
+            <header class="bg-[#111827] border-b border-gray-800 px-6 py-4 flex justify-between items-center shadow-md z-40">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-lg font-bold text-gray-200">
+                        {% if store %}<span class="text-purple-400">{{ store.store_name }}</span> {% else %} Setup Store {% endif %}
+                    </h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden md:block">
+                        <p class="text-sm font-bold text-white">{{ user.username }}</p>
+                        <p class="text-xs text-green-400 font-mono">Main Wallet: ?{{ "%.2f"|format(user.balance) }}</p>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="flex-1 overflow-y-auto p-4 md:p-8">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>
