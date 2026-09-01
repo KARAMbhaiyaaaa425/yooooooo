@@ -94,15 +94,17 @@ echo $response;</code></pre>
         <table class="w-full text-left text-sm text-gray-300">
             <thead class="bg-[#0a0f1c] text-gray-400 text-xs uppercase font-bold tracking-wider">
                 <tr>
+                    <th scope="col" class="px-6 py-4">Category</th>
                     <th scope="col" class="px-6 py-4">Product Name</th>
                     <th scope="col" class="px-6 py-4">PID</th>
                     <th scope="col" class="px-6 py-4">API Mode / Available Stock</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-800">
-                {% for name, details in grouped_products.items() %}
+                {% for key, details in grouped_products.items() %}
                 <tr class="hover:bg-gray-800/50 transition">
-                    <td class="px-6 py-4 font-bold text-white whitespace-nowrap">{{ name }}</td>
+                    <td class="px-6 py-4 font-bold text-blue-400 whitespace-nowrap">{{ details.category }}</td>
+                    <td class="px-6 py-4 font-bold text-white whitespace-nowrap">{{ details.name }}</td>
                     <td class="px-6 py-4 font-mono text-blue-400">{{ details.pid }}</td>
                     <td class="px-6 py-4">
                         <div class="flex flex-col gap-1 text-[11px] font-medium tracking-wide">
