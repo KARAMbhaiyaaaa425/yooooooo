@@ -1230,15 +1230,85 @@ def reseller_api():
         return jsonify({"status": "error", "message": "Invalid action!"})
 
 
-# ================= RESELLER STOREFRONT =================
-@app.route('/my_store', methods=['GET', 'POST'])
-def my_store():
+
+# ================= RESELLER ADMIN PANEL =================
+
+@app.route('/my_store/panel')
+def reseller_panel():
     if "user_id" not in session: return redirect("/login")
     user_id = session["user_id"]
     user = db.users.find_one({"user_id": user_id})
-    if not user: return redirect("/login")
-    
     store = db.stores.find_one({"user_id": user_id})
+    if not store: return redirect("/my_store/settings")
+    
+    orders = list(db.store_orders.find({"store_id": store["store_id"]}))
+    total_sales = len(orders)
+    
+    total_revenue = 0.0
+    for o in orders:
+        # fetch reseller price for that order
+        sp = db.store_products.find_one({"store_id": store["store_id"], "pid": o["pid"]})
+        if sp: total_revenue += sp.get("reseller_price", 0)
+    
+    return render_template("reseller_admin/panel.html", user=user, store=store, total_sales=total_sales, total_revenue=total_revenue, recent_orders=orders[-5:])
+
+@app.route('/my_store/orders')
+def reseller_orders():
+    if "user_id" not in session: return redirect("/login")
+    user_id = session["user_id"]
+    user = db.users.find_one({"user_id": user_id})
+    store = db.stores.find_one({"user_id": user_id})
+    if not store: return redirect("/my_store/settings")
+    
+    orders = list(db.store_orders.find({"store_id": store["store_id"]}).sort("_id", -1))
+    
+    # attach product details
+    for o in orders:
+        p = db.products.find_one({"id": o["pid"]})
+        if p:
+            o["product_name"] = p.get("name", "Unknown")
+            o["plan_name"] = p.get("plan_name", "")
+        else:
+            o["product_name"] = "Deleted"
+            
+    return render_template("reseller_admin/orders.html", user=user, store=store, orders=orders)
+
+@app.route('/my_store/products', methods=['GET', 'POST'])
+def reseller_products():
+    if "user_id" not in session: return redirect("/login")
+    user_id = session["user_id"]
+    user = db.users.find_one({"user_id": user_id})
+    store = db.stores.find_one({"user_id": user_id})
+    if not store: return redirect("/my_store/settings")
+    
+    if request.method == 'POST':
+        pid = request.form.get("pid")
+        reseller_price = request.form.get("reseller_price", type=float)
+        if pid and reseller_price is not None:
+            db.store_products.update_one(
+                {"store_id": store["store_id"], "pid": pid},
+                {"": {"reseller_price": reseller_price}},
+                upsert=True
+            )
+        return redirect("/my_store/products")
+        
+    raw_products = list(db.products.find({}).sort("order", 1))
+    store_products = list(db.store_products.find({"store_id": store["store_id"]}))
+    sp_dict = {p["pid"]: p["reseller_price"] for p in store_products}
+    
+    for p in raw_products:
+        p["reseller_price"] = sp_dict.get(p.get("id")) or p.get("price")
+        
+    return render_template("reseller_admin/products.html", user=user, store=store, products=raw_products)
+
+@app.route('/my_store', methods=['GET'])
+@app.route('/my_store/settings', methods=['GET', 'POST'])
+def reseller_settings():
+    if "user_id" not in session: return redirect("/login")
+    user_id = session["user_id"]
+    user = db.users.find_one({"user_id": user_id})
+    store = db.stores.find_one({"user_id": user_id})
+    
     if request.method == 'POST':
         store_id = request.form.get("store_id", "").strip().lower()
         store_name = request.form.get("store_name", "").strip()
@@ -1246,10 +1316,9 @@ def my_store():
         theme_color = request.form.get("theme_color", "#2563eb").strip()
         logo_url = request.form.get("logo_url", "").strip()
         
-        # Check if store_id is already taken by someone else
         existing = db.stores.find_one({"store_id": store_id})
         if existing and existing["user_id"] != user_id:
-            return render_template("my_store.html", user=user, store=store, error="URL Slug already taken!")
+            return render_template("reseller_admin/settings.html", user=user, store=store, error="URL Slug already taken!")
             
         data = {
             "user_id": user_id,
@@ -1266,43 +1335,12 @@ def my_store():
         else:
             db.stores.insert_one(data)
             
-        return redirect("/my_store")
+        return redirect("/my_store/panel")
         
-    return render_template("my_store.html", user=user, store=store)
-
-@app.route('/my_store/pricing', methods=['GET', 'POST'])
-def my_store_pricing():
-    if "user_id" not in session: return redirect("/login")
-    user_id = session["user_id"]
-    user = db.users.find_one({"user_id": user_id})
-    if not user: return redirect("/login")
-    
-    store = db.stores.find_one({"user_id": user_id})
-    if not store: return redirect("/my_store")
-    
-    if request.method == 'POST':
-        pid = request.form.get("pid")
-        reseller_price = request.form.get("reseller_price", type=float)
-        
-        if pid and reseller_price is not None:
-            db.store_products.update_one(
-                {"store_id": store["store_id"], "pid": pid},
-                {"": {"reseller_price": reseller_price}},
-                upsert=True
-            )
-        return redirect("/my_store/pricing")
-        
-    raw_products = list(db.products.find({}).sort("order", 1))
-    store_products = list(db.store_products.find({"store_id": store["store_id"]}))
-    sp_dict = {p["pid"]: p["reseller_price"] for p in store_products}
-    
-    # Merge
-    for p in raw_products:
-        p["reseller_price"] = sp_dict.get(p.get("id")) or p.get("price")
-        
-    return render_template("my_store_pricing.html", user=user, store=store, products=raw_products)
+    return render_template("reseller_admin/settings.html", user=user, store=store)
 
 # --- STOREFRONT PUBLIC ROUTES ---
+
 
 @app.route('/store/<store_id>')
 def store_index(store_id):
