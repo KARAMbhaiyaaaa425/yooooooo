@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-2xl font-black text-white uppercase tracking-wider flex items-center gap-3">
+        <i class="fa-solid fa-store text-purple-500"></i> My Storefront
+    </h2>
+    <p class="text-gray-400 text-sm mt-1">Configure your white-label reseller store</p>
+</div>
+
+<div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-lg">
+    {% if error %}
+    <div class="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-xl mb-6">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="/my_store">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label class="block text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Store Name</label>
+                <input type="text" name="store_name" value="{{ store.store_name if store else '' }}" required class="w-full bg-[#0a0f1c] border border-gray-700 text-white px-4 py-3 rounded-xl focus:border-purple-500 outline-none">
+            </div>
+            
+            <div>
+                <label class="block text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">URL Slug</label>
+                <div class="flex items-center">
+                    <span class="bg-gray-800 border border-gray-700 border-r-0 text-gray-400 px-4 py-3 rounded-l-xl text-sm">/store/</span>
+                    <input type="text" name="store_id" value="{{ store.store_id if store else '' }}" required pattern="[a-z0-9_-]+" title="Only lowercase letters, numbers, hyphens and underscores allowed" class="w-full bg-[#0a0f1c] border border-gray-700 text-white px-4 py-3 rounded-r-xl focus:border-purple-500 outline-none">
+                </div>
+                <p class="text-[11px] text-gray-500 mt-1">Example: rahulmods</p>
+            </div>
+            
+            <div>
+                <label class="block text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">GuruPay API Key</label>
+                <input type="text" name="gurupay_key" value="{{ store.gurupay_key if store else '' }}" required class="w-full bg-[#0a0f1c] border border-gray-700 text-yellow-500 font-mono px-4 py-3 rounded-xl focus:border-purple-500 outline-none">
+                <p class="text-[11px] text-gray-500 mt-1">Payments will go directly to your bank account.</p>
+            </div>
+            
+            <div>
+                <label class="block text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Logo URL (Optional)</label>
+                <input type="url" name="logo_url" value="{{ store.logo_url if store else '' }}" class="w-full bg-[#0a0f1c] border border-gray-700 text-white px-4 py-3 rounded-xl focus:border-purple-500 outline-none">
+            </div>
+            
+            <div>
+                <label class="block text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Theme Color (Hex)</label>
+                <div class="flex items-center gap-3">
+                    <input type="color" name="theme_color" value="{{ store.theme_color if store else '#2563eb' }}" class="h-12 w-12 rounded bg-[#0a0f1c] border border-gray-700 cursor-pointer">
+                    <span class="text-sm text-gray-400">Choose your brand color</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4 border-t border-gray-800 pt-6">
+            <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition">Save Configuration</button>
+            
+            {% if store and store.store_id %}
+            <a href="/store/{{ store.store_id }}" target="_blank" class="text-blue-400 hover:text-blue-300 font-bold flex items-center gap-2">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Visit Store
+            </a>
+            <a href="/my_store/pricing" class="ml-auto bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-md">
+                Manage Pricing <i class="fa-solid fa-tags ml-2"></i>
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}
