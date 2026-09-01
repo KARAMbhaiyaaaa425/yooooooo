@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Successful - {{ store.store_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --brand-color: {{ store.theme_color }};
+        }
+        body { background-color: #050505; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .brand-bg { background-color: var(--brand-color); }
+        .brand-text { color: var(--brand-color); }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-[#111] border border-gray-800 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden">
+            <!-- Confetti/Success bg -->
+            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-green-500 via-[#111] to-[#111]"></div>
+            
+            <div class="relative z-10">
+                <div class="h-24 w-24 rounded-full bg-green-500/20 border-2 border-green-500 text-green-500 flex items-center justify-center text-5xl mx-auto mb-6 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                
+                <h1 class="text-2xl font-black uppercase tracking-wide text-white mb-2">Payment Successful!</h1>
+                <p class="text-gray-400 text-sm font-medium mb-8">Thank you for your purchase from {{ store.store_name }}.</p>
+                
+                <div class="bg-black border border-gray-800 rounded-2xl p-6 mb-8 text-left">
+                    <p class="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-4">Your Product Key</p>
+                    
+                    <div class="relative">
+                        <textarea id="key_box" readonly class="w-full bg-[#0a0f1c] border border-gray-700 text-green-400 font-mono text-sm p-4 rounded-xl h-24 focus:outline-none resize-none">{{ key }}</textarea>
+                        <button onclick="copyKey()" class="absolute top-2 right-2 bg-gray-800 hover:bg-gray-700 text-gray-300 h-8 w-8 rounded-lg flex items-center justify-center transition">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <a href="/store/{{ store.store_id }}" class="inline-block brand-bg hover:opacity-80 text-white font-bold py-3 px-8 rounded-xl transition shadow-lg w-full">
+                    Return to Store
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    function copyKey() {
+        const keyBox = document.getElementById('key_box');
+        keyBox.select();
+        document.execCommand('copy');
+        Swal.fire({
+            title: 'Copied!',
+            text: 'Product key copied to clipboard',
+            icon: 'success',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            background: '#111827', color: '#fff'
+        });
+    }
+    </script>
+</body>
+</html>
