@@ -607,10 +607,25 @@ def admin_edit_product(pid):
         
     return render_template("admin/edit_product.html", product=product)
 
-@app.route("/admin/product/delete/<int:pid>")
+@app.route("/admin/product/delete/<pid>")
 def admin_delete_product(pid):
     if not session.get("admin"): return redirect("/admin")
-    db.products.delete_one({"id": pid})
+    from bson.objectid import ObjectId
+    # Try deleting by _id first, if it's a valid ObjectId
+    try:
+        res = db.products.delete_one({"_id": ObjectId(pid)})
+        if res.deleted_count > 0: return redirect("/admin/products")
+    except:
+        pass
+        
+    # Fallback to custom 'id' field (both int and string)
+    try:
+        res = db.products.delete_one({"id": int(pid)})
+        if res.deleted_count > 0: return redirect("/admin/products")
+    except:
+        pass
+        
+    db.products.delete_one({"id": str(pid)})
     return redirect("/admin/products")
 
 @app.route("/admin/product/add", methods=["GET", "POST"])
@@ -1160,9 +1175,18 @@ def reseller_api():
             return jsonify({"status": "error", "message": "Missing product_id or duration!"})
             
         # Find exact product in DB
-        plan = db.products.find_one({"id": int(product_pid) if product_pid.isdigit() else product_pid, "plan_name": duration})
-        if not plan:
-            return jsonify({"status": "error", "message": "Service not found. Check PID and Duration."})
+          base_plan = db.products.find_one({"id": int(product_pid) if str(product_pid).isdigit() else product_pid})
+          if not base_plan:
+              base_plan = db.products.find_one({"id": str(product_pid)})
+              
+          if not base_plan:
+              return jsonify({"status": "error", "message": "Service not found. Check PID."})
+              
+          target_name = base_plan.get("name")
+          plan = db.products.find_one({"name": target_name, "plan_name": duration})
+          
+          if not plan:
+              return jsonify({"status": "error", "message": "Service not found for this Duration."})
             
         if plan.get("status") in ["PATCHED", "UPDATING"]:
             return jsonify({"status": "error", "message": "Product is currently unavailable."})
