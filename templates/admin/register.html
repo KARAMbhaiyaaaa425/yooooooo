@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Register - {{ global_settings.app_name | default('Karan Store') }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Montserrat', 'sans-serif'] },
+                    colors: {
+                        dark: '#0a0e17',
+                        card: '#111827',
+                        primary: '#2563eb'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; background-color: #0a0e17; color: #f8fafc; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <div class="w-full max-w-sm bg-card border border-gray-800 rounded-3xl p-8 text-center relative z-10 shadow-2xl mt-4 mb-4">
+        
+        {% if global_settings.app_logo %}
+            <div class="w-24 h-24 mx-auto rounded-full mb-4 shadow-[0_0_20px_rgba(37,99,235,0.4)] overflow-hidden border-4 border-blue-600">
+                <img src="{{ global_settings.app_logo }}" class="w-full h-full object-cover">
+            </div>
+        {% else %}
+            <div class="w-20 h-20 mx-auto bg-blue-900/30 border-4 border-blue-600 rounded-full flex items-center justify-center text-blue-500 text-3xl mb-4 shadow-[0_0_20px_rgba(37,99,235,0.4)]">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+        {% endif %}
+        
+        <h1 class="text-3xl font-black mb-1 text-white uppercase tracking-wider">{{ global_settings.app_name | default('Karan Store') }}</h1>
+        <p class="text-gray-400 mb-8 text-xs font-bold tracking-widest uppercase">Create an account</p>
+        
+        {% if error %}
+        <div class="bg-red-500/20 border border-red-500/50 text-red-400 p-3 rounded-xl mb-6 text-xs font-bold flex items-center justify-center gap-2">
+            <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="POST">
+            <div class="space-y-4 mb-6">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <input type="text" name="username" placeholder="Username" required class="w-full bg-gray-900 border border-gray-700 text-white pl-10 pr-4 py-4 rounded-xl focus:outline-none focus:border-blue-500 text-center font-bold tracking-widest text-sm transition">
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <input type="email" name="email" placeholder="Email Address" required class="w-full bg-gray-900 border border-gray-700 text-white pl-10 pr-4 py-4 rounded-xl focus:outline-none focus:border-blue-500 text-center font-bold tracking-widest text-sm transition">
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <input type="password" name="password" placeholder="Password (Min 8 chars)" minlength="8" required class="w-full bg-gray-900 border border-gray-700 text-white pl-10 pr-4 py-4 rounded-xl focus:outline-none focus:border-blue-500 text-center font-bold tracking-widest text-sm transition">
+                </div>
+            </div>
+            
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition shadow-[0_0_15px_rgba(37,99,235,0.4)] tracking-widest uppercase flex items-center justify-center gap-2 mb-4">
+                REGISTER <i class="fa-solid fa-check"></i>
+            </button>
+            
+            <p class="mt-6 text-sm text-gray-400 font-medium">Already have an account? <br>
+                <a href="/" class="text-blue-400 font-bold hover:text-blue-300">Login Here</a>
+            </p>
+        </form>
+    </div>
+</body>
+</html>

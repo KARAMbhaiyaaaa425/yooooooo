@@ -1,0 +1,264 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    /* Force the layout's main wrapper to be a flex column taking exactly the visible screen space */
+    .min-h-screen {
+        display: flex !important;
+        flex-direction: column !important;
+        height: calc(100dvh - 140px) !important; /* 100dvh - (60px top nav) - (80px body pb-20) */
+        min-height: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    
+    #chatContainer {
+        flex-grow: 1;
+        flex-shrink: 1;
+        height: auto !important;
+        min-height: 0; 
+        margin-bottom: -1px; /* To prevent 1px borders from causing gaps */
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-bottom: none !important;
+    }
+</style>
+<div class="mb-4 flex items-center gap-3 mt-2">
+    <a href="/dashboard" class="w-8 h-8 rounded-full bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition shadow-md">
+        <i class="fa-solid fa-chevron-left text-sm"></i>
+    </a>
+    <div>
+        <h2 class="text-xl font-bold text-white tracking-wide">Live Support</h2>
+        <p class="text-green-400 text-[10px] mt-0.5">? We typically reply within a few minutes</p>
+    </div>
+</div>
+
+<h3 class="text-[11px] font-bold text-white mt-4 mb-3 px-1">Connect with us on</h3>
+
+<div class="grid grid-cols-2 gap-3 mb-4">
+    <a href="{{ global_settings.whatsapp_support | default('#') }}" target="_blank" class="bg-[#0f1f16] border border-[#1b3d2b] rounded-2xl p-3 hover:bg-[#152e1f] transition shadow-md flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white shrink-0 shadow-[0_0_10px_rgba(34,197,94,0.4)]">
+            <i class="fa-brands fa-whatsapp text-lg"></i>
+        </div>
+        <div>
+            <h4 class="text-white font-bold text-xs">WhatsApp</h4>
+        </div>
+    </a>
+    
+    <a href="{{ global_settings.telegram_support | default('#') }}" target="_blank" class="bg-[#0e1628] border border-[#1e2f5c] rounded-2xl p-3 hover:bg-[#16223f] transition shadow-md flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-[#2AABEE] flex items-center justify-center text-white shrink-0 shadow-[0_0_10px_rgba(42,171,238,0.4)]">
+            <i class="fa-brands fa-telegram text-lg -ml-0.5"></i>
+        </div>
+        <div>
+            <h4 class="text-white font-bold text-xs">Telegram</h4>
+        </div>
+    </a>
+</div>
+
+<div class="relative flex py-2 items-center mb-1">
+    <div class="flex-grow border-t border-gray-800"></div>
+    <span class="flex-shrink-0 mx-4 text-white text-xs font-bold">Chat with Support</span>
+    <div class="flex-grow border-t border-gray-800"></div>
+</div>
+
+<div id="chatContainer" class="bg-[#0a0f1c] border border-gray-800 rounded-2xl flex flex-col shadow-lg relative overflow-hidden" >
+    
+    <div class="flex justify-center mt-3">
+        <span class="bg-[#121b2d] border border-gray-800 text-gray-400 text-[10px] px-3 py-1 rounded-full">Today</span>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-4 pb-4" id="chatBox">
+        
+        <!-- Welcome Message -->
+        <div class="flex gap-3">
+            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-[0_0_10px_rgba(37,99,235,0.4)]">
+                <i class="fa-solid fa-headset text-xs"></i>
+            </div>
+            <div class="bg-[#1a253a] border border-[#253554] rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%] shadow-md">
+                <p class="text-[13px] text-gray-200 leading-relaxed">Hello {{ user.username }}! How can we help you today?</p>
+                <p class="text-[9px] text-gray-400 mt-1.5 text-right">System</p>
+            </div>
+        </div>
+
+        {% for msg in messages %}
+            {% if msg.sender == 'admin' %}
+            <div class="flex gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-[0_0_10px_rgba(37,99,235,0.4)]">
+                    <i class="fa-solid fa-headset text-xs"></i>
+                </div>
+                <div class="max-w-[80%]">
+                    <div class="bg-[#1a253a] border border-[#253554] rounded-2xl rounded-tl-sm px-4 py-3 shadow-md">
+                        {% if msg.text.startswith('data:image') %}
+                            <img src="{{ msg.text }}" class="w-full rounded-lg mb-1" onclick="window.open(this.src)">
+                        {% elif msg.text.startswith('data:audio') %}
+                            <audio src="{{ msg.text }}" controls class="max-w-full h-8"></audio>
+                        {% else %}
+                            <p class="text-[13px] text-gray-200 leading-relaxed">{{ msg.text }}</p>
+                        {% endif %}
+                    </div>
+                    <p class="text-[9px] text-gray-500 mt-1 ml-1">{{ msg.time }}</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="flex flex-row-reverse gap-3">
+                <div class="max-w-[80%]">
+                    <div class="bg-blue-600 rounded-2xl rounded-tr-sm px-4 py-3 shadow-[0_0_15px_rgba(37,99,235,0.2)] text-white">
+                        {% if msg.text.startswith('data:image') %}
+                            <img src="{{ msg.text }}" class="w-full rounded-lg mb-1" onclick="window.open(this.src)">
+                        {% elif msg.text.startswith('data:audio') %}
+                            <audio src="{{ msg.text }}" controls class="max-w-full h-8"></audio>
+                        {% else %}
+                            <p class="text-[13px] text-white leading-relaxed">{{ msg.text }}</p>
+                        {% endif %}
+                    </div>
+                    <p class="text-[9px] text-gray-500 mt-1 mr-1 text-right">{{ msg.time }} <i class="fa-solid fa-check-double text-[8px] text-blue-400 ml-0.5"></i></p>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="mediaLoader" class="hidden absolute inset-0 bg-black/80 z-20 flex-col items-center justify-center">
+        <i class="fa-solid fa-spinner fa-spin text-blue-500 text-3xl mb-2"></i>
+        <p class="text-white text-xs font-bold" id="loaderText">Uploading...</p>
+    </div>
+    
+    <!-- Recording Overlay -->
+    <div id="recordingOverlay" class="hidden absolute bottom-20 left-1/2 -translate-x-1/2 bg-red-600 px-4 py-2 rounded-full z-30 shadow-[0_0_20px_rgba(220,38,38,0.6)] flex items-center gap-3">
+        <div class="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+        <span class="text-white text-xs font-bold" id="recordTime">00:00</span>
+        <button onclick="stopRecording()" class="ml-2 bg-white text-red-600 w-6 h-6 rounded-full flex items-center justify-center text-[10px]"><i class="fa-solid fa-stop"></i></button>
+    </div>
+
+    <!-- Input Area -->
+    <div class="p-3 bg-[#0a0f1c] border-t border-gray-800 shrink-0">
+        <form method="POST" id="chatForm" class="flex gap-2 relative items-center">
+            <input type="file" id="mediaUpload" accept="image/*" class="hidden" onchange="handleMediaUpload(event)">
+            <input type="hidden" name="message" id="realMessageInput">
+            
+            <i class="fa-solid fa-paperclip absolute left-3 text-gray-400 text-sm cursor-pointer hover:text-white transition z-10" onclick="document.getElementById('mediaUpload').click()"></i>
+            
+                        <input type="text" id="textInput" placeholder="Type your message..." autocomplete="off" class="flex-1 bg-[#121b2d] border border-gray-700 text-white rounded-full pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition shadow-inner">
+            
+                        <button type="submit" onclick="return submitChat()" class="w-11 h-11 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0 transition shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                <i class="fa-solid fa-paper-plane text-sm -ml-0.5"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 1. Fix layout shake
+        document.addEventListener("DOMContentLoaded", () => {
+        // Scroll to bottom
+        const chatBox = document.getElementById('chatBox');
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    // Handle normal text submission
+    function submitChat() {
+        const text = document.getElementById('textInput').value.trim();
+        if(text) {
+            document.getElementById('realMessageInput').value = text;
+            return true;
+        }
+        return false;
+    }
+
+    // 2. Media Upload Logic
+    function handleMediaUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        document.getElementById('mediaLoader').classList.remove('hidden');
+        document.getElementById('mediaLoader').classList.add('flex');
+        document.getElementById('loaderText').innerText = "Uploading Image...";
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(e) {
+            // Compress image
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 600;
+                let width = img.width, height = img.height;
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                canvas.width = width; canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                const base64String = canvas.toDataURL('image/jpeg', 0.6);
+                
+                // Submit form with base64
+                document.getElementById('realMessageInput').value = base64String;
+                document.getElementById('chatForm').submit();
+            }
+        };
+    }
+
+    // 3. Audio Recording Logic
+    let mediaRecorder;
+    let audioChunks = [];
+    let recordInterval;
+    let seconds = 0;
+
+    async function startRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                clearInterval(recordInterval);
+                document.getElementById('recordingOverlay').classList.add('hidden');
+                document.getElementById('mediaLoader').classList.remove('hidden');
+                document.getElementById('mediaLoader').classList.add('flex');
+                document.getElementById('loaderText').innerText = "Sending Voice...";
+                
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+                reader.onloadend = () => {
+                    document.getElementById('realMessageInput').value = reader.result;
+                    document.getElementById('chatForm').submit();
+                }
+            };
+            
+            mediaRecorder.start();
+            document.getElementById('recordingOverlay').classList.remove('hidden');
+            seconds = 0;
+            document.getElementById('recordTime').innerText = "00:00";
+            
+            recordInterval = setInterval(() => {
+                seconds++;
+                const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+                                const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+                const s = String(seconds % 60).padStart(2, '0');
+                document.getElementById('recordTime').innerText = m + ':' + s;
+            }, 1000);
+            
+        } catch(err) {
+            alert("Microphone access denied or not supported by browser.");
+        }
+    }
+
+    function stopRecording() {
+        if(mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+        }
+    }
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+
+

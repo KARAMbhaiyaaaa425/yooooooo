@@ -42,12 +42,15 @@
         const items = document.querySelectorAll('.group-item');
         let orderData = [];
         
+        let currentOrder = 1;
         items.forEach((item, index) => {
             const idsStr = item.getAttribute('data-ids');
             if(idsStr) {
-                const ids = idsStr.split(',').map(id => parseInt(id.trim()));
+                const ids = idsStr.split(',').map(id => id.trim());
                 ids.forEach(id => {
-                    orderData.push({ id: id, order: index + 1 });
+                    const parsedId = isNaN(parseInt(id)) ? id : parseInt(id);
+                    orderData.push({ id: parsedId, order: currentOrder });
+                    currentOrder++;
                 });
             }
         });

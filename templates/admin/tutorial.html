@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="mb-6 flex items-center gap-3">
+    <a href="/dashboard" class="text-white hover:text-gray-300"><i class="fa-solid fa-chevron-left"></i></a>
+    <h2 class="text-2xl font-bold text-white tracking-wide uppercase">Tutorials</h2>
+</div>
+
+<div class="space-y-6 mb-20 px-2">
+
+    <!-- How to Deposit -->
+    <div class="bg-card border border-gray-800 rounded-2xl overflow-hidden shadow-lg">
+        <div class="p-4 border-b border-gray-800 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 theme-bg-subtle theme-text">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-white uppercase tracking-wider text-sm">How to Deposit</h3>
+                <p class="text-xs text-gray-500">Learn how to add balance</p>
+            </div>
+        </div>
+        <div class="aspect-video bg-gray-900 flex items-center justify-center">
+            {% if global_settings.video_deposit %}
+                {% if 'youtube.com' in global_settings.video_deposit or 'youtu.be' in global_settings.video_deposit %}
+                    {% set video_id = global_settings.video_deposit.split('v=')[-1].split('/')[-1].split('?')[0] %}
+                    <iframe class="w-full h-full" src="https://www.youtube.com/embed/{{ video_id }}" title="How to Deposit" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                {% else %}
+                    <video controls class="w-full h-full object-cover">
+                        <source src="{{ global_settings.video_deposit }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                {% endif %}
+            {% else %}
+                <div class="text-center text-gray-600">
+                    <i class="fa-solid fa-video-slash text-3xl mb-2"></i>
+                    <p class="text-xs uppercase tracking-widest font-bold">No Video Available</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- How to use App -->
+    <div class="bg-card border border-gray-800 rounded-2xl overflow-hidden shadow-lg">
+        <div class="p-4 border-b border-gray-800 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-400">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-white uppercase tracking-wider text-sm">How to use this APP</h3>
+                <p class="text-xs text-gray-500">Complete guide to buy products</p>
+            </div>
+        </div>
+        <div class="aspect-video bg-gray-900 flex items-center justify-center">
+            {% if global_settings.video_use %}
+                {% if 'youtube.com' in global_settings.video_use or 'youtu.be' in global_settings.video_use %}
+                    {% set video_id = global_settings.video_use.split('v=')[-1].split('/')[-1].split('?')[0] %}
+                    <iframe class="w-full h-full" src="https://www.youtube.com/embed/{{ video_id }}" title="How to Use App" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                {% else %}
+                    <video controls class="w-full h-full object-cover">
+                        <source src="{{ global_settings.video_use }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                {% endif %}
+            {% else %}
+                <div class="text-center text-gray-600">
+                    <i class="fa-solid fa-video-slash text-3xl mb-2"></i>
+                    <p class="text-xs uppercase tracking-widest font-bold">No Video Available</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
