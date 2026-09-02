@@ -1,0 +1,256 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    .plan-dropdown { transition: max-height 0.3s ease-in-out; max-height: 0; overflow: hidden; }
+    .plan-dropdown.open { max-height: 1000px; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+</style>
+
+<div class="flex justify-between items-center mb-6 mt-2 px-1">
+    <div class="flex items-center gap-3">
+        <i class="fa-solid fa-cart-shopping text-blue-500 text-xl theme-text"></i>
+        <h2 class="text-2xl font-black text-white tracking-wide">Store</h2>
+    </div>
+    <span class="bg-[#121b2d] border border-blue-900/50 text-blue-400 text-xs font-bold px-4 py-1.5 rounded-full theme-border">User</span>
+</div>
+
+<!-- Search Bar (Gradient Border) -->
+<div class="bg-gradient-to-r from-orange-500 via-yellow-500 to-cyan-500 p-[1.5px] rounded-2xl mb-5 shadow-lg">
+    <div class="relative bg-[#0a0f1c] rounded-2xl theme-bg-subtle">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <i class="fa-solid fa-search text-gray-400"></i>
+        </div>
+        <input type="text" id="searchInput" onkeyup="searchProducts()" class="w-full bg-transparent border-none text-white text-sm rounded-2xl pl-12 pr-4 py-3.5 focus:outline-none focus:ring-0 transition font-medium" placeholder="Search products, features...">
+    </div>
+</div>
+
+<!-- Balance Box -->
+<div class="flex justify-between items-center bg-card border border-gray-800 theme-border rounded-2xl p-5 mb-5 shadow-lg">
+    <div>
+        <p class="text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-1">Balance</p>
+        <p class="text-2xl font-bold text-yellow-500 theme-text">?{{ balance | default(0) }}</p>
+    </div>
+    <a href="/deposit" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.4)] transition">
+        <i class="fa-solid fa-wallet"></i> Add Balance
+    </a>
+</div>
+
+
+
+<!-- Category Filters -->
+<div class="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+    <button onclick="filterCategory('all', this)" class="cat-btn shrink-0 bg-blue-600 text-white px-5 py-2 rounded-full text-[11px] font-bold shadow-md transition uppercase tracking-wider">ALL</button>
+    {% for category in categories %}
+        <button onclick="filterCategory('{{ category }}', this)" class="cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 theme-border hover:text-white px-5 py-2 rounded-full text-[11px] font-bold transition uppercase tracking-wider">{{ category }}</button>
+    {% endfor %}
+</div>
+
+<!-- Products List -->
+<div class="space-y-6 mb-20" id="products-container">
+    {% for category in categories %}
+        {% for p in products[category] %}
+        {% set outer_index = loop.index0 ~ '-' ~ category %}
+        <div class="product-card bg-gray-900 border border-gray-800 theme-border rounded-[1.5rem] overflow-hidden relative shadow-2xl" data-category="{{ category }}" data-name="{{ p.name | lower }}">
+        
+        <!-- Image Section (Full Top) -->
+        <div class="relative w-full h-[220px] bg-black flex items-center justify-center overflow-hidden group">
+            {% if p.media_url %}
+                {% if p.media_url.endswith('.mp4') %}
+                    <video src="{{ p.media_url }}" class="w-full h-full object-cover opacity-90" autoplay loop muted playsinline></video>
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div class="w-16 h-16 rounded-full border-2 border-white/30 flex items-center justify-center bg-black/40 backdrop-blur-sm shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+                            <i class="fa-solid fa-volume-xmark text-white text-lg"></i>
+                        </div>
+                    </div>
+                {% else %}
+                    <img src="{{ p.media_url }}" class="w-full h-full object-cover opacity-90">
+                {% endif %}
+            {% else %}
+                <div class="w-full h-full flex flex-col items-center justify-center bg-gray-900">
+                    <i class="fa-solid fa-image text-4xl text-gray-700 mb-3"></i>
+                    <p class="text-gray-500 font-bold text-xs tracking-widest uppercase">No Preview</p>
+                </div>
+            {% endif %}
+            
+            <!-- Bottom Gradient for Title Readability -->
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0a0f1c] via-[#0a0f1c]/40 to-transparent"></div>
+            
+            <!-- Title Overlay -->
+            <h3 class="absolute bottom-5 left-5 text-white font-black text-2xl uppercase tracking-wider drop-shadow-xl z-10 w-[80%] leading-tight">{{ p.name }}</h3>
+            
+            <!-- Share Icon -->
+            <button class="absolute bottom-5 right-5 bg-black/50 hover:bg-black/80 transition w-11 h-11 rounded-full flex items-center justify-center text-white z-10 border border-white/10 backdrop-blur-md shadow-lg">
+                <i class="fa-solid fa-share-nodes"></i>
+            </button>
+        </div>
+        
+        <!-- Details Section -->
+        <div class="p-5 bg-card">
+            
+                        <!-- Status Msg (Yellow Box) -->
+            {% set status_msg = p.plans[0].status_msg | default('', true) %}
+            {% if status_msg %}
+            <div class="bg-[#1a1506] border border-yellow-900/50 rounded-xl p-3.5 mb-4 flex items-center gap-2.5 shadow-inner">
+                <span class="text-sm drop-shadow-md">??</span>
+                <p class="text-yellow-500 text-[11px] font-bold uppercase tracking-wider">{{ status_msg }}</p>
+            </div>
+            {% endif %}
+            
+            <!-- Features (Lightning Bolts) -->
+            {% if p.features %}
+            <div class="flex flex-wrap gap-x-5 gap-y-2.5 mb-5 px-1.5">
+                {% for feature in p.features.split('\n') %}
+                    {% if feature.strip() %}
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-bolt text-yellow-500 text-[11px]"></i>
+                        <span class="text-gray-300 text-[10px] font-bold uppercase tracking-widest">{{ feature.replace('??', '').replace('', '').strip() }}</span>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+                        <!-- Feedback and Update Buttons -->
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                {% set product_feedback = p.plans[0].feedback_link | default(global_settings.feedback_link | default('#'), true) %}
+                <a href="{{ product_feedback }}" target="_blank" class="flex justify-center items-center gap-2 bg-transparent border border-gray-700 theme-border rounded-xl py-3 hover:bg-gray-800 transition shadow-sm">
+                    <i class="fa-regular fa-comment-dots text-blue-500 theme-text text-sm"></i>
+                    <span class="text-gray-300 font-bold text-[11px] tracking-wide">Feedback</span>
+                </a>
+                
+                {% set product_updates = p.plans[0].updates_link | default(global_settings.updates_link | default('#'), true) %}
+                <a href="{{ product_updates }}" target="_blank" class="flex justify-center items-center gap-2 bg-transparent border border-yellow-600/80 rounded-xl py-3 hover:bg-yellow-900/20 transition shadow-sm">
+                    <i class="fa-solid fa-download text-yellow-500 text-sm"></i>
+                    <span class="text-yellow-500 font-bold text-[11px] tracking-wide">Download APK</span>
+                </a>
+            </div>
+            
+            <button onclick="togglePlanDropdown('{{ outer_index }}')" id="btn-{{ outer_index }}" class="w-full flex justify-center items-center gap-2 bg-blue-600 rounded-xl py-4 hover:bg-blue-500 transition shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                <span class="text-white font-bold text-sm tracking-wide">Buy Key</span>
+                <i class="fa-solid fa-chevron-down text-sm text-white transition-transform duration-300 ml-1" id="icon-{{ outer_index }}"></i>
+            </button>
+            
+            <!-- Plans Accordion (New Style) -->
+            <div id="plans-{{ outer_index }}" class="plan-dropdown mt-4 space-y-3">
+                {% for plan in p.plans %}
+                {% set status = plan.status | default('SAFE') %}
+                <div class="bg-gray-900 border border-gray-800 theme-border rounded-2xl p-4 flex justify-between items-center transition hover:border-gray-600">
+                    <div>
+                        <h4 class="text-white text-[13px] font-medium tracking-wide">{{ plan.plan_name }}</h4>
+                        <p class="text-white font-black text-xl mt-0.5">?{{ plan.price }}</p>
+                    </div>
+                    {% if status == 'SAFE' or status == 'WORKING' %}
+                        <button onclick="buyProduct('{{ plan.id }}', '{{ plan.name | escape }}', '{{ plan.price }}')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-7 py-3 rounded-xl text-sm shadow-[0_0_15px_rgba(37,99,235,0.4)] transition transform hover:scale-105">Buy</button>
+                    {% else %}
+                        <button disabled class="bg-gray-800 text-gray-500 font-bold px-5 py-3 rounded-xl text-xs uppercase">{{ status }}</button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            
+        </div>
+    </div>
+        {% endfor %}
+    {% endfor %}
+</div>
+
+<script>
+function filterCategory(category, btnElement) {
+    const buttons = document.querySelectorAll('.cat-btn');
+    buttons.forEach(btn => btn.className = 'cat-btn shrink-0 bg-card text-gray-400 border border-gray-800 theme-border hover:text-white px-5 py-2 rounded-full text-[11px] font-bold transition uppercase tracking-wider');
+    btnElement.className = 'cat-btn shrink-0 bg-blue-600 text-white px-5 py-2 rounded-full text-[11px] font-bold shadow-md transition uppercase tracking-wider';
+    
+    const cards = document.querySelectorAll('.product-card');
+    cards.forEach(card => {
+        if (category === 'all' || card.getAttribute('data-category') === category) card.style.display = 'block';
+        else card.style.display = 'none';
+    });
+}
+
+function searchProducts() {
+    const input = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.product-card');
+    cards.forEach(card => {
+        const name = card.getAttribute('data-name');
+        if (name.includes(input)) card.style.display = 'block';
+        else card.style.display = 'none';
+    });
+}
+
+function togglePlanDropdown(index) {
+    const dropdown = document.getElementById('plans-' + index);
+    const icon = document.getElementById('icon-' + index);
+    
+    if (dropdown.classList.contains('open')) {
+        dropdown.classList.remove('open');
+        icon.style.transform = 'rotate(0deg)';
+    } else {
+        dropdown.classList.add('open');
+        icon.style.transform = 'rotate(180deg)';
+    }
+}
+
+function buyProduct(productId, name, price) {
+    Swal.fire({
+        title: 'CONFIRM PURCHASE',
+        html: '<p class="text-sm text-gray-300 uppercase font-medium mt-2">ARE YOU SURE YOU WANT TO BUY <br><b class="text-white">' + name + '</b> FOR <b class="text-green-400">?' + price + '</b>?</p>',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#2563eb',
+        cancelButtonColor: '#1f2937',
+        confirmButtonText: 'YES, BUY IT!',
+        background: '#111827', color: '#fff'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({ title: 'PROCESSING...', allowOutsideClick: false, background: '#111827', color: '#fff', didOpen: () => { Swal.showLoading() } });
+            
+            fetch('/buy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ 'product_id': productId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'SUCCESS!',
+                        html: '<p class="text-sm text-gray-300 mb-4">Your key was purchased successfully.</p>' +
+                              '<div class="bg-gray-900 p-3 rounded-lg border border-gray-700 flex justify-between items-center mb-2">' +
+                              '<code class="text-green-400 font-mono text-xs break-all">' + data.key + '</code>' +
+                              '<button onclick="navigator.clipboard.writeText(\'' + data.key + '\'); Swal.fire({title:\'Copied!\', toast:true, position:\'top-end\', showConfirmButton:false, timer:1500, background:\'#111827\', color:\'#fff\'})" class="ml-3 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs transition whitespace-nowrap"><i class="fa-regular fa-copy"></i> Copy</button>' +
+                              '</div>',
+                        icon: 'success',
+                        background: '#111827', color: '#fff',
+                        confirmButtonText: 'Go to History',
+                        confirmButtonColor: '#2563eb',
+                        showCancelButton: true,
+                        cancelButtonText: 'Close'
+                    }).then((res2) => {
+                        if(res2.isConfirmed) window.location.href = '/history';
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'ERROR!',
+                        text: data.msg || 'Unknown error occurred.',
+                        icon: 'error',
+                        background: '#111827', color: '#fff',
+                        confirmButtonColor: '#dc2626'
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire('ERROR!', 'Network error. Please try again.', 'error');
+            });
+        }
+    });
+}
+</script>
+{% endblock %}
+
+
+
+
+
+
+
