@@ -1175,19 +1175,19 @@ def reseller_api():
             return jsonify({"status": "error", "message": "Missing product_id or duration!"})
             
         # Find exact product in DB
-          base_plan = db.products.find_one({"id": int(product_pid) if str(product_pid).isdigit() else product_pid})
-          if not base_plan:
-              base_plan = db.products.find_one({"id": str(product_pid)})
-              
-          if not base_plan:
-              return jsonify({"status": "error", "message": "Service not found. Check PID."})
-              
-          target_name = base_plan.get("name")
-          plan = db.products.find_one({"name": target_name, "plan_name": duration})
-          
-          if not plan:
-              return jsonify({"status": "error", "message": "Service not found for this Duration."})
+        base_plan = db.products.find_one({"id": int(product_pid) if str(product_pid).isdigit() else product_pid})
+        if not base_plan:
+            base_plan = db.products.find_one({"id": str(product_pid)})
             
+        if not base_plan:
+            return jsonify({"status": "error", "message": "Service not found. Check PID."})
+            
+        target_name = base_plan.get("name")
+        plan = db.products.find_one({"name": target_name, "plan_name": duration})
+        
+        if not plan:
+            return jsonify({"status": "error", "message": "Service not found for this Duration."})
+          
         if plan.get("status") in ["PATCHED", "UPDATING"]:
             return jsonify({"status": "error", "message": "Product is currently unavailable."})
             
