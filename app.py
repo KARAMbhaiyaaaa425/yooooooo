@@ -611,6 +611,7 @@ def admin_edit_product(pid):
             "category": category,
             "plan_name": plan_name,
             "price": price,
+            "reseller_price": reseller_price,
             "product_id": api_id
         }})
         return redirect("/admin/products")
