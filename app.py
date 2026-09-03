@@ -901,8 +901,13 @@ def admin_add_reseller_manual():
             # Also try searching by username (with or without @)
             search_username = search.lstrip('@')
             user = db.users.find_one({"username": {"$regex": f"^{search_username}$", "$options": "i"}})
+        import urllib.parse
         if user:
             db.users.update_one({"user_id": user["user_id"]}, {"$set": {"is_reseller": is_reseller}})
+            msg = urllib.parse.quote(f"Success: User @{user.get('username')} updated!")
+        else:
+            msg = urllib.parse.quote(f"Error: Could not find user '{search}'")
+        return redirect(f"/admin/resellers?msg={msg}")
     return redirect("/admin/resellers")
 
 @app.route("/admin/toggle_reseller/<user_id>")
@@ -912,6 +917,11 @@ def admin_toggle_reseller(user_id):
     if user:
         new_status = not user.get("is_reseller", False)
         db.users.update_one({"user_id": user_id}, {"$set": {"is_reseller": new_status}})
+    
+    # redirect back to where they came from
+    referrer = request.referrer
+    if referrer and "/admin/resellers" in referrer:
+        return redirect("/admin/resellers")
     return redirect("/admin/users")
 
 @app.route("/admin/resellers")
