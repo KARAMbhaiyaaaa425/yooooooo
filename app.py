@@ -526,6 +526,7 @@ def admin_login():
 def admin_panel():
     if not session.get("admin"): return redirect("/admin")
     total_users = db.users.count_documents({})
+    total_resellers = db.users.count_documents({"is_reseller": True})
     users = list(db.users.find({}))
     total_balance = sum(u.get("balance", 0) for u in users)
     orders = db.history.count_documents({})
@@ -542,7 +543,7 @@ def admin_panel():
         sales_labels.append(dt.strftime('%a'))
         sales_data.append(daily_total)
         
-    return render_template("admin/panel.html", total_users=total_users, total_balance=total_balance, orders=orders, sales_labels=sales_labels, sales_data=sales_data)
+    return render_template("admin/panel.html", total_users=total_users, total_resellers=total_resellers, total_balance=total_balance, orders=orders, sales_labels=sales_labels, sales_data=sales_data)
 
 
 @app.route("/admin/add_balance", methods=["POST"])
