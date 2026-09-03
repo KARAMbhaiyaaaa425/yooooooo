@@ -897,6 +897,10 @@ def admin_add_reseller_manual():
         user = db.users.find_one({"email": search})
         if not user:
             user = db.users.find_one({"user_id": search})
+        if not user:
+            # Also try searching by username (with or without @)
+            search_username = search.lstrip('@')
+            user = db.users.find_one({"username": {"$regex": f"^{search_username}$", "$options": "i"}})
         if user:
             db.users.update_one({"user_id": user["user_id"]}, {"$set": {"is_reseller": is_reseller}})
     return redirect("/admin/resellers")
