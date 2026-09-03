@@ -1153,7 +1153,6 @@ def generate_api_key():
 def developer_api():
     if "user_id" not in session: return redirect("/")
     user = db.users.find_one({"user_id": session["user_id"]})
-    if not user.get("is_reseller"): return redirect("/dashboard")
     settings = db.settings.find_one({"id": "global"}) or {}
     
     # Ensure user has api_key
