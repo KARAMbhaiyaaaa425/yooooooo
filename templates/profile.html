@@ -41,10 +41,18 @@
         <h3 class="text-2xl font-bold text-white mb-1" id="mainUsername">{{ user.username | default('admin') }}</h3>
         <p class="text-[10px] text-gray-500 font-mono mb-4">User ID: {{ user.user_id }}</p>
         
+        {% if user.is_reseller %}
+        <div class="inline-flex items-center gap-2 bg-[#2a2107] border border-yellow-900/50 px-4 py-1.5 rounded-full">
+            <div class="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+            <i class="fa-solid fa-crown text-yellow-500 text-[10px]"></i>
+            <span class="text-[10px] font-bold text-yellow-500 tracking-wider">RESELLER</span>
+        </div>
+        {% else %}
         <div class="inline-flex items-center gap-2 bg-[#0a1f14] border border-green-900/50 px-4 py-1.5 rounded-full">
             <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-            <span class="text-[10px] font-bold text-green-500 tracking-wider">ACTIVE MEMBER</span>
+            <span class="text-[10px] font-bold text-green-500 tracking-wider">NORMAL USER</span>
         </div>
+        {% endif %}
     </div>
     <!-- Action Cards -->
     <div class="space-y-3 mb-24">
