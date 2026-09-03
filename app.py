@@ -891,12 +891,14 @@ def admin_delete_all_products():
 def admin_add_reseller_manual():
     if not session.get("admin"): return redirect("/admin")
     search = request.form.get("email_or_user_id", "").strip()
+    action = request.form.get("action", "add")
+    is_reseller = True if action == "add" else False
     if search:
         user = db.users.find_one({"email": search})
         if not user:
             user = db.users.find_one({"user_id": search})
         if user:
-            db.users.update_one({"user_id": user["user_id"]}, {"$set": {"is_reseller": True}})
+            db.users.update_one({"user_id": user["user_id"]}, {"$set": {"is_reseller": is_reseller}})
     return redirect("/admin/resellers")
 
 @app.route("/admin/toggle_reseller/<user_id>")
