@@ -200,6 +200,11 @@ def store():
         for p in raw_products:
             cat = p.get("category", "Uncategorized").upper()
             if cat in hidden_cats: continue
+            
+            # Switch price if user is reseller
+            if user and user.get("is_reseller"):
+                p["price"] = p.get("reseller_price", p.get("price", 0))
+
             if cat not in grouped_products:
                 grouped_products[cat] = {}
             
@@ -586,6 +591,10 @@ def admin_edit_product(pid):
         except (TypeError, ValueError):
             price = 0.0
         try:
+            reseller_price = float(request.form.get("reseller_price", product.get("reseller_price", price)))
+        except (TypeError, ValueError):
+            reseller_price = price
+        try:
             api_id = int(request.form.get("product_id", product.get("product_id")))
         except (TypeError, ValueError):
             api_id = 0
@@ -641,6 +650,10 @@ def admin_add_product():
         except (TypeError, ValueError):
             price = 0.0
         try:
+            reseller_price = float(request.form.get("reseller_price"))
+        except (TypeError, ValueError):
+            reseller_price = price
+        try:
             product_id = int(request.form.get("product_id", 0))
         except (TypeError, ValueError):
             product_id = 0
@@ -663,6 +676,7 @@ def admin_add_product():
             "category": category,
             "plan_name": plan_name,
             "price": price,
+            "reseller_price": reseller_price,
             "product_id": product_id,
             "media_url": media_url,
             "feedback_link": feedback_link,
@@ -871,6 +885,15 @@ def admin_delete_all_products():
     if not session.get("admin"): return redirect("/admin")
     db.products.delete_many({})
     return redirect("/admin/products")
+
+@app.route("/admin/toggle_reseller/<user_id>")
+def admin_toggle_reseller(user_id):
+    if not session.get("admin"): return redirect("/admin")
+    user = db.users.find_one({"user_id": user_id})
+    if user:
+        new_status = not user.get("is_reseller", False)
+        db.users.update_one({"user_id": user_id}, {"$set": {"is_reseller": new_status}})
+    return redirect("/admin/users")
 
 @app.route("/admin/users")
 def admin_users():
@@ -1107,6 +1130,7 @@ def generate_api_key():
 def developer_api():
     if "user_id" not in session: return redirect("/")
     user = db.users.find_one({"user_id": session["user_id"]})
+    if not user.get("is_reseller"): return redirect("/dashboard")
     settings = db.settings.find_one({"id": "global"}) or {}
     
     # Ensure user has api_key
@@ -1191,7 +1215,7 @@ def reseller_api():
         if plan.get("status") in ["PATCHED", "UPDATING"]:
             return jsonify({"status": "error", "message": "Product is currently unavailable."})
             
-        price = float(plan.get("price", 0))
+        price = float(plan.get("reseller_price", plan.get("price", 0))) if user.get("is_reseller") else float(plan.get("price", 0))
         if float(user.get("balance", 0)) < price:
             return jsonify({"status": "error", "message": "Insufficient Balance!"})
             
