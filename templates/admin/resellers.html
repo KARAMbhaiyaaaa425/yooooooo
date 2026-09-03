@@ -1,6 +1,11 @@
 {% extends "admin/layout.html" %}
 
 {% block content %}
+{% if request.args.get('msg') %}
+<div class="mb-6 p-4 rounded-xl border {% if 'Error' in request.args.get('msg') %}bg-red-900/50 border-red-500 text-red-200{% else %}bg-green-900/50 border-green-500 text-green-200{% endif %} font-bold shadow-lg">
+    {{ request.args.get('msg') }}
+</div>
+{% endif %}
 <div class="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
     <div class="flex items-center gap-4">
         <a href="/admin/panel" class="text-gray-400 hover:text-white"><i class="fa-solid fa-arrow-left text-xl"></i></a>
