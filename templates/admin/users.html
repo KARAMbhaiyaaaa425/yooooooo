@@ -29,7 +29,7 @@
                 {% for u in users %}
                 <tr class="hover:bg-gray-750">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{{ u.user_id }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-white">@{{ u.username | default('Unknown') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-white">@{{ u.username | default('Unknown') }} {% if u.is_reseller %}<span class="bg-yellow-500/20 text-yellow-500 text-[10px] px-2 py-0.5 rounded-full ml-1 border border-yellow-500/50"><i class="fa-solid fa-crown mr-1"></i>RESELLER</span>{% endif %}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-300">{{ u.email | default('N/A') }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-xs text-red-400 font-mono">{{ u.password | default('N/A') }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-400">?{{ u.balance | default(0) }}</td>
@@ -39,6 +39,7 @@
                             <input type="number" name="amount" placeholder="Amt" class="w-16 bg-gray-900 border border-gray-700 text-white px-2 py-1 rounded-md text-xs focus:outline-none" required>
                             <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs font-bold shadow-md">Add</button>
                         </form>
+                        <a href="/admin/toggle_reseller/{{ u.user_id }}" class="text-yellow-400 hover:text-yellow-300 ml-2" title="Toggle Reseller"><i class="fa-solid fa-crown mt-2"></i></a>
                     </td>
                 </tr>
                 {% endfor %}
