@@ -896,6 +896,16 @@ def admin_toggle_reseller(user_id):
         db.users.update_one({"user_id": user_id}, {"$set": {"is_reseller": new_status}})
     return redirect("/admin/users")
 
+@app.route("/admin/resellers")
+def admin_resellers():
+    if not session.get("admin"): return redirect("/admin")
+    sort_by = request.args.get("sort", "_id")
+    if sort_by == "balance":
+        users = list(db.users.find({"is_reseller": True}).sort("balance", -1))
+    else:
+        users = list(db.users.find({"is_reseller": True}).sort("_id", -1))
+    return render_template("admin/resellers.html", users=users)
+
 @app.route("/admin/users")
 def admin_users():
     if not session.get("admin"): return redirect("/admin")
