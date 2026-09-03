@@ -55,14 +55,19 @@ def check_maintenance():
 
 
 @app.context_processor
-def inject_unread():
+def inject_global_data():
+    data = {
+        "unread_count": 0,
+        "balance": 0.0,
+        "global_settings": db.settings.find_one({"id": "global"}) or {}
+    }
     if "user_id" in session:
         user = db.users.find_one({"user_id": session["user_id"]})
         if user:
             last_seen = user.get("last_seen_notification", "")
-            count = db.notifications.count_documents({"date": {"$gt": last_seen}})
-            return {"unread_count": count}
-    return {"unread_count": 0}
+            data["unread_count"] = db.notifications.count_documents({"date": {"": last_seen}})
+            data["balance"] = user.get("balance", 0.0)
+    return data
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -178,34 +183,55 @@ def dashboard():
 def download_app():
     if "user_id" not in session: return redirect("/")
     user = db.users.find_one({"user_id": session["user_id"]})
-    return render_template("download.html", user=user)
+    settings = db.settings.find_one({"id": "global"}) or {}
+    return render_template("download.html", user=user, global_settings=settings)
 
 @app.route("/store")
 def store():
-    if "user_id" not in session: return redirect("/")
-    user = db.users.find_one({"user_id": session["user_id"]})
-    raw_products = list(db.products.find({}).sort("order", 1))
-    
-    settings = db.settings.find_one({"id": "global"}) or {}
-    hidden_cats = [c.strip().upper() for c in settings.get("hidden_categories", "").split(",")]
-    
-    # Group by category and name
-    grouped_products = {}
-    for p in raw_products:
-        if p['category'].upper() in hidden_cats: continue
+    try:
+        if "user_id" not in session: return redirect("/")
+        user = db.users.find_one({"user_id": session["user_id"]})
+        raw_products = list(db.products.find({}).sort("order", 1))
         
-        key = f"{p['category']}_{p['name']}"
-        if key not in grouped_products:
-            grouped_products[key] = {
-                "name": p["name"],
-                "category": p["category"],
-                "media_url": p.get("media_url", ""),
-                "features": p.get("features", ""),
-                "plans": []
-            }
-        grouped_products[key]["plans"].append(p)
+        settings = db.settings.find_one({"id": "global"}) or {}
+        hidden_cats = [c.strip().upper() for c in settings.get("hidden_categories", "").split(",")]
         
-    return render_template("store.html", user=user, balance=user.get("balance", 0.0), products=list(grouped_products.values()), global_settings=settings)
+        grouped_products = {}
+        for p in raw_products:
+            cat = p.get("category", "Uncategorized").upper()
+            if cat in hidden_cats: continue
+            
+            # Switch price if user is reseller
+            if user and user.get("is_reseller"):
+                p["price"] = p.get("reseller_price", p.get("price", 0))
+
+            if cat not in grouped_products:
+                grouped_products[cat] = {}
+            
+            name = p.get("name", "Unknown")
+            if name not in grouped_products[cat]:
+                grouped_products[cat][name] = []
+            
+            grouped_products[cat][name].append(p)
+            
+        final_products = {}
+        for cat, names in grouped_products.items():
+            final_products[cat] = []
+            for name, plans in names.items():
+                if not plans: continue
+                final_products[cat].append({
+                    "name": name,
+                    "plans": sorted(plans, key=lambda x: x.get("order", 0)),
+                    "media_url": plans[0].get("media_url", "")
+                })
+                
+        categories = list(final_products.keys())
+        categories.sort()
+        
+        return render_template("store.html", user=user, balance=user.get("balance", 0.0) if user else 0.0, products=final_products, categories=categories, global_settings=settings)
+    except Exception as e:
+        import traceback
+        return "<pre>" + traceback.format_exc() + "</pre>"
 
 @app.route('/settings')
 def user_settings():
@@ -500,6 +526,7 @@ def admin_login():
 def admin_panel():
     if not session.get("admin"): return redirect("/admin")
     total_users = db.users.count_documents({})
+    total_resellers = db.users.count_documents({"is_reseller": True})
     users = list(db.users.find({}))
     total_balance = sum(u.get("balance", 0) for u in users)
     orders = db.history.count_documents({})
@@ -516,7 +543,7 @@ def admin_panel():
         sales_labels.append(dt.strftime('%a'))
         sales_data.append(daily_total)
         
-    return render_template("admin/panel.html", total_users=total_users, total_balance=total_balance, orders=orders, sales_labels=sales_labels, sales_data=sales_data)
+    return render_template("admin/panel.html", total_users=total_users, total_resellers=total_resellers, total_balance=total_balance, orders=orders, sales_labels=sales_labels, sales_data=sales_data)
 
 
 @app.route("/admin/add_balance", methods=["POST"])
@@ -565,6 +592,10 @@ def admin_edit_product(pid):
         except (TypeError, ValueError):
             price = 0.0
         try:
+            reseller_price = float(request.form.get("reseller_price", product.get("reseller_price", price)))
+        except (TypeError, ValueError):
+            reseller_price = price
+        try:
             api_id = int(request.form.get("product_id", product.get("product_id")))
         except (TypeError, ValueError):
             api_id = 0
@@ -586,10 +617,25 @@ def admin_edit_product(pid):
         
     return render_template("admin/edit_product.html", product=product)
 
-@app.route("/admin/product/delete/<int:pid>")
+@app.route("/admin/product/delete/<pid>")
 def admin_delete_product(pid):
     if not session.get("admin"): return redirect("/admin")
-    db.products.delete_one({"id": pid})
+    from bson.objectid import ObjectId
+    # Try deleting by _id first, if it's a valid ObjectId
+    try:
+        res = db.products.delete_one({"_id": ObjectId(pid)})
+        if res.deleted_count > 0: return redirect("/admin/products")
+    except:
+        pass
+        
+    # Fallback to custom 'id' field (both int and string)
+    try:
+        res = db.products.delete_one({"id": int(pid)})
+        if res.deleted_count > 0: return redirect("/admin/products")
+    except:
+        pass
+        
+    db.products.delete_one({"id": str(pid)})
     return redirect("/admin/products")
 
 @app.route("/admin/product/add", methods=["GET", "POST"])
@@ -604,6 +650,10 @@ def admin_add_product():
             price = float(request.form.get("price"))
         except (TypeError, ValueError):
             price = 0.0
+        try:
+            reseller_price = float(request.form.get("reseller_price"))
+        except (TypeError, ValueError):
+            reseller_price = price
         try:
             product_id = int(request.form.get("product_id", 0))
         except (TypeError, ValueError):
@@ -627,6 +677,7 @@ def admin_add_product():
             "category": category,
             "plan_name": plan_name,
             "price": price,
+            "reseller_price": reseller_price,
             "product_id": product_id,
             "media_url": media_url,
             "feedback_link": feedback_link,
@@ -706,6 +757,46 @@ def admin_settings():
     return render_template("admin/settings.html", settings=settings)
 
 @app.route("/admin/api_settings", methods=["GET", "POST"])
+
+@app.route("/admin/api_analytics")
+def admin_api_analytics():
+    if not session.get("admin"): return redirect("/admin")
+    
+    # Get all API orders (they have ' (API)' in the product name)
+    api_orders = list(db.history.find({"product": {"$regex": " \(API\)$"}}))
+    
+    total_api_revenue = sum(float(o.get("price", 0)) for o in api_orders)
+    total_api_keys = len(api_orders)
+    
+    # Group by reseller
+    reseller_stats = {}
+    for o in api_orders:
+        uid = o.get("user_id")
+        if uid not in reseller_stats:
+            user_doc = db.users.find_one({"user_id": uid})
+            username = user_doc.get("username", "Unknown") if user_doc else "Unknown"
+            reseller_stats[uid] = {"username": username, "spent": 0, "keys": 0}
+            
+        reseller_stats[uid]["spent"] += float(o.get("price", 0))
+        reseller_stats[uid]["keys"] += 1
+        
+    sorted_resellers = sorted(reseller_stats.items(), key=lambda x: x[1]["spent"], reverse=True)
+    
+    # Get today's API revenue
+    from datetime import datetime
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    today_orders = [o for o in api_orders if str(o.get("date", "")).startswith(today_str)]
+    today_api_revenue = sum(float(o.get("price", 0)) for o in today_orders)
+    
+    return render_template("admin/api_analytics.html", 
+        total_api_revenue=total_api_revenue,
+        total_api_keys=total_api_keys,
+        today_api_revenue=today_api_revenue,
+        resellers=sorted_resellers,
+        recent_orders=sorted(api_orders, key=lambda x: x.get("date", ""), reverse=True)[:50]
+    )
+
+
 def admin_api_settings():
     if not session.get("admin"): return redirect("/admin")
     settings = db.settings.find_one({"id": "global"}) or {}
@@ -766,14 +857,82 @@ def admin_reorder():
         for item in order_data:
             db.products.update_one({"id": item["id"]}, {"$set": {"order": item["order"]}})
         return jsonify({"success": True})
-    products = list(db.products.find({}).sort("order", 1))
-    return render_template("admin/reorder.html", products=products)
+        
+    raw_products = list(db.products.find({}).sort("order", 1))
+    
+    # Group them by name for the UI
+    groups = {}
+    for p in raw_products:
+        key = p["name"]
+        if key not in groups:
+            groups[key] = {
+                "name": p["name"],
+                "category": p["category"],
+                "count": 0,
+                "ids": []
+            }
+        groups[key]["count"] += 1
+        groups[key]["ids"].append(str(p["id"]))
+        
+    for k in groups:
+        groups[k]["ids"] = ",".join(groups[k]["ids"])
+        
+    grouped_products = list(groups.values())
+    
+    return render_template("admin/reorder.html", grouped_products=grouped_products)
 
 @app.route("/admin/product/delete_all")
 def admin_delete_all_products():
     if not session.get("admin"): return redirect("/admin")
     db.products.delete_many({})
     return redirect("/admin/products")
+
+@app.route("/admin/add_reseller_manual", methods=["POST"])
+def admin_add_reseller_manual():
+    if not session.get("admin"): return redirect("/admin")
+    search = request.form.get("email_or_user_id", "").strip()
+    action = request.form.get("action", "add")
+    is_reseller = True if action == "add" else False
+    if search:
+        user = db.users.find_one({"email": search})
+        if not user:
+            user = db.users.find_one({"user_id": search})
+        if not user:
+            # Also try searching by username (with or without @)
+            search_username = search.lstrip('@')
+            user = db.users.find_one({"username": {"$regex": f"^{search_username}$", "$options": "i"}})
+        import urllib.parse
+        if user:
+            db.users.update_one({"user_id": user["user_id"]}, {"$set": {"is_reseller": is_reseller}})
+            msg = urllib.parse.quote(f"Success: User @{user.get('username')} updated!")
+        else:
+            msg = urllib.parse.quote(f"Error: Could not find user '{search}'")
+        return redirect(f"/admin/resellers?msg={msg}")
+    return redirect("/admin/resellers")
+
+@app.route("/admin/toggle_reseller/<user_id>")
+def admin_toggle_reseller(user_id):
+    if not session.get("admin"): return redirect("/admin")
+    user = db.users.find_one({"user_id": user_id})
+    if user:
+        new_status = not user.get("is_reseller", False)
+        db.users.update_one({"user_id": user_id}, {"$set": {"is_reseller": new_status}})
+    
+    # redirect back to where they came from
+    referrer = request.referrer
+    if referrer and "/admin/resellers" in referrer:
+        return redirect("/admin/resellers")
+    return redirect("/admin/users")
+
+@app.route("/admin/resellers")
+def admin_resellers():
+    if not session.get("admin"): return redirect("/admin")
+    sort_by = request.args.get("sort", "_id")
+    if sort_by == "balance":
+        users = list(db.users.find({"is_reseller": True}).sort("balance", -1))
+    else:
+        users = list(db.users.find({"is_reseller": True}).sort("_id", -1))
+    return render_template("admin/resellers.html", users=users)
 
 @app.route("/admin/users")
 def admin_users():
@@ -995,3 +1154,163 @@ if __name__ == "__main__":
 
 
 
+
+
+import secrets
+
+@app.route("/api/generate_key", methods=["POST"])
+def generate_api_key():
+    if "user_id" not in session: return jsonify({"success": False})
+    new_key = secrets.token_hex(16)
+    db.users.update_one({"user_id": session["user_id"]}, {"$set": {"api_key": new_key}})
+    return jsonify({"success": True, "api_key": new_key})
+
+@app.route("/developer_api")
+def developer_api():
+    if "user_id" not in session: return redirect("/")
+    user = db.users.find_one({"user_id": session["user_id"]})
+    settings = db.settings.find_one({"id": "global"}) or {}
+    
+    # Ensure user has api_key
+    if "api_key" not in user:
+        new_key = secrets.token_hex(16)
+        db.users.update_one({"user_id": session["user_id"]}, {"$set": {"api_key": new_key}})
+        user["api_key"] = new_key
+        
+    master_key = settings.get("reseller_master_key", "c054bf5dc7a486e4c05147a11e4c7039")
+    raw_products = list(db.products.find({}).sort("order", 1))
+    
+    # Group products by name and category for the API documentation table
+    grouped = {}
+    for p in raw_products:
+        name = p.get("name", "Unknown")
+        cat = p.get("category", "Uncategorized")
+        key = f"{cat}___{name}"
+        if key not in grouped: grouped[key] = {"name": name, "category": cat, "plans": [], "pid": p.get("id")}
+        grouped[key]["plans"].append(p)
+    
+    return render_template("api.html", user=user, master_key=master_key, grouped_products=grouped, url_root=request.url_root)
+
+@app.route("/api/reseller_v1.php", methods=["POST", "GET"])
+@app.route("/api/reseller_v1", methods=["POST", "GET"])
+def reseller_api():
+    if request.method == "GET":
+        return jsonify({"status": "error", "message": "Method Not Allowed. Use POST."})
+        
+    settings = db.settings.find_one({"id": "global"}) or {}
+    expected_master_key = settings.get("reseller_master_key", "c054bf5dc7a486e4c05147a11e4c7039")
+    provided_master_key = request.headers.get("x-master-key") or request.headers.get("X-Master-Key")
+    
+    if provided_master_key != expected_master_key:
+        return jsonify({"status": "error", "message": "Invalid Master Key!"})
+        
+    api_key = request.form.get("api_key")
+    if not api_key:
+        return jsonify({"status": "error", "message": "Missing api_key parameter!"})
+        
+    user = db.users.find_one({"api_key": api_key})
+    if not user:
+        return jsonify({"status": "error", "message": "Invalid API Key!"})
+        
+    action = request.form.get("action")
+    if action == "services":
+        # Return list of services
+        raw_products = list(db.products.find({}).sort("order", 1))
+        services = []
+        for p in raw_products:
+            services.append({
+                "service_id": p.get("id"),
+                "name": p.get("name"),
+                "category": p.get("category"),
+                "plan_name": p.get("plan_name"),
+                "price": p.get("price"),
+                "status": p.get("status")
+            })
+        return jsonify({"status": "success", "services": services})
+        
+    elif action == "buy":
+        product_pid = request.form.get("product_id")
+        duration = request.form.get("duration")
+        android_id = request.form.get("android_id", "")
+        
+        if not product_pid or not duration:
+            return jsonify({"status": "error", "message": "Missing product_id or duration!"})
+            
+        # Find exact product in DB
+        base_plan = db.products.find_one({"id": int(product_pid) if str(product_pid).isdigit() else product_pid})
+        if not base_plan:
+            base_plan = db.products.find_one({"id": str(product_pid)})
+            
+        if not base_plan:
+            return jsonify({"status": "error", "message": "Service not found. Check PID."})
+            
+        target_name = base_plan.get("name")
+        plan = db.products.find_one({"name": target_name, "plan_name": duration})
+        
+        if not plan:
+            return jsonify({"status": "error", "message": "Service not found for this Duration."})
+          
+        if plan.get("status") in ["PATCHED", "UPDATING"]:
+            return jsonify({"status": "error", "message": "Product is currently unavailable."})
+            
+        price = float(plan.get("reseller_price", plan.get("price", 0))) if user.get("is_reseller") else float(plan.get("price", 0))
+        if float(user.get("balance", 0)) < price:
+            return jsonify({"status": "error", "message": "Insufficient Balance!"})
+            
+        # Deduct Balance
+        res = db.users.update_one({"_id": user["_id"], "balance": {"$gte": price}}, {"$inc": {"balance": -price}})
+        if res.modified_count == 0:
+            return jsonify({"status": "error", "message": "Balance deduction failed!"})
+            
+        # Fetch Key
+        key_data = ""
+        if plan.get("type") == "manual":
+            key_doc = db.keys.find_one_and_update(
+                {"product_db_id": plan["id"], "used": False},
+                {"$set": {"used": True, "used_by": user["user_id"], "used_date": datetime.now()}}
+            )
+            if not key_doc:
+                db.users.update_one({"_id": user["_id"]}, {"$inc": {"balance": price}}) # refund
+                return jsonify({"status": "error", "message": "Out of Stock!"})
+            key_data = key_doc["key"]
+        else:
+            # External API purchase
+            current_api_key = settings.get("api_key", API_KEY)
+            current_master_key = settings.get("master_key", MASTER_KEY)
+            current_api_endpoint = settings.get("api_endpoint", API_ENDPOINT)
+            
+            payload = {'api_key': current_api_key, 'action': 'buy', 'product_id': str(plan.get("product_id", "")), 'duration': str(plan.get("plan_name", "")), 'android_id': android_id}
+            headers = {'Content-Type': 'application/x-www-form-urlencoded', 'x-master-key': current_master_key}
+            
+            try:
+                import requests
+                api_res = requests.post(current_api_endpoint, data=payload, headers=headers, timeout=15)
+                data = api_res.json()
+                if data.get("status") == "success" or data.get("success") == True:
+                    key_data = data.get("key") or data.get("license") or "N/A"
+                else:
+                    db.users.update_one({"_id": user["_id"]}, {"$inc": {"balance": price}}) # refund
+                    error_msg = data.get("msg") or data.get("message") or "Provider API Error"
+                    return jsonify({"status": "error", "message": error_msg})
+            except Exception as e:
+                db.users.update_one({"_id": user["_id"]}, {"$inc": {"balance": price}}) # refund
+                return jsonify({"status": "error", "message": "Provider API connection failed!"})
+                
+        # Insert History
+        db.history.insert_one({
+            "user_id": user["user_id"],
+            "product": plan.get("name", "N/A") + " (API)",
+            "plan": plan.get("plan_name", "N/A"),
+            "price": price,
+            "license_key": key_data,
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+        
+        return jsonify({
+            "status": "success",
+            "key": key_data,
+            "balance": float(user.get("balance", 0)) - price,
+            "message": "Purchased successfully via API"
+        })
+    else:
+        return jsonify({"status": "error", "message": "Invalid action!"})
