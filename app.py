@@ -1241,9 +1241,15 @@ def reseller_api():
         base_plan = db.products.find_one({"id": int(product_pid) if str(product_pid).isdigit() else product_pid})
         if not base_plan:
             base_plan = db.products.find_one({"id": str(product_pid)})
+        if not base_plan and str(product_pid).isdigit():
+            base_plan = db.products.find_one({"product_id": int(product_pid)})
+        if not base_plan:
+            base_plan = db.products.find_one({"product_id": str(product_pid)})
+        if not base_plan:
+            base_plan = db.products.find_one({"name": str(product_pid)})
             
         if not base_plan:
-            return jsonify({"status": "error", "message": "Service not found. Check PID."})
+            return jsonify({"status": "error", "message": f"Service not found. Check PID ({product_pid})."})
             
         target_name = base_plan.get("name")
         plan = db.products.find_one({"name": target_name, "plan_name": duration})
