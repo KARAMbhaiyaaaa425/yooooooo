@@ -305,7 +305,8 @@ def deposit():
         headers = {"X-Guru-Key": get_karanpay_key(order_id), "Content-Type": "application/json"}
         
         try:
-            resp = requests.post(KARANPAY_CREATE_URL, json=payload, headers=headers, timeout=20).json()
+            # Reduced timeout to 12s to prevent Gunicorn SIGKILL (which happens at 30s)
+            resp = requests.post(KARANPAY_CREATE_URL, json=payload, headers=headers, timeout=12).json()
             if resp.get("status") == "success":
                 payment_url = resp.get("data", {}).get("payment_url") or resp.get("payment_url")
                 upi_url = payment_url
