@@ -287,6 +287,9 @@ def deposit():
     if "user_id" not in session: return redirect("/")
     user_id = session["user_id"]
     user = db.users.find_one({"user_id": user_id})
+    if not user:
+        session.clear()
+        return redirect("/")
     
     if request.method == "POST":
         amount = float(request.form.get("amount", 0))
