@@ -11,22 +11,21 @@
     <!-- Loading state -->
     <div id="loading-state">
         <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-400 mb-3"></i>
-        <p class="text-gray-300 font-bold mt-2">Setting up payment...</p>
+        <p class="text-gray-300 font-bold mt-3">Setting up payment...</p>
         <p class="text-gray-500 text-xs mt-1">Please wait a moment</p>
     </div>
 
-    <!-- Pay button (hidden until gateway ready) -->
+    <!-- Pay button (shown after gateway ready) -->
     <div id="pay-state" style="display:none;">
         <p class="text-gray-400 text-sm mb-4">
             <i class="fa-solid fa-circle-check text-green-400 mr-1"></i>
-            Payment ready! Click below to pay.
-            <b class="text-yellow-400 block mt-1">Do NOT close this page after clicking.</b>
+            Payment gateway is ready!
         </p>
         <button onclick="openPayPopup()" id="pay-btn"
             class="w-full bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.5)] transition-all flex justify-center items-center gap-3 text-lg">
             <i class="fa-solid fa-indian-rupee-sign"></i> Pay &#8377;{{ amount }} Now
         </button>
-        <p class="text-xs text-gray-500 mt-3">If popup is blocked, click the button again after allowing popups.</p>
+        <p class="text-xs text-gray-500 mt-3">A payment popup will open. After paying, come back to this page — your balance will be added automatically.</p>
     </div>
 
     <!-- Error state -->
@@ -36,13 +35,13 @@
         <a href="/deposit" class="mt-4 inline-block text-sm text-blue-400 underline">Try Again</a>
     </div>
 
-    <p class="text-xs text-gray-600 mt-4">Order ID: <code class="text-blue-400">{{ order_id }}</code></p>
+    <p class="text-xs text-gray-600 mt-5">Order ID: <code class="text-blue-400">{{ order_id }}</code></p>
 </div>
 
 <div class="text-center mt-4" id="status-container">
-    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-500 mb-3"></i>
-    <p class="text-gray-300 font-bold" id="status-text">Waiting for payment...</p>
-    <p class="text-xs text-gray-500 mt-1 mb-6">Once you pay in the popup, this page will auto-update.</p>
+    <i class="fa-solid fa-circle-notch fa-spin text-2xl text-blue-500 mb-3"></i>
+    <p class="text-gray-400 font-bold" id="status-text">Waiting for payment confirmation...</p>
+    <p class="text-xs text-gray-500 mt-1 mb-6">After paying in the popup, this page will update automatically.</p>
 
     <a href="/deposit" class="inline-flex items-center gap-2 bg-transparent border border-red-900/50 hover:bg-red-900/20 text-red-500 font-bold text-sm px-6 py-2.5 rounded-xl transition shadow-sm">
         <i class="fa-solid fa-xmark"></i> Cancel Payment
@@ -51,45 +50,45 @@
 
 <script>
     var payWindow = null;
-    var paymentUrl = null;
+    var checkoutUrl = null;
 
     function openPayPopup() {
-        if (!paymentUrl) return;
+        if (!checkoutUrl) return;
         var w = 480, h = 640;
         var left = (screen.width / 2) - (w / 2);
         var top = (screen.height / 2) - (h / 2);
-        payWindow = window.open(paymentUrl, 'GatewayPayment',
+        payWindow = window.open(checkoutUrl, 'FamGatewayPayment',
             'width=' + w + ',height=' + h + ',top=' + top + ',left=' + left + ',scrollbars=yes,resizable=yes');
 
         if (!payWindow || payWindow.closed || typeof payWindow.closed === 'undefined') {
             document.getElementById('pay-btn').innerHTML =
                 '<i class="fa-solid fa-arrow-up-right-from-square mr-2"></i> Allow Popups & Click Again';
-            alert('Your browser blocked the popup!\nPlease allow popups for this website and click the button again.');
+            alert('Your browser blocked the popup!\nPlease allow popups for this website and click the Pay button again.');
         }
     }
 
-    // STEP 2: Call /create_payment in background to get payment_url
+    // Call /create_payment in background to get checkout_url from FamGateway
     fetch('/create_payment/{{ order_id }}')
         .then(res => res.json())
         .then(data => {
             document.getElementById('loading-state').style.display = 'none';
-            if (data.success) {
-                paymentUrl = data.payment_url;
+            if (data.success && data.checkout_url) {
+                checkoutUrl = data.checkout_url;
                 document.getElementById('pay-state').style.display = 'block';
-                // Auto-open popup after 500ms
-                setTimeout(openPayPopup, 500);
+                // Auto-open popup after short delay
+                setTimeout(openPayPopup, 600);
             } else {
                 document.getElementById('error-state').style.display = 'block';
                 document.getElementById('error-msg').textContent = 'Error: ' + (data.error || 'Gateway failed. Please try again.');
             }
         })
-        .catch(err => {
+        .catch(() => {
             document.getElementById('loading-state').style.display = 'none';
             document.getElementById('error-state').style.display = 'block';
             document.getElementById('error-msg').textContent = 'Connection error. Please try again.';
         });
 
-    // Poll every 5 seconds for payment confirmation
+    // Poll every 4 seconds for payment confirmation
     let checkInterval = setInterval(() => {
         fetch('/check_payment/{{ order_id }}')
             .then(res => res.json())
@@ -105,6 +104,6 @@
                     `;
                 }
             });
-    }, 5000);
+    }, 4000);
 </script>
 {% endblock %}
