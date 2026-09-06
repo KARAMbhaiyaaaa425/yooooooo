@@ -24,7 +24,7 @@ API_KEY = "4936a17fb44211207c7ca20bdc6a4a57"
 MASTER_KEY = "a7f3e8b2c9d1f4a6b8c2d5e9f1a3b6c8"
 
 # FamGateway Config
-FAM_API_KEY = "fam_8f664c95e7fe29e380b7317317b00e979c5d0ba8"
+FAM_API_KEY = "fam_a146681687091ddb7dc092a5fb4f903332c27fa1"
 FAM_CREATE_URL = "https://famgateway.in/api/create-order.php"
 FAM_SITE_URL = "https://ffpanelshop.onrender.com"
 
@@ -404,8 +404,42 @@ def check_payment(order_id):
     order = db.orders.find_one({"order_id": order_id})
     if not order: return jsonify({"success": False})
     if order.get("status") == "completed": return jsonify({"success": True})
-    return jsonify({"success": False})
 
+    try:
+        fam_id = order.get("fam_order_id")
+        if not fam_id: return jsonify({"success": False})
+
+        resp = requests.get(f"https://famgateway.in/api/checkout-status.php?order_id={fam_id}", timeout=5).json()
+        
+        status = str(resp.get("status", "")).lower()
+        if status in ("success", "paid", "captured"):
+            data = resp.get("data", resp)
+            utr = data.get("utr", "FamGateway")
+            sender = data.get("sender_name", "FamGateway")
+            amount = float(order.get("amount", 0))
+            user_id = order["user_id"]
+
+            res = db.orders.update_one(
+                {"order_id": order_id, "status": "pending"},
+                {"$set": {"status": "completed", "utr": utr, "sender": sender}}
+            )
+            if res.modified_count > 0:
+                db.users.update_one({"user_id": user_id}, {"$inc": {"balance": amount}})
+                db.deposit_history.insert_one({
+                    "user_id": user_id,
+                    "order_id": order_id,
+                    "amount": amount,
+                    "utr": utr,
+                    "sender": sender,
+                    "status": "completed",
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+                return jsonify({"success": True})
+    except Exception as e:
+        print(f"Check payment error: {e}")
+        pass
+    
+    return jsonify({"success": False})
 
 
 
