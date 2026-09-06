@@ -7,9 +7,15 @@
 </div>
 
 <div class="bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-700 text-center mb-6">
-    <div class="mb-4 mt-2 w-full overflow-hidden rounded-xl">
-        <!-- Render official Gateway page inside iframe -->
-        <iframe src="{{ payment_url }}" width="100%" height="600px" frameborder="0" class="rounded-xl shadow-lg border border-gray-700 bg-white"></iframe>
+    <div class="bg-white p-4 rounded-xl inline-block mb-4">
+        <!-- Render perfectly extracted QR code -->
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ upi_url | urlencode }}" alt="UPI QR Code" class="w-48 h-48">
+    </div>
+    
+    <div class="mb-4">
+        <a href="{{ payment_url }}" target="_blank" onclick="window.open(this.href, 'Payment', 'width=500,height=600'); return false;" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl shadow-md transition inline-block">
+            <i class="fa-solid fa-external-link-alt mr-2"></i> Open Gateway Window
+        </a>
     </div>
     
     <p class="text-xs text-gray-500 mb-2">Order ID: <code class="text-blue-400">{{ order_id }}</code></p>
