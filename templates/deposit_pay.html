@@ -1,100 +1,54 @@
 ﻿{% extends "layout.html" %}
 
 {% block content %}
-<div class="mb-4 text-center">
-    <h2 class="text-2xl font-bold text-white mb-1">Complete Payment</h2>
+<div class="mb-6 text-center">
+    <h2 class="text-2xl font-bold text-white mb-2">Scan to Pay</h2>
     <p class="text-gray-400 text-sm">Pay exactly <b class="text-green-400 text-lg">&#8377;{{ amount }}</b></p>
 </div>
 
-<!-- Loading state (shown until iframe ready) -->
-<div id="loading-state" class="bg-gray-800 rounded-2xl p-8 shadow-md border border-gray-700 text-center mb-4">
-    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-400 mb-3"></i>
-    <p class="text-gray-300 font-bold mt-3">Setting up payment...</p>
-    <p class="text-gray-500 text-xs mt-1">Please wait a moment</p>
-</div>
+<div class="bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-700 text-center mb-6">
 
-<!-- Payment iframe container (hidden until ready) -->
-<div id="iframe-container" style="display:none;" class="mb-4">
-    <div class="rounded-2xl overflow-hidden border border-blue-900/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-        <iframe id="payment-iframe" src="" width="100%" height="580px"
-            frameborder="0" scrolling="yes"
-            style="background:white; border-radius:16px; display:block;">
-        </iframe>
+    <!-- QR Code directly from FamGateway -->
+    <div class="bg-white p-4 rounded-xl inline-block mb-4 shadow-lg">
+        <img src="{{ qr_url }}" alt="UPI QR Code" class="w-52 h-52" id="qr-img">
     </div>
-    <p class="text-xs text-gray-600 mt-2 text-center">Order ID: <code class="text-blue-400">{{ order_id }}</code></p>
+
+    <p class="text-gray-400 text-sm mb-1">Scan with any UPI app (GPay, PhonePe, Paytm)</p>
+    <p class="text-xs text-gray-600 mb-3">Order ID: <code class="text-blue-400">{{ order_id }}</code></p>
+
+    <!-- Fallback: Open Gateway button -->
+    <a href="{{ checkout_url }}" target="_blank"
+        class="inline-flex items-center gap-2 bg-blue-700/40 hover:bg-blue-700/60 border border-blue-700/50 text-blue-300 text-xs font-semibold px-4 py-2 rounded-xl transition">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> Can't scan? Open payment page
+    </a>
 </div>
 
-<!-- Error state -->
-<div id="error-state" style="display:none;" class="bg-gray-800 rounded-2xl p-8 shadow-md border border-gray-700 text-center mb-4">
-    <i class="fa-solid fa-triangle-exclamation text-3xl text-red-400 mb-3"></i>
-    <p class="text-red-400 font-bold mt-2" id="error-msg">Gateway Error</p>
-    <a href="/deposit" class="mt-4 inline-block bg-blue-600 text-white px-6 py-2 rounded-xl font-bold text-sm">Try Again</a>
-</div>
+<!-- Status container -->
+<div class="text-center mt-4" id="status-container">
+    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-500 mb-3"></i>
+    <p class="text-gray-300 font-bold" id="status-text">Waiting for payment...</p>
+    <p class="text-xs text-gray-500 mt-1 mb-6">Please do not close this page.</p>
 
-<!-- Status bar -->
-<div id="status-bar" style="display:none;" class="bg-gray-800 rounded-2xl p-4 border border-gray-700 text-center mb-4">
-    <i class="fa-solid fa-circle-notch fa-spin text-blue-500 mr-2"></i>
-    <span class="text-gray-300 text-sm font-bold">Waiting for payment confirmation...</span>
-    <span class="text-gray-500 text-xs block mt-1">This page will auto-update once payment is received.</span>
-</div>
-
-<!-- Success state (hidden until paid) -->
-<div id="success-state" style="display:none;" class="bg-gray-800 rounded-2xl p-8 shadow-md border border-green-900/50 text-center mb-4">
-    <i class="fa-solid fa-circle-check text-5xl text-green-500 mb-4"></i>
-    <p class="text-xl font-bold text-white mb-1">Payment Successful!</p>
-    <p class="text-sm text-gray-400 mb-5">&#8377;{{ amount }} has been added to your wallet.</p>
-    <a href="/store" class="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-xl font-bold transition">Go to Store</a>
-</div>
-
-<!-- Cancel button -->
-<div id="cancel-btn" class="text-center">
     <a href="/deposit" class="inline-flex items-center gap-2 bg-transparent border border-red-900/50 hover:bg-red-900/20 text-red-500 font-bold text-sm px-6 py-2.5 rounded-xl transition shadow-sm">
         <i class="fa-solid fa-xmark"></i> Cancel Payment
     </a>
 </div>
 
 <script>
-    var checkInterval = null;
-
-    function showSuccess() {
-        clearInterval(checkInterval);
-        document.getElementById('iframe-container').style.display = 'none';
-        document.getElementById('status-bar').style.display = 'none';
-        document.getElementById('cancel-btn').style.display = 'none';
-        document.getElementById('success-state').style.display = 'block';
-    }
-
-    function startPolling() {
-        checkInterval = setInterval(() => {
-            fetch('/check_payment/{{ order_id }}')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) { showSuccess(); }
-                });
-        }, 4000);
-    }
-
-    // Step 1: Call /create_payment to get checkout_url from FamGateway
-    fetch('/create_payment/{{ order_id }}')
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('loading-state').style.display = 'none';
-            if (data.success && data.checkout_url) {
-                // Load FamGateway page inside iframe
-                document.getElementById('payment-iframe').src = data.checkout_url;
-                document.getElementById('iframe-container').style.display = 'block';
-                document.getElementById('status-bar').style.display = 'block';
-                // Start polling for payment confirmation
-                startPolling();
-            } else {
-                document.getElementById('error-state').style.display = 'block';
-                document.getElementById('error-msg').textContent = 'Error: ' + (data.error || 'Gateway failed. Please try again.');
-            }
-        })
-        .catch(() => {
-            document.getElementById('loading-state').style.display = 'none';
-            document.getElementById('error-state').style.display = 'block';
-            document.getElementById('error-msg').textContent = 'Connection error. Please try again.';
-        });
+    let checkInterval = setInterval(() => {
+        fetch('/check_payment/{{ order_id }}')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    clearInterval(checkInterval);
+                    document.getElementById('status-container').innerHTML = `
+                        <i class="fa-solid fa-check-circle text-5xl text-green-500 mb-3"></i>
+                        <p class="text-xl font-bold text-white mb-1">Payment Successful!</p>
+                        <p class="text-sm text-gray-400 mb-4">&#8377;{{ amount }} has been added to your wallet.</p>
+                        <a href="/store" class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold">Go to Store</a>
+                    `;
+                }
+            });
+    }, 4000);
 </script>
 {% endblock %}
