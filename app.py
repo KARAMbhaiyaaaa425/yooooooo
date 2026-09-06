@@ -24,7 +24,7 @@ API_KEY = "4936a17fb44211207c7ca20bdc6a4a57"
 MASTER_KEY = "a7f3e8b2c9d1f4a6b8c2d5e9f1a3b6c8"
 
 # FamGateway Config
-FAM_API_KEY = "fam_a146681687091ddb7dc092a5fb4f903332c27fa1"
+FAM_API_KEY = "fam_8f664c95e7fe29e380b7317317b00e979c5d0ba8"
 FAM_CREATE_URL = "https://famgateway.in/api/create-order.php"
 FAM_SITE_URL = "https://ffpanelshop.onrender.com"
 
