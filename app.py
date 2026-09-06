@@ -24,7 +24,7 @@ API_KEY = "4936a17fb44211207c7ca20bdc6a4a57"
 MASTER_KEY = "a7f3e8b2c9d1f4a6b8c2d5e9f1a3b6c8"
 
 # FamGateway Config
-FAM_API_KEY = "fam_8f664c95e7fe29e380b7317317b00e979c5d0ba8"
+FAM_API_KEY = "fam_a146681687091ddb7dc092a5fb4f903332c27fa1"
 FAM_CREATE_URL = "https://famgateway.in/api/create-order.php"
 FAM_SITE_URL = "https://ffpanelshop.onrender.com"
 
@@ -292,25 +292,38 @@ def deposit():
             amount = float(request.form.get("amount", 0))
         except:
             amount = 0
-        gateway = request.form.get("gateway", "1")
         if amount < 1:
             return render_template("deposit.html", user=user, balance=user.get("balance", 0.0), error="Minimum amount is ₹1")
-        
-        # STEP 1: Save order instantly to DB, NO gateway call here
-        order_prefix = "ADD1_" if gateway == "1" else "ADD2_"
-        order_id = f"{order_prefix}{datetime.now().strftime('%Y%m%d%H%M%S')}{uuid.uuid4().hex[:4].upper()}"
-        db.orders.insert_one({
-            "order_id": order_id,
-            "user_id": user_id,
-            "amount": amount,
-            "status": "pending",
-            "utr": "",
-            "sender": "",
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        })
-        # Redirect instantly - JS on next page will call gateway in background
-        return redirect(f"/deposit_pay/{order_id}")
-            
+
+        order_id = f"FAM_{datetime.now().strftime('%Y%m%d%H%M%S')}{uuid.uuid4().hex[:4].upper()}"
+        redirect_url = f"{FAM_SITE_URL}/deposit_success?order_id={order_id}"
+        payload = {"amount": float(amount), "redirect_url": redirect_url}
+        headers = {"Authorization": f"Bearer {FAM_API_KEY}", "Content-Type": "application/json"}
+
+        try:
+            resp = requests.post(FAM_CREATE_URL, json=payload, headers=headers, timeout=12).json()
+            if resp.get("status") == "success":
+                data = resp.get("data", {})
+                qr_url = data.get("qr_url", "")
+                checkout_url = data.get("checkout_url", "")
+                fam_order_id = data.get("order_id", "")
+                db.orders.insert_one({
+                    "order_id": order_id,
+                    "user_id": user_id,
+                    "amount": amount,
+                    "status": "pending",
+                    "utr": "",
+                    "sender": "",
+                    "fam_order_id": fam_order_id,
+                    "checkout_url": checkout_url,
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+                return render_template("deposit_pay.html", order_id=order_id, amount=amount, qr_url=qr_url, checkout_url=checkout_url)
+            else:
+                return render_template("deposit.html", user=user, balance=user.get("balance", 0.0), error="Gateway Error: " + resp.get("message", "Unknown error"))
+        except Exception as e:
+            return render_template("deposit.html", user=user, balance=user.get("balance", 0.0), error="Gateway Error: " + str(e))
+
     return render_template("deposit.html", user=user, balance=user.get("balance", 0.0))
 
 @app.route("/deposit_pay/<order_id>")
