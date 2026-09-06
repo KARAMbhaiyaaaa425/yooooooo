@@ -226,7 +226,7 @@ def store():
                 })
                 
         categories = list(final_products.keys())
-        categories.sort()
+        # Removed categories.sort() so that categories appear in the order defined by admin reorder
         
         return render_template("store.html", user=user, balance=user.get("balance", 0.0) if user else 0.0, products=final_products, categories=categories, global_settings=settings)
     except Exception as e:
@@ -384,7 +384,9 @@ def buy():
         if not product_db_id:
             return jsonify({"success": False, "msg": "Invalid product ID!"})
             
-        plan = db.products.find_one({"id": int(product_db_id)})
+        plan = db.products.find_one({"id": int(product_db_id) if str(product_db_id).isdigit() else product_db_id})
+        if not plan:
+            plan = db.products.find_one({"id": str(product_db_id)})
         if not plan:
             return jsonify({"success": False, "msg": "Product not found!"})
             
@@ -392,8 +394,8 @@ def buy():
             msg = plan.get("status_msg") or "Product is currently unavailable (Patched/Updating)."
             return jsonify({"success": False, "msg": msg})
             
-        price = float(plan.get("price", 0))
         user = db.users.find_one({"user_id": user_id})
+        price = float(plan.get("reseller_price", plan.get("price", 0))) if user.get("is_reseller") else float(plan.get("price", 0))
         
         if float(user.get("balance", 0)) < price:
             return jsonify({"success": False, "msg": f"Insufficient Balance! You need ₹{price}"})
@@ -570,10 +572,15 @@ def admin_products():
     products = list(db.products.find({}).sort("order", 1))
     return render_template("admin/products.html", products=products)
 
-@app.route("/admin/product/edit/<int:pid>", methods=["GET", "POST"])
+@app.route("/admin/product/edit/<pid>", methods=["GET", "POST"])
 def admin_edit_product(pid):
     if not session.get("admin"): return redirect("/admin")
-    product = db.products.find_one({"id": pid})
+    try:
+        product = db.products.find_one({"id": int(pid)})
+    except ValueError:
+        product = None
+    if not product:
+        product = db.products.find_one({"id": str(pid)})
     if not product: return redirect("/admin/products")
     
     if request.method == "POST":
@@ -600,7 +607,7 @@ def admin_edit_product(pid):
         except (TypeError, ValueError):
             api_id = 0
         
-        db.products.update_one({"id": pid}, {"$set": {
+        db.products.update_one({"id": product["id"]}, {"$set": {
             "media_url": media_url,
             "feedback_link": feedback_link,
             "updates_link": updates_link, 
@@ -856,7 +863,13 @@ def admin_reorder():
     if request.method == "POST":
         order_data = request.json.get("order", [])
         for item in order_data:
-            db.products.update_one({"id": item["id"]}, {"$set": {"order": item["order"]}})
+            pid = item["id"]
+            res = db.products.update_one({"id": pid}, {"$set": {"order": item["order"]}})
+            if res.matched_count == 0:
+                if isinstance(pid, int):
+                    db.products.update_one({"id": str(pid)}, {"$set": {"order": item["order"]}})
+                elif isinstance(pid, str) and pid.isdigit():
+                    db.products.update_one({"id": int(pid)}, {"$set": {"order": item["order"]}})
         return jsonify({"success": True})
         
     raw_products = list(db.products.find({}).sort("order", 1))
