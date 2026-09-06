@@ -292,37 +292,62 @@ def deposit():
         return redirect("/")
     
     if request.method == "POST":
-        amount = float(request.form.get("amount", 0))
+        try:
+            amount = float(request.form.get("amount", 0))
+        except:
+            amount = 0
         gateway = request.form.get("gateway", "1")
         if amount < 1:
             return render_template("deposit.html", user=user, balance=user.get("balance", 0.0), error="Minimum amount is ₹1")
-            
+        
+        # STEP 1: Save order instantly to DB, NO gateway call here
         order_prefix = "ADD1_" if gateway == "1" else "ADD2_"
         order_id = f"{order_prefix}{datetime.now().strftime('%Y%m%d%H%M%S')}{uuid.uuid4().hex[:4].upper()}"
-        customer_name = session.get("username", "WebUser")
-        
-        payload = {"amount": f"{amount:.2f}", "order_id": order_id, "customer_name": customer_name}
-        headers = {"X-Guru-Key": get_karanpay_key(order_id), "Content-Type": "application/json"}
-        
-        try:
-            # Reduced timeout to 12s to prevent Gunicorn SIGKILL (which happens at 30s)
-            resp = requests.post(KARANPAY_CREATE_URL, json=payload, headers=headers, timeout=12).json()
-            if resp.get("status") == "success":
-                payment_url = resp.get("data", {}).get("payment_url") or resp.get("payment_url")
-                upi_url = payment_url
-                try:
-                    html_resp = requests.get(payment_url, timeout=10).text
-                    matches = re.findall(r'upi://pay\?[^\"\'<>]+', html_resp)
-                    if matches: upi_url = matches[0].replace("&amp;", "&")
-                except: pass
-                
-                db.orders.insert_one({"order_id": order_id, "user_id": user_id, "amount": amount, "status": "pending", "utr": "", "sender": "", "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
-                
-                return render_template("deposit_pay.html", order_id=order_id, amount=amount, upi_url=upi_url, payment_url=payment_url)
-        except Exception as e:
-            return render_template("deposit.html", user=user, balance=user.get("balance", 0.0), error="Gateway Error: " + str(e))
+        db.orders.insert_one({
+            "order_id": order_id,
+            "user_id": user_id,
+            "amount": amount,
+            "status": "pending",
+            "utr": "",
+            "sender": "",
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+        # Redirect instantly - JS on next page will call gateway in background
+        return redirect(f"/deposit_pay/{order_id}")
             
     return render_template("deposit.html", user=user, balance=user.get("balance", 0.0))
+
+@app.route("/deposit_pay/<order_id>")
+def deposit_pay_page(order_id):
+    if "user_id" not in session: return redirect("/")
+    order = db.orders.find_one({"order_id": order_id})
+    if not order: return redirect("/deposit")
+    return render_template("deposit_pay.html", order_id=order_id, amount=order["amount"])
+
+@app.route("/create_payment/<order_id>")
+def create_payment(order_id):
+    if "user_id" not in session: return jsonify({"success": False, "error": "Not logged in"})
+    order = db.orders.find_one({"order_id": order_id})
+    if not order: return jsonify({"success": False, "error": "Order not found"})
+    
+    # Already has a payment_url stored? Return it
+    if order.get("payment_url"):
+        return jsonify({"success": True, "payment_url": order["payment_url"]})
+    
+    customer_name = session.get("username", "WebUser")
+    payload = {"amount": f"{order['amount']:.2f}", "order_id": order_id, "customer_name": customer_name}
+    headers = {"X-Guru-Key": get_karanpay_key(order_id), "Content-Type": "application/json"}
+    try:
+        resp = requests.post(KARANPAY_CREATE_URL, json=payload, headers=headers, timeout=12).json()
+        if resp.get("status") == "success":
+            payment_url = resp.get("data", {}).get("payment_url") or resp.get("payment_url")
+            # Store payment_url in order for future reference
+            db.orders.update_one({"order_id": order_id}, {"$set": {"payment_url": payment_url}})
+            return jsonify({"success": True, "payment_url": payment_url})
+        else:
+            return jsonify({"success": False, "error": resp.get("message", "Gateway error")})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 @app.route("/check_payment/<order_id>")
 def check_payment(order_id):
