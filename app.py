@@ -23,16 +23,12 @@ API_ENDPOINT = "https://adminpanels.shop/api/reseller_v1.php"
 API_KEY = "4936a17fb44211207c7ca20bdc6a4a57"
 MASTER_KEY = "a7f3e8b2c9d1f4a6b8c2d5e9f1a3b6c8"
 
-# KaranPay Config
-KARANPAY_KEY_1 = "guru131e012b5141689b9135317fb6fa7f"
-KARANPAY_KEY_2 = "guru1eff587f747b3df8c7a355570f90ce"
-KARANPAY_CREATE_URL = "https://gurupaygateway.com/api/create-order"
-KARANPAY_STATUS_URL = "https://gurupaygateway.com/api/check-status"
+# FamGateway Config
+FAM_API_KEY = "fam_a146681687091ddb7dc092a5fb4f903332c27fa1"
+FAM_CREATE_URL = "https://famgateway.in/api/create-order.php"
+FAM_SITE_URL = "https://ffpanelshop.onrender.com"
 
-def get_karanpay_key(order_id):
-    settings = db.settings.find_one({"id": "global"}) or {}
-    if order_id.startswith("ADD2_"): return settings.get("karanpay_key_2", KARANPAY_KEY_2)
-    return settings.get("karanpay_key_1", KARANPAY_KEY_1)
+
 
 # ================= MIDDLEWARE =================
 @app.context_processor
@@ -329,51 +325,75 @@ def create_payment(order_id):
     if "user_id" not in session: return jsonify({"success": False, "error": "Not logged in"})
     order = db.orders.find_one({"order_id": order_id})
     if not order: return jsonify({"success": False, "error": "Order not found"})
-    
-    # Already has a payment_url stored? Return it
-    if order.get("payment_url"):
-        return jsonify({"success": True, "payment_url": order["payment_url"]})
-    
-    customer_name = session.get("username", "WebUser")
-    payload = {"amount": f"{order['amount']:.2f}", "order_id": order_id, "customer_name": customer_name}
-    headers = {"X-Guru-Key": get_karanpay_key(order_id), "Content-Type": "application/json"}
+
+    # Already has a checkout_url stored? Return it
+    if order.get("checkout_url"):
+        return jsonify({"success": True, "checkout_url": order["checkout_url"]})
+
+    redirect_url = f"{FAM_SITE_URL}/deposit_success?order_id={order_id}"
+    payload = {
+        "amount": float(order["amount"]),
+        "redirect_url": redirect_url
+    }
+    headers = {
+        "Authorization": f"Bearer {FAM_API_KEY}",
+        "Content-Type": "application/json"
+    }
     try:
-        resp = requests.post(KARANPAY_CREATE_URL, json=payload, headers=headers, timeout=12).json()
+        resp = requests.post(FAM_CREATE_URL, json=payload, headers=headers, timeout=12).json()
         if resp.get("status") == "success":
-            payment_url = resp.get("data", {}).get("payment_url") or resp.get("payment_url")
-            # Store payment_url in order for future reference
-            db.orders.update_one({"order_id": order_id}, {"$set": {"payment_url": payment_url}})
-            return jsonify({"success": True, "payment_url": payment_url})
+            data = resp.get("data", {})
+            checkout_url = data.get("checkout_url")
+            fam_order_id = data.get("order_id")
+            # Store checkout_url and fam_order_id in our order
+            db.orders.update_one({"order_id": order_id}, {"$set": {
+                "checkout_url": checkout_url,
+                "fam_order_id": fam_order_id
+            }})
+            return jsonify({"success": True, "checkout_url": checkout_url})
         else:
             return jsonify({"success": False, "error": resp.get("message", "Gateway error")})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+
+@app.route("/deposit_success")
+def deposit_success():
+    if "user_id" not in session: return redirect("/")
+    order_id = request.args.get("order_id", "")
+    order = db.orders.find_one({"order_id": order_id})
+    if not order: return redirect("/deposit")
+    user_id = order["user_id"]
+
+    # Only credit if still pending (prevent double credit)
+    if order.get("status") == "pending":
+        amount = float(order.get("amount", 0))
+        res = db.orders.update_one(
+            {"order_id": order_id, "status": "pending"},
+            {"$set": {"status": "completed", "utr": "FamGateway", "sender": "FamGateway"}}
+        )
+        if res.modified_count > 0:
+            db.users.update_one({"user_id": user_id}, {"$inc": {"balance": amount}})
+            db.deposit_history.insert_one({
+                "user_id": user_id,
+                "order_id": order_id,
+                "amount": amount,
+                "utr": "FamGateway",
+                "sender": "FamGateway",
+                "status": "completed",
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+    # Redirect to dashboard with success message
+    return redirect("/dashboard?payment=success")
 
 @app.route("/check_payment/<order_id>")
 def check_payment(order_id):
     if "user_id" not in session: return jsonify({"success": False})
     order = db.orders.find_one({"order_id": order_id})
     if not order: return jsonify({"success": False})
-    if order["status"] == "completed": return jsonify({"success": True})
-    
-    headers = {"X-Guru-Key": get_karanpay_key(order_id), "Content-Type": "application/json"}
-    try:
-        resp = requests.post(KARANPAY_STATUS_URL, json={"order_id": order_id}, headers=headers, timeout=10).json()
-        if resp.get("status") == "success" and resp.get("data", {}).get("payment_status") == "success":
-            d = resp["data"]
-            user_id = order["user_id"]
-            amount = d.get("amount", order["amount"])
-            utr = d.get("utr", "N/A")
-            sender = d.get("customer_name", "Unknown")
-            
-            res = db.orders.update_one({"order_id": order_id, "status": "pending"}, {"$set": {"status": "completed", "utr": utr, "sender": sender}})
-            if res.modified_count > 0:
-                db.users.update_one({"user_id": user_id}, {"$inc": {"balance": amount}})
-                db.deposit_history.insert_one({"user_id": user_id, "order_id": order_id, "amount": amount, "utr": utr, "sender": sender, "status": "completed", "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
-                return jsonify({"success": True})
-    except:
-        pass
+    if order.get("status") == "completed": return jsonify({"success": True})
     return jsonify({"success": False})
+
+
 
 
 @app.route("/transfer", methods=["GET", "POST"])
