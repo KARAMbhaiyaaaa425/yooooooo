@@ -19,16 +19,20 @@ client = MongoClient('mongodb+srv://karanbhaiyagithub_db_user:6XlEePVBUcU7KH1q@w
 db = client["karanpay_bot"]
 
 # API Config
-API_ENDPOINT = "https://adminpanels.shop/api/reseller_v1.php"
-API_KEY = "4936a17fb44211207c7ca20bdc6a4a57"
-MASTER_KEY = "a7f3e8b2c9d1f4a6b8c2d5e9f1a3b6c8"
+API_ENDPOINT = "https://keyspanelshop.shop/reseller_api.php"
+API_KEY = "rsk_852c7f9da4f7e377d36e9334213d0e0b3ce1aa85577671a4"
+MASTER_KEY = "rsk_852c7f9da4f7e377d36e9334213d0e0b3ce1aa85577671a4"
 
-# FamGateway Config
-FAM_API_KEY = "fam_a146681687091ddb7dc092a5fb4f903332c27fa1"
-FAM_CREATE_URL = "https://famgateway.in/api/create-order.php"
-FAM_SITE_URL = "https://ffpanelshop.onrender.com"
+# KaranPay Config
+KARANPAY_KEY_1 = "guru131e012b5141689b9135317fb6fa7f"
+KARANPAY_KEY_2 = "guru1eff587f747b3df8c7a355570f90ce"
+KARANPAY_CREATE_URL = "https://gurupaygateway.com/api/create-order"
+KARANPAY_STATUS_URL = "https://gurupaygateway.com/api/check-status"
 
-
+def get_karanpay_key(order_id):
+    settings = db.settings.find_one({"id": "global"}) or {}
+    if order_id.startswith("ADD2_"): return settings.get("karanpay_key_2", KARANPAY_KEY_2)
+    return settings.get("karanpay_key_1", KARANPAY_KEY_1)
 
 # ================= MIDDLEWARE =================
 @app.context_processor
@@ -283,164 +287,64 @@ def deposit():
     if "user_id" not in session: return redirect("/")
     user_id = session["user_id"]
     user = db.users.find_one({"user_id": user_id})
-    if not user:
-        session.clear()
-        return redirect("/")
     
     if request.method == "POST":
-        try:
-            amount = float(request.form.get("amount", 0))
-        except:
-            amount = 0
+        amount = float(request.form.get("amount", 0))
+        gateway = request.form.get("gateway", "1")
         if amount < 1:
             return render_template("deposit.html", user=user, balance=user.get("balance", 0.0), error="Minimum amount is ₹1")
-
-        order_id = f"FAM_{datetime.now().strftime('%Y%m%d%H%M%S')}{uuid.uuid4().hex[:4].upper()}"
-        redirect_url = f"{FAM_SITE_URL}/deposit_success?order_id={order_id}"
-        payload = {"amount": float(amount), "redirect_url": redirect_url}
-        headers = {"Authorization": f"Bearer {FAM_API_KEY}", "Content-Type": "application/json"}
-
+            
+        order_prefix = "ADD1_" if gateway == "1" else "ADD2_"
+        order_id = f"{order_prefix}{datetime.now().strftime('%Y%m%d%H%M%S')}{uuid.uuid4().hex[:4].upper()}"
+        customer_name = session.get("username", "WebUser")
+        
+        payload = {"amount": f"{amount:.2f}", "order_id": order_id, "customer_name": customer_name}
+        headers = {"X-Guru-Key": get_karanpay_key(order_id), "Content-Type": "application/json"}
+        
         try:
-            resp = requests.post(FAM_CREATE_URL, json=payload, headers=headers, timeout=12).json()
+            resp = requests.post(KARANPAY_CREATE_URL, json=payload, headers=headers, timeout=20).json()
             if resp.get("status") == "success":
-                data = resp.get("data", {})
-                qr_url = data.get("qr_url", "")
-                checkout_url = data.get("checkout_url", "")
-                fam_order_id = data.get("order_id", "")
-                db.orders.insert_one({
-                    "order_id": order_id,
-                    "user_id": user_id,
-                    "amount": amount,
-                    "status": "pending",
-                    "utr": "",
-                    "sender": "",
-                    "fam_order_id": fam_order_id,
-                    "checkout_url": checkout_url,
-                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
-                return render_template("deposit_pay.html", order_id=order_id, amount=amount, qr_url=qr_url, checkout_url=checkout_url)
-            else:
-                return render_template("deposit.html", user=user, balance=user.get("balance", 0.0), error="Gateway Error: " + resp.get("message", "Unknown error"))
+                payment_url = resp.get("data", {}).get("payment_url") or resp.get("payment_url")
+                upi_url = payment_url
+                try:
+                    html_resp = requests.get(payment_url, timeout=10).text
+                    matches = re.findall(r'upi://pay\?[^\"\'<>]+', html_resp)
+                    if matches: upi_url = matches[0].replace("&amp;", "&")
+                except: pass
+                
+                db.orders.insert_one({"order_id": order_id, "user_id": user_id, "amount": amount, "status": "pending", "utr": "", "sender": "", "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+                
+                return render_template("deposit_pay.html", order_id=order_id, amount=amount, upi_url=upi_url, payment_url=payment_url)
         except Exception as e:
             return render_template("deposit.html", user=user, balance=user.get("balance", 0.0), error="Gateway Error: " + str(e))
-
+            
     return render_template("deposit.html", user=user, balance=user.get("balance", 0.0))
-
-@app.route("/deposit_pay/<order_id>")
-def deposit_pay_page(order_id):
-    if "user_id" not in session: return redirect("/")
-    order = db.orders.find_one({"order_id": order_id})
-    if not order: return redirect("/deposit")
-    return render_template("deposit_pay.html", order_id=order_id, amount=order["amount"])
-
-@app.route("/create_payment/<order_id>")
-def create_payment(order_id):
-    if "user_id" not in session: return jsonify({"success": False, "error": "Not logged in"})
-    order = db.orders.find_one({"order_id": order_id})
-    if not order: return jsonify({"success": False, "error": "Order not found"})
-
-    # Already has a checkout_url stored? Return it
-    if order.get("checkout_url"):
-        return jsonify({"success": True, "checkout_url": order["checkout_url"]})
-
-    redirect_url = f"{FAM_SITE_URL}/deposit_success?order_id={order_id}"
-    payload = {
-        "amount": float(order["amount"]),
-        "redirect_url": redirect_url
-    }
-    headers = {
-        "Authorization": f"Bearer {FAM_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    try:
-        resp = requests.post(FAM_CREATE_URL, json=payload, headers=headers, timeout=12).json()
-        if resp.get("status") == "success":
-            data = resp.get("data", {})
-            checkout_url = data.get("checkout_url")
-            fam_order_id = data.get("order_id")
-            # Store checkout_url and fam_order_id in our order
-            db.orders.update_one({"order_id": order_id}, {"$set": {
-                "checkout_url": checkout_url,
-                "fam_order_id": fam_order_id
-            }})
-            return jsonify({"success": True, "checkout_url": checkout_url})
-        else:
-            return jsonify({"success": False, "error": resp.get("message", "Gateway error")})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
-
-@app.route("/deposit_success")
-def deposit_success():
-    if "user_id" not in session: return redirect("/")
-    order_id = request.args.get("order_id", "")
-    order = db.orders.find_one({"order_id": order_id})
-    if not order: return redirect("/deposit")
-    user_id = order["user_id"]
-
-    # Only credit if still pending (prevent double credit)
-    if order.get("status") == "pending":
-        amount = float(order.get("amount", 0))
-        res = db.orders.update_one(
-            {"order_id": order_id, "status": "pending"},
-            {"$set": {"status": "completed", "utr": "FamGateway", "sender": "FamGateway"}}
-        )
-        if res.modified_count > 0:
-            db.users.update_one({"user_id": user_id}, {"$inc": {"balance": amount}})
-            db.deposit_history.insert_one({
-                "user_id": user_id,
-                "order_id": order_id,
-                "amount": amount,
-                "utr": "FamGateway",
-                "sender": "FamGateway",
-                "status": "completed",
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            })
-    # Redirect to dashboard with success message
-    return redirect("/dashboard?payment=success")
 
 @app.route("/check_payment/<order_id>")
 def check_payment(order_id):
     if "user_id" not in session: return jsonify({"success": False})
     order = db.orders.find_one({"order_id": order_id})
     if not order: return jsonify({"success": False})
-    if order.get("status") == "completed": return jsonify({"success": True})
-
+    if order["status"] == "completed": return jsonify({"success": True})
+    
+    headers = {"X-Guru-Key": get_karanpay_key(order_id), "Content-Type": "application/json"}
     try:
-        fam_id = order.get("fam_order_id")
-        if not fam_id: return jsonify({"success": False})
-
-        resp = requests.get(f"https://famgateway.in/api/checkout-status.php?order_id={fam_id}", timeout=5).json()
-        
-        status = str(resp.get("status", "")).lower()
-        if status in ("success", "paid", "captured"):
-            data = resp.get("data", resp)
-            utr = data.get("utr", "FamGateway")
-            sender = data.get("sender_name", "FamGateway")
-            amount = float(order.get("amount", 0))
+        resp = requests.post(KARANPAY_STATUS_URL, json={"order_id": order_id}, headers=headers, timeout=10).json()
+        if resp.get("status") == "success" and resp.get("data", {}).get("payment_status") == "success":
+            d = resp["data"]
             user_id = order["user_id"]
-
-            res = db.orders.update_one(
-                {"order_id": order_id, "status": "pending"},
-                {"$set": {"status": "completed", "utr": utr, "sender": sender}}
-            )
+            amount = d.get("amount", order["amount"])
+            utr = d.get("utr", "N/A")
+            sender = d.get("customer_name", "Unknown")
+            
+            res = db.orders.update_one({"order_id": order_id, "status": "pending"}, {"$set": {"status": "completed", "utr": utr, "sender": sender}})
             if res.modified_count > 0:
                 db.users.update_one({"user_id": user_id}, {"$inc": {"balance": amount}})
-                db.deposit_history.insert_one({
-                    "user_id": user_id,
-                    "order_id": order_id,
-                    "amount": amount,
-                    "utr": utr,
-                    "sender": sender,
-                    "status": "completed",
-                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
+                db.deposit_history.insert_one({"user_id": user_id, "order_id": order_id, "amount": amount, "utr": utr, "sender": sender, "status": "completed", "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
                 return jsonify({"success": True})
-    except Exception as e:
-        print(f"Check payment error: {e}")
+    except:
         pass
-    
     return jsonify({"success": False})
-
 
 
 @app.route("/transfer", methods=["GET", "POST"])
@@ -532,15 +436,18 @@ def buy():
             current_master_key = settings.get("master_key", MASTER_KEY)
             current_api_endpoint = settings.get("api_endpoint", API_ENDPOINT)
             
-            payload = {'api_key': current_api_key, 'action': 'buy', 'product_id': str(plan.get("product_id", "")), 'duration': str(plan.get("plan_name", "")), 'android_id': android_id}
-            headers = {'Content-Type': 'application/x-www-form-urlencoded', 'x-master-key': current_master_key}
+            payload = {'action': 'buy', 'variant_id': str(plan.get("product_id", "")), 'quantity': 1}
+            headers = {'Content-Type': 'application/x-www-form-urlencoded', 'x-master-key': current_master_key, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
             
             import requests
-            api_res = requests.post(current_api_endpoint, data=payload, headers=headers, timeout=15)
-            data = api_res.json()
+            api_res = requests.post(current_api_endpoint, data=payload, headers=headers, timeout=15, verify=False)
+            try:
+                data = api_res.json()
+            except Exception:
+                raise Exception(f"API Returned Non-JSON: {api_res.text[:100]}")
             
-            if data.get("status") == "success" or data.get("success") == True:
-                key_data = data.get("key") or data.get("license") or "N/A"
+            if data.get("ok"):
+                key_data = data.get("key") or "N/A"
                 db.history.insert_one({
                     "user_id": user_id,
                     "product": plan.get("name", "N/A"),
@@ -552,7 +459,7 @@ def buy():
                 return jsonify({"success": True, "key": key_data})
             else:
                 db.users.update_one({"user_id": user_id}, {"$inc": {"balance": price}})
-                error_msg = data.get("msg") or data.get("message") or "API Error: Unknown Error"
+                error_msg = data.get("error") or data.get("msg") or data.get("message") or "API Error: Unknown Error"
                 return jsonify({"success": False, "msg": error_msg})
     except Exception as e:
         import traceback
@@ -1395,18 +1302,18 @@ def reseller_api():
             current_master_key = settings.get("master_key", MASTER_KEY)
             current_api_endpoint = settings.get("api_endpoint", API_ENDPOINT)
             
-            payload = {'api_key': current_api_key, 'action': 'buy', 'product_id': str(plan.get("product_id", "")), 'duration': str(plan.get("plan_name", "")), 'android_id': android_id}
-            headers = {'Content-Type': 'application/x-www-form-urlencoded', 'x-master-key': current_master_key}
+            payload = {'action': 'buy', 'variant_id': str(plan.get("product_id", "")), 'quantity': 1}
+            headers = {'Content-Type': 'application/x-www-form-urlencoded', 'x-master-key': current_master_key, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
             
             try:
                 import requests
-                api_res = requests.post(current_api_endpoint, data=payload, headers=headers, timeout=15)
+                api_res = requests.post(current_api_endpoint, data=payload, headers=headers, timeout=15, verify=False)
                 data = api_res.json()
-                if data.get("status") == "success" or data.get("success") == True:
-                    key_data = data.get("key") or data.get("license") or "N/A"
+                if data.get("ok"):
+                    key_data = data.get("key") or "N/A"
                 else:
                     db.users.update_one({"_id": user["_id"]}, {"$inc": {"balance": price}}) # refund
-                    error_msg = data.get("msg") or data.get("message") or "Provider API Error"
+                    error_msg = data.get("error") or data.get("msg") or data.get("message") or "Provider API Error"
                     return jsonify({"status": "error", "message": error_msg})
             except Exception as e:
                 db.users.update_one({"_id": user["_id"]}, {"$inc": {"balance": price}}) # refund
