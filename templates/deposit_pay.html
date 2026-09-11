@@ -1,26 +1,27 @@
-﻿{% extends "layout.html" %}
+{% extends "layout.html" %}
 
 {% block content %}
-<div class="mb-6 text-center" id="header-container">
+<div class="mb-6 text-center">
     <h2 class="text-2xl font-bold text-white mb-2">Scan to Pay</h2>
-    <p class="text-gray-400 text-sm">Pay exactly <b class="text-green-400 text-lg">&#8377;{{ amount }}</b></p>
+    <p class="text-gray-400 text-sm">Pay exactly <b class="text-green-400 text-lg">₹{{ amount }}</b></p>
 </div>
 
-<!-- QR Container -->
-<div class="bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-700 text-center mb-6" id="qr-container">
-    <div class="bg-white p-4 rounded-xl inline-block mb-4 shadow-lg">
-        <img src="{{ qr_url }}" alt="UPI QR Code" class="w-52 h-52" id="qr-img">
+<div class="bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-700 text-center mb-6">
+    <div class="bg-white p-4 rounded-xl inline-block mb-4">
+        <!-- Render QR code using Google Chart API or raw URL -->
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ upi_url | urlencode }}" alt="UPI QR Code" class="w-48 h-48">
     </div>
-    <p class="text-gray-400 text-sm mb-1">Scan with any UPI app (GPay, PhonePe, Paytm)</p>
-    <p class="text-xs text-gray-600 mb-3">Order ID: <code class="text-blue-400">{{ order_id }}</code></p>
+    
+    <p class="text-xs text-gray-500 mb-2">Order ID: <code class="text-blue-400">{{ order_id }}</code></p>
+    
+
 </div>
 
-<!-- Status container -->
-<div class="text-center mt-4" id="status-container">
+<div class="text-center mt-6" id="status-container">
     <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-500 mb-3"></i>
     <p class="text-gray-300 font-bold" id="status-text">Waiting for payment...</p>
     <p class="text-xs text-gray-500 mt-1 mb-6">Please do not close this page.</p>
-
+    
     <a href="/deposit" class="inline-flex items-center gap-2 bg-transparent border border-red-900/50 hover:bg-red-900/20 text-red-500 font-bold text-sm px-6 py-2.5 rounded-xl transition shadow-sm">
         <i class="fa-solid fa-xmark"></i> Cancel Payment
     </a>
@@ -29,25 +30,19 @@
 <script>
     let checkInterval = setInterval(() => {
         fetch('/check_payment/{{ order_id }}')
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    clearInterval(checkInterval);
-                    
-                    // Hide the QR code and header
-                    document.getElementById('qr-container').style.display = 'none';
-                    document.getElementById('header-container').style.display = 'none';
-                    
-                    // Show success message
-                    document.getElementById('status-container').innerHTML = `
-                        <i class="fa-solid fa-check-circle text-5xl text-green-500 mb-3"></i>
-                        <p class="text-xl font-bold text-white mb-1">Payment Successful!</p>
-                        <p class="text-sm text-gray-400 mb-4">&#8377;{{ amount }} has been added to your wallet.</p>
-                        <a href="/store" class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold">Go to Store</a>
-                    `;
-                }
-            })
-            .catch(err => console.log('Polling error:', err));
-    }, 4000);
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                clearInterval(checkInterval);
+                document.getElementById('status-container').innerHTML = `
+                    <i class="fa-solid fa-check-circle text-5xl text-green-500 mb-3"></i>
+                    <p class="text-xl font-bold text-white mb-1">Payment Successful!</p>
+                    <p class="text-sm text-gray-400 mb-4">₹{{ amount }} has been added to your wallet.</p>
+                    <a href="/store" class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold">Go to Store</a>
+                `;
+            }
+        });
+    }, 5000); // Check every 5 seconds
 </script>
 {% endblock %}
+
